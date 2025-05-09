@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+
+	
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+		<composite:attribute name="formAsignacion" required="true"></composite:attribute>
+	</composite:interface>
+	
+	<composite:implementation>
+		<p:messages id="MSG_Numeracion" showDetail="false" showSummary="true"  closable="true" showIcon="false"/>
+	
+		<h:panelGrid id="pn_tipos" columns="4" style="margin-bottom:20px" cellpadding="3" cellspacing="3">
+			<p:outputLabel for="seltipobloque" value="#{msg['asignacion.cpsn.tab.numeracion.tipo.bloque']}" />
+			<p:selectOneMenu id="seltipobloque" 
+				value="#{cc.attrs.nameBean.numeracionSolicitada.tipoBloque}" 
+			 	converter="#{tipoBloqueCPSNConverter}"
+			 	disabled="#{!cc.attrs.nameBean.tabHabilitado}"> 
+				<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+				<f:selectItems value="#{cc.attrs.nameBean.listaTiposBloque}" var="tipobloquesel" itemLabel="#{tipobloquesel.descripcion}"
+					itemValue="#{tipobloquesel}"/>
+			</p:selectOneMenu>
+		 	<p:outputLabel style="margin-left:10px" for="in_cantidad" value="#{msg['asignacion.cpsn.tab.numeracion.cantidad_num']}" />
+		 	<p:inputText id="in_cantidad" value="#{cc.attrs.nameBean.numeracionSolicitada.cantSolicitada}" 
+		 		maxlength="3"
+		 		disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+		 		<f:validateLongRange minimum="1" maximum="999"/>
+			</p:inputText>
+		</h:panelGrid>
+		
+		<p:commandButton value="#{msg['manual.numeracion.agregar']}" id="bt_seleccionar" styleClass="ui-priority-primary"
+			actionListener="#{cc.attrs.nameBean.agregarBloque}" rendered="#{cc.attrs.nameBean.tabHabilitado}"
+			update="MSG_Numeracion TBL_resumen pn_tipos btn_guardar PNL_resumenCant"
+			style="height:30px; width:82px ;margin: 12px">
+		</p:commandButton>
+
+		<h:panelGrid id="pn_resumen" columns="4" style="margin-bottom:20px" cellpadding="3" cellspacing="3">
+			<p:dataTable id="TBL_resumen" var="tablaResumen" 
+					style="width: 600px;"
+					value="#{cc.attrs.nameBean.solicitud.numeracionSolicitadas}"
+					selectionMode="single" selection="#{cc.attrs.nameBean.selectedNumeracionSolicitada}"
+					paginator="true" paginatorPosition="bottom" rows="10"
+					resizableColumns="true" rowKey="#{tablaResumen}"
+					emptyMessage="#{msg['buscador.noresultados']}">
+					<f:facet name="header">#{msg['manual.numeraicon.resumen']}</f:facet>
+					
+					<p:column headerText="#{msg['asignacion.cpsn.tab.numeracion.resumen.bloque']}">
+						<h:outputText value="#{tablaResumen.tipoBloque.descripcion}" />
+					</p:column>
+					
+					<p:column headerText="#{msg['asignacion.cpsn.tab.numeracion.resumen.cantidad']}">
+						<h:outputText value="#{tablaResumen.cantSolicitada}" />
+					</p:column>
+					
+					<p:column width="10%">
+						<p:commandButton 
+							title="#{msg['consultas.generales.cancelar']}" 
+							icon="ui-icon-circle-close"
+							process="@this"
+							disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+							action="#{cc.attrs.nameBean.eliminarBloque}"
+							update=":#{cc.attrs.formAsignacion}">
+							<f:setPropertyActionListener 
+       							value="#{tablaResumen}" 
+       							target="#{cc.attrs.nameBean.selectedNumeracionSolicitada}" >
+       						</f:setPropertyActionListener>
+						</p:commandButton>
+					</p:column>
+					
+			</p:dataTable>
+		</h:panelGrid>
+		
+		<h:panelGrid columns="8" cellspacing="3" cellpadding="3" style="display:block;" id="PNL_resumenCant">
+			<p:outputLabel value="#{msg['asignacion.cpsn.tab.numeracion.resumen.cantidad.bloque2048']}" />
+			<h:outputText value="#{cc.attrs.nameBean.total2048}"/>
+			
+			<p:outputLabel value="#{msg['asignacion.cpsn.tab.numeracion.resumen.cantidad.bloque128']}" />
+			<h:outputText value="#{cc.attrs.nameBean.total128}"/>
+			
+			<p:outputLabel value="#{msg['asignacion.cpsn.tab.numeracion.resumen.cantidad.bloque8']}" />
+			<h:outputText value="#{cc.attrs.nameBean.total8}"/>
+			
+			<p:outputLabel value="#{msg['asignacion.cpsn.tab.numeracion.resumen.cantidad.individual']}" />
+			<h:outputText value="#{cc.attrs.nameBean.totalIndividual}"/>
+		</h:panelGrid>
+		
+		<p:panel styleClass="botonera alaDcha">
+			<p:commandButton value="#{msg['manual.generales.btn.guardar']}" id="btn_guardar" process="@this"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado) or cc.attrs.nameBean.habilitarGuardar eq false}"
+				icon="ui-icon-disk"
+				actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+				update=":#{cc.attrs.formAsignacion}" 
+				style="height:30px; width:94px">
+			</p:commandButton>
+		</p:panel>
+		
+	</composite:implementation>
+</html>

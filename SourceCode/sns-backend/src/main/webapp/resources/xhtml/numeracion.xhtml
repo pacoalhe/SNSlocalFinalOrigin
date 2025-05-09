@@ -1,0 +1,697 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+
+	
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+		<composite:attribute name="formAsignacion" required="true"></composite:attribute>
+	</composite:interface>
+	
+	<composite:implementation>
+		<p:messages id="MSG_Numeracion" showDetail="false" showSummary="true"  closable="true" showIcon="false"/>
+
+		<p:fieldset>
+			<h:panelGrid id="pn_tipos" columns="6" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="seltipored" value="#{msg['manual.numeracion.tipo.red']} *" />
+				<p:selectOneMenu 
+					id="seltipored"
+					value="#{cc.attrs.nameBean.numeracionSolicitada.tipoRed}" 
+				 	converter="#{tipoRedConverter}" > 
+				 	<p:ajax 
+				 		event="change"
+				 		update="pn_modalidad pn_variable" 
+				 		listener="#{cc.attrs.nameBean.actualizarListadoArrendar}">
+				 	</p:ajax>
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+					<f:selectItems 
+						value="#{cc.attrs.nameBean.listaTiposRed}" 
+						var="tiporedsel" 
+						itemLabel="#{tiporedsel.descripcion}"
+						itemValue="#{tiporedsel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+	
+				<h:panelGrid id="pn_modalidad" columns="2" cellpadding="3" cellspacing="3">
+					<p:outputLabel 
+						for="seltipomodalidad" 
+						value="#{msg['manual.numeracion.tipo.modalidad']} *" 
+						rendered="#{cc.attrs.nameBean.numeracionSolicitada.tipoRed.cdg == 'M'}">
+					</p:outputLabel>
+					<p:selectOneMenu 
+						id="seltipomodalidad" 
+						value="#{cc.attrs.nameBean.numeracionSolicitada.tipoModalidad}" 
+					 	converter="#{tipoModalidadConverter}"
+					 	rendered="#{cc.attrs.nameBean.numeracionSolicitada.tipoRed.cdg == 'M'}"> 
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+						<f:selectItems 
+							value="#{cc.attrs.nameBean.listaTiposModalidad}" 
+							var="tipomodalidadsel" 
+							itemLabel="#{tipomodalidadsel.descripcion}"
+							itemValue="#{tipomodalidadsel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</h:panelGrid>
+
+			 	<p:outputLabel for="in_cantidad" value="#{msg['manual.numeracion.cantidad_num']} *" />
+			 	<p:inputText 
+			 		id="in_cantidad" 
+			 		label="#{msg['manual.numeracion.cantidad_num']}"
+			 		value="#{cc.attrs.nameBean.numeracionSolicitada.cantSolicitada}" 
+			 		maxlength="7">
+			 		<f:validateLongRange minimum="1" maximum="9999999"/>
+			 	</p:inputText>
+			</h:panelGrid>
+		</p:fieldset>
+		
+		<h:panelGrid id="pn_ubicacion" columns="2" cellpadding="3" cellspacing="3" style="vertical-align:top;">
+			<p:fieldset 
+				id="fs_ubicacion" 
+				style="vertical-align:top; text-align:left;"
+				legend="#{msg['manual.numeracion.field.ubicacion']}" 
+				toggleable="false">
+
+				<h:panelGrid id="pn_ubicacionClaveCensal" columns="4" cellpadding="3" cellspacing="3" >
+					<p:outputLabel for="in_clave" value="#{msg['manual.numeracion.field.ubicacion.clave.censal']} *"/>
+					<p:inputText 
+						id="in_clave" maxlength="9" 
+						value="#{cc.attrs.nameBean.claveCensal}">
+						<p:ajax 
+							event="change" 
+							update="fs_ubicacion MSG_Numeracion" 
+							listener="#{cc.attrs.nameBean.claveCensalChange}">
+						</p:ajax>
+					</p:inputText>
+					
+					<p:outputLabel for="in_abn" value="#{msg['manual.numeracion.field.ubicacion.abn']} *"/>
+					<p:inputText 
+						id="in_abn" maxlength="3"
+						value="#{cc.attrs.nameBean.abn}">
+						<p:ajax 
+							event="change" 
+							update="fs_ubicacion MSG_Numeracion" 
+							listener="#{cc.attrs.nameBean.abnChange}">
+						</p:ajax>
+					</p:inputText>
+				</h:panelGrid>
+					
+				<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+					<p:outputLabel 
+						id="lbl_in_estado" 
+						for="in_estado" 
+						value="#{msg['ubicacion.estado']} *:  #{cc.attrs.nameBean.estado.codEstado}">
+					</p:outputLabel>
+					<p:selectOneMenu 
+						id="in_estado" 
+						value="#{cc.attrs.nameBean.estado}" 
+				 		converter="#{estadoConverter}"
+				 		style="width:300px;">
+					 	<p:ajax 
+					 		event="change" 
+					 		listener="#{cc.attrs.nameBean.habilitarMunicipio}" 
+					 		update="fs_ubicacion MSG_Numeracion">
+					 	</p:ajax>
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+						<f:selectItems
+							value="#{cc.attrs.nameBean.listaEstados}" 
+							var="tipoestadosel" 
+							itemLabel="#{tipoestadosel.nombre}"
+							itemValue="#{tipoestadosel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+						
+					<p:outputLabel 
+						id="lbl_in_municipio"
+						for="in_municipio" 
+						value="#{msg['ubicacion.municipio']} *:	 #{cc.attrs.nameBean.municipio.id.codMunicipio}">
+					</p:outputLabel>
+					<p:selectOneMenu 
+						id="in_municipio" 
+						value="#{cc.attrs.nameBean.municipio}" 
+					 	converter="#{municipioConverter}"
+					 	style="width:300px;">
+					 	<p:ajax 
+					 		event="change" 
+					 		update="fs_ubicacion MSG_Numeracion" 
+					 		listener="#{cc.attrs.nameBean.habilitarPoblacion}">
+					 	</p:ajax>
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+						<f:selectItems 
+							value="#{cc.attrs.nameBean.listaMunicipios}" 
+							var="tipomunicipiosel" 
+							itemLabel="#{tipomunicipiosel.nombre}"
+							itemValue="#{tipomunicipiosel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+	
+					<p:outputLabel
+						id="lbl_in_poblacion"
+						for="in_poblacion" 
+						value="#{msg['ubicacion.poblacion']} *:  #{cc.attrs.nameBean.poblacion.cdgPoblacion}">
+					</p:outputLabel>
+					<p:selectOneMenu 
+						id="in_poblacion" 
+						value="#{cc.attrs.nameBean.poblacion}" 
+					 	converter="#{poblacionConverter}"
+					 	style="width:300px;">
+					 	<p:ajax 
+					 		event="change" 
+					 		update="fs_ubicacion MSG_Numeracion" 
+					 		listener="#{cc.attrs.nameBean.generaClave}">
+					 	</p:ajax>
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+						<f:selectItems 
+							value="#{cc.attrs.nameBean.listaPoblaciones}" 
+							var="tipopoblacionsel"
+							itemLabel="#{tipopoblacionsel.nombre}"
+							itemValue="#{tipopoblacionsel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</h:panelGrid>
+			</p:fieldset>
+					
+			<p:fieldset
+				 id="fs_centrales" 
+				 style="vertical-align:top; text-align:left;"
+				 legend="#{msg['manual.numeracion.field.centrales']}" 
+				 toggleable="false">
+				 
+				<h:panelGrid id="pn_centrales" columns="2" cellpadding="3" cellspacing="3">
+					<p:outputLabel 
+						for="in_central_ori" value="#{msg['manual.numeracion.field.centrales.origen']} *" 
+						rendered="#{(cc.attrs.nameBean.tipoEscenarioAsignacion != 2) or (cc.attrs.nameBean.numeracionSolicitada.concesionario != null)}">
+					</p:outputLabel>
+					<p:autoComplete 
+						id="in_central_ori" 
+						dropdown="true"
+						value="#{cc.attrs.nameBean.numeracionSolicitada.centralOrigen}"
+						rendered="#{(cc.attrs.nameBean.tipoEscenarioAsignacion != 2) or (cc.attrs.nameBean.numeracionSolicitada.concesionario != null)}"					
+					 	var="central" itemLabel="#{central.labelCentralOrigen}"  
+					 	itemValue="#{central}" 
+						converter="#{centralConverter}" size="30" queryDelay="1000" minQueryLength="3"
+					 	completeMethod="#{cc.attrs.nameBean.completeCentralOrigen}" forceSelection="true"
+					 	scrollHeight="200" >
+					 	<p:ajax 
+					 		event="itemSelect" 
+					 		update="in_longitud_ori in_latitud_ori pn_capacidad_ini_o pn_capacidad_fin_o MSG_Numeracion">
+					 	</p:ajax>
+					</p:autoComplete>
+													
+					<h:panelGrid 
+						id="pn_latitudOrigen" columns="2" cellpadding="3" cellspacing="3" 
+						rendered="#{(cc.attrs.nameBean.tipoEscenarioAsignacion != 2) or (cc.attrs.nameBean.numeracionSolicitada.concesionario != null)}"
+						style="width:190px">
+						<p:outputLabel for="in_latitud_ori" value="#{msg['manual.numeracion.field.centrales.latitud']}"/>
+						<p:inputText id="in_latitud_ori" disabled="true" value="#{cc.attrs.nameBean.numeracionSolicitada.centralOrigen.latitud}"/>
+					</h:panelGrid>
+	
+					<h:panelGrid 
+						id="pn_logitudOrigen" columns="2" cellpadding="3" cellspacing="3" 
+						rendered="#{(cc.attrs.nameBean.tipoEscenarioAsignacion != 2) or (cc.attrs.nameBean.numeracionSolicitada.concesionario != null)}">
+						<p:outputLabel for="in_longitud_ori" value="#{msg['manual.numeracion.field.centrales.longitud']}"/>
+						<p:inputText id="in_longitud_ori" disabled="true" value="#{cc.attrs.nameBean.numeracionSolicitada.centralOrigen.longitud}"/>
+					</h:panelGrid>
+					
+					<h:panelGrid 
+						id="pn_capacidad_ini_o" columns="2" cellpadding="3" cellspacing="3" 
+						rendered="#{(cc.attrs.nameBean.tipoEscenarioAsignacion != 2) or (cc.attrs.nameBean.numeracionSolicitada.concesionario != null)}">
+						<p:outputLabel for="in_capacidad_ini_o" value="#{msg['manual.numeracion.field.centrales.cap.inicial']}"></p:outputLabel>
+						<p:inputText 
+							id="in_capacidad_ini_o" 
+							disabled="#{cc.attrs.nameBean.numeracionSolicitada.centralOrigen == null}"
+							value="#{cc.attrs.nameBean.numeracionSolicitada.centralOrigen.capacidadInicial}" maxlength="10">
+						</p:inputText>
+					</h:panelGrid>
+					
+					<h:panelGrid 
+						id="pn_capacidad_fin_o" columns="2" cellpadding="3" cellspacing="3" 
+						rendered="#{(cc.attrs.nameBean.tipoEscenarioAsignacion != 2) or (cc.attrs.nameBean.numeracionSolicitada.concesionario != null)}">
+						<p:outputLabel for="in_capacidad_fin_o" value="#{msg['manual.numeracion.field.centrales.cap.final']}"></p:outputLabel>
+						<p:inputText 
+							id="in_capacidad_fin_o"
+							disabled="#{cc.attrs.nameBean.numeracionSolicitada.centralOrigen == null}"
+							value="#{cc.attrs.nameBean.numeracionSolicitada.centralOrigen.capacidadFinal}" 
+							maxlength="10">
+						</p:inputText>
+					</h:panelGrid>
+				
+					<p:outputLabel for="in_central_des" value="#{msg['manual.numeracion.field.centrales.destino']} *"/>
+					<p:autoComplete 
+						id="in_central_des" dropdown="true" value="#{cc.attrs.nameBean.numeracionSolicitada.centralDestino}" 
+					 	var="central" itemLabel="#{central.labelCentralDestino}" 
+						itemValue="#{central}" converter="#{centralConverter}" 
+						size="30" scrollHeight="200" forceSelection="true"
+					 	completeMethod="#{cc.attrs.nameBean.completeCentralDestino}" queryDelay="1000" minQueryLength="3">
+					 	<p:ajax 
+					 		event="itemSelect" 
+					 		update="pn_longitud_des pn_latitud_des pn_capacidad_ini_d pn_capacidad_fin_d MSG_Numeracion">
+					 	</p:ajax>
+					</p:autoComplete>
+					
+					<h:panelGrid 
+						id="pn_latitud_des" columns="2" cellpadding="3" cellspacing="3" >	
+						<p:outputLabel for="in_latitud_des" value="#{msg['manual.numeracion.field.centrales.latitud']}"/>
+						<p:inputText 
+							id="in_latitud_des" 
+							disabled="true"
+							value="#{cc.attrs.nameBean.numeracionSolicitada.centralDestino.latitud}">
+						</p:inputText>
+					</h:panelGrid>
+					
+					<h:panelGrid id="pn_longitud_des" columns="2" cellpadding="3" cellspacing="3" >
+						<p:outputLabel for="in_longitud_des" value="#{msg['manual.numeracion.field.centrales.longitud']}"/>
+						<p:inputText 
+							id="in_longitud_des" 
+							disabled="true"
+							value="#{cc.attrs.nameBean.numeracionSolicitada.centralDestino.longitud}">
+						</p:inputText>
+					</h:panelGrid>
+
+					<h:panelGrid id="pn_capacidad_ini_d" columns="2" cellpadding="3" cellspacing="3" >
+						<p:outputLabel for="in_capacidad_ini_d" value="#{msg['manual.numeracion.field.centrales.cap.inicial']}"/>
+						<p:inputText 
+							id="in_capacidad_ini_d" 
+							disabled="#{cc.attrs.nameBean.numeracionSolicitada.centralDestino == null}"
+							value="#{cc.attrs.nameBean.numeracionSolicitada.centralDestino.capacidadInicial}" 
+							maxlength="10">
+						</p:inputText>
+					</h:panelGrid>
+					
+					<h:panelGrid id="pn_capacidad_fin_d" columns="2" cellpadding="3" cellspacing="3" >
+						<p:outputLabel for="in_capacidad_fin_d" value="#{msg['manual.numeracion.field.centrales.cap.final']}"/>
+						<p:inputText 
+							id="in_capacidad_fin_d" 
+							disabled="#{cc.attrs.nameBean.numeracionSolicitada.centralDestino == null}"
+							value="#{cc.attrs.nameBean.numeracionSolicitada.centralDestino.capacidadFinal}" 
+							maxlength="10">
+						</p:inputText>
+					</h:panelGrid>
+					
+					<p:commandButton value="#{msg['manual.numeracion.centrales']}" id="bt_catCentrales" process="@this"
+						update=":MDL_Centrales" oncomplete="PF('MDL_Centrales').show();"
+						style="height:30px;  width:162px; margin-right:20px;margin: 12px;" >
+					</p:commandButton>
+				</h:panelGrid>
+			</p:fieldset>
+		</h:panelGrid>
+	
+		<p:fieldset>
+			<h:panelGrid id="pn_variable" columns="9">
+				<p:outputLabel 
+					for="selconcesionario" 
+					value="#{msg['manual.numeracion.concesionario']}" 
+					rendered="#{cc.attrs.nameBean.tipoEscenarioAsignacion != 1}">
+				</p:outputLabel>
+				<p:selectOneMenu autoWidth="false"
+					id="selconcesionario" 
+					value="#{cc.attrs.nameBean.numeracionSolicitada.concesionario}" 
+				 	converter="#{proveedorConverter}" 
+				 	rendered="#{cc.attrs.nameBean.tipoEscenarioAsignacion != 1}"
+				 	style="width:200px; margin:12px"> 
+				 	<p:ajax 
+				 		event="change" 
+				 		update="pn_centrales sl_ido pn_variable">
+				 	</p:ajax>
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+					<f:selectItems 
+						value="#{cc.attrs.nameBean.listaConcesionarios}" 
+						var="concesionariosel" 
+						itemLabel="#{concesionariosel.nombre}" 
+						itemValue="#{concesionariosel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+	
+				<p:outputLabel for="selarrendatario" value="#{msg['manual.numeracion.arredar']}" />
+				<p:selectOneMenu autoWidth="false"
+					id="selarrendatario" 
+					value="#{cc.attrs.nameBean.numeracionSolicitada.arrendatario}" 
+				 	converter="#{proveedorConverter}"
+				 	style="width:200px; margin:12px">
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+					<f:selectItems 
+						value="#{cc.attrs.nameBean.listaArrendatarios}" 
+						var="arrendatariosel" 
+						itemLabel="#{arrendatariosel.nombre}" 
+						itemValue="#{arrendatariosel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+		
+				<p:selectOneRadio 
+					id="sl_ido" value="#{cc.attrs.nameBean.numeracionSolicitada.idoPnn}" 
+					rendered="#{(cc.attrs.nameBean.tipoEscenarioAsignacion eq 3) and (cc.attrs.nameBean.numeracionSolicitada.concesionario != null)}">
+	            	<f:selectItem 
+	            		itemLabel="#{msg['manual.numeracion.ido.propio']}" 
+	            		itemValue="#{cc.attrs.nameBean.solicitud.proveedorSolicitante.ido}">
+	            	</f:selectItem>
+	            	<f:selectItem 
+	            		itemLabel="#{msg['manual.numeracion.ido.concesionario']}" 
+	            		itemValue="#{cc.attrs.nameBean.numeracionSolicitada.concesionario.ido}">
+	            	</f:selectItem>
+		        </p:selectOneRadio>
+		        
+		        <p:commandButton
+		        	id="bt_seleccionar" 
+		        	value="#{msg['manual.numeracion.agregar']}" 
+		        	styleClass="ui-priority-primary"
+					actionListener="#{cc.attrs.nameBean.agregarAction}" 
+					rendered="#{cc.attrs.nameBean.tabHabilitado}"
+					update="MSG_Numeracion tbl_resumen btn_guardar fs_centrales fs_ubicacion pn_tipos pn_variable"
+					style="height:30px; width:100px; margin:12px"
+					icon="ui-icon-check">
+				</p:commandButton>
+				
+				<p:commandButton
+					id="bt_editar_ter"
+					value="#{msg['manual.numeracion.agregar']}" 
+					styleClass="ui-priority-primary"
+					actionListener="#{cc.attrs.nameBean.agregarAction}" 
+					rendered="#{!cc.attrs.nameBean.tabHabilitado}"
+					update="MSG_Numeracion tbl_resumen btn_guardar fs_centrales fs_ubicacion pn_tipos pn_variable"
+					style="height:30px; width:90px; margin:12px">
+					<p:confirm 
+						header="#{msg['confirmacion.titulo']}"
+						message="#{msg['confirmacion.mensaje.modificar']}" 
+	 					icon="ui-icon-alert">
+	 				</p:confirm>
+				</p:commandButton>
+				
+		        <p:commandButton 
+		        	id="bt_seleccionar_ter"
+		        	value="#{msg['manual.numeracion.editar']}"
+		        	styleClass="ui-priority-primary"
+					actionListener="#{cc.attrs.nameBean.editarAction}" 
+					rendered="#{!cc.attrs.nameBean.tabHabilitado}"
+					disabled="#{!cc.attrs.nameBean.habilitarEditar}"
+					update="MSG_Numeracion tbl_resumen btn_guardar fs_centrales fs_ubicacion pn_tipos pn_variable"
+					style="height:30px; width:175px; margin:12px" 
+					icon="ui-icon-pencil">
+					<p:confirm 
+						header="#{msg['confirmacion.titulo']}" 
+						message="#{msg['confirmacion.mensaje.modificar']}" 
+	 					icon="ui-icon-alert">
+	 				</p:confirm>
+				</p:commandButton>
+				
+		        <p:commandButton
+		        	id="bt_editar"
+		        	value="#{msg['manual.numeracion.editar']}" 
+		        	styleClass="ui-priority-primary"
+					actionListener="#{cc.attrs.nameBean.editarAction}" 
+					rendered="#{cc.attrs.nameBean.tabHabilitado}"
+					disabled="#{!cc.attrs.nameBean.habilitarEditar}"
+					update="MSG_Numeracion tbl_resumen btn_guardar fs_centrales fs_ubicacion pn_tipos pn_variable"
+					style="height:30px; width:175px; margin:12px" 
+					icon="ui-icon-pencil">
+				</p:commandButton>
+			</h:panelGrid>
+		</p:fieldset>
+ 		
+		<p:dataTable 
+			id="tbl_resumen" 
+			var="tablaResumen" 
+			value="#{cc.attrs.nameBean.numeracionesSolicitadas}"
+			selectionMode="multiple" 
+			selection="#{cc.attrs.nameBean.selectedNumeracionSolicitada}"
+			scrollable="true"
+			emptyMessage="#{msg['buscador.noresultados']}"	
+			paginator="true" paginatorPosition="bottom" 
+			rows="#{cc.attrs.nameBean.registroPorPagina}"
+			resizableColumns="true">
+			
+			<f:facet name="header">#{msg['manual.numeraicon.resumen']}</f:facet>
+			
+			<p:ajax 
+				event="rowSelect" 
+				update=":#{cc.attrs.formAsignacion}" 
+				listener="#{cc.attrs.nameBean.onRowSelect}">
+			</p:ajax>
+				
+			<p:ajax 
+				event="rowUnselect" 
+				update=":#{cc.attrs.formAsignacion}" 
+				listener="#{cc.attrs.nameBean.onRowUnSelect}">
+			</p:ajax>
+			
+			<p:column 
+				headerText="#{msg['analisis.claveCensal']}" 
+				filterBy="#{tablaResumen.poblacion.inegi}"
+				sortBy="#{tablaResumen.poblacion.inegi}" 
+				resizable="true" width="75"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;"
+				filterMaxLength="9">
+				<h:outputText 
+					value="#{tablaResumen.poblacion.inegi}"
+					title="#{tablaResumen.poblacion.inegi}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.estado']}" 
+				filterBy="#{tablaResumen.poblacion.municipio.estado.nombre}"
+				sortBy="#{tablaResumen.poblacion.municipio.estado.nombre}"				
+				resizable="true" width="150"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText 
+					value="#{tablaResumen.poblacion.municipio.estado.nombre}"
+					title="#{tablaResumen.poblacion.municipio.estado.nombre}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.municipio']}" 
+				filterBy="#{tablaResumen.poblacion.municipio.nombre}"
+				sortBy="#{tablaResumen.poblacion.municipio.nombre}"
+				resizable="true" width="150"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText 
+					value="#{tablaResumen.poblacion.municipio.nombre}"
+					title="#{tablaResumen.poblacion.municipio.nombre}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.poblacion']}"
+				filterBy="#{tablaResumen.poblacion.nombre}"
+				sortBy="#{tablaResumen.poblacion.nombre}"
+				resizable="true" width="150"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText 
+					value="#{tablaResumen.poblacion.nombre}"
+					title="#{tablaResumen.poblacion.nombre}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.centralOrigen']}" 
+				filterBy="#{tablaResumen.centralOrigen.nombre}"
+				sortBy="#{tablaResumen.centralOrigen.nombre}"
+				resizable="true" width="100"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText 
+					value="#{tablaResumen.centralOrigen.nombre}"
+					title="#{tablaResumen.centralOrigen.nombre}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.centralDestino']}" 
+				filterBy="#{tablaResumen.centralDestino.nombre}"
+				sortBy="#{tablaResumen.centralDestino.nombre}"
+				resizable="true" width="100"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText 
+					value="#{tablaResumen.centralDestino.nombre}"
+					title="#{tablaResumen.centralDestino.nombre}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.abn']}" 
+				filterBy="#{tablaResumen.poblacion.abn.codigoAbn}"
+				sortBy="#{tablaResumen.poblacion.abn.codigoAbn}"
+				resizable="true" width="75"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;"
+				filterMaxLength="3">
+				<h:outputText 
+					value="#{tablaResumen.poblacion.abn.codigoAbn}"
+					title="#{tablaResumen.poblacion.abn.codigoAbn}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.cantidad']}" 
+				filterBy="#{tablaResumen.cantSolicitada}"
+				sortBy="#{tablaResumen.cantSolicitada}"
+				resizable="true" width="75"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;"
+				filterMaxLength="7">
+				<h:outputText 
+					value="#{tablaResumen.cantSolicitada}"
+					title="#{tablaResumen.cantSolicitada}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.tipoServicio']}"
+				filterBy="#{tablaResumen.tipoRed.cdg}"
+				sortBy="#{tablaResumen.tipoRed.cdg}"
+			 	resizable="true" width="75"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText
+					 value="#{tablaResumen.tipoRed.cdg}"
+					 rendered="#{tablaResumen.tipoRed.cdg != 'M'}"
+					 title="#{tablaResumen.tipoRed.cdg}">
+				</h:outputText>
+				<h:outputText 
+					value="#{tablaResumen.tipoRed.cdg}-#{tablaResumen.tipoModalidad.cdg}" 
+					rendered="#{tablaResumen.tipoRed.cdg == 'M'}"
+					title="#{tablaResumen.tipoRed.cdg}-#{tablaResumen.tipoModalidad.cdg}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.idoConcesionario']}" 
+				filterBy="#{tablaResumen.concesionario.ido}"
+				sortBy="#{tablaResumen.concesionario.ido}"
+				resizable="true" width="75"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;"
+				rendered="#{cc.attrs.nameBean.tipoEscenarioAsignacion != 1}"
+				filterMaxLength="3">
+				<h:outputText 
+					value="#{tablaResumen.concesionario.ido}"
+					title="#{tablaResumen.concesionario.ido}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.concesionario']}" 
+				filterBy="#{tablaResumen.concesionario.nombre}"
+				sortBy="#{tablaResumen.concesionario.nombre}"
+				resizable="true" width="150"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;"
+				rendered="#{cc.attrs.nameBean.tipoEscenarioAsignacion != 1}">
+				<h:outputText 
+					value="#{tablaResumen.concesionario.nombre}"
+					title="#{tablaResumen.concesionario.nombre}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.pstArrendatario']}" 
+				filterBy="#{tablaResumen.arrendatario.nombre}"
+				sortBy="#{tablaResumen.arrendatario.nombre}"
+				resizable="true" width="150"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText 
+					value="#{tablaResumen.arrendatario.nombre}"
+					title="#{tablaResumen.arrendatario.nombre}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.idoPnn']}" 
+				filterBy="#{tablaResumen.idoPnn}"
+				sortBy="#{tablaResumen.idoPnn}"
+				resizable="true" width="75"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;"
+				filterMaxLength="3">
+				<h:outputText 
+					value="#{tablaResumen.idoPnn}"
+					title="#{tablaResumen.idoPnn}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.idaPnn']}" 
+				filterBy="#{tablaResumen.idaPnn}"
+				sortBy="#{tablaResumen.idaPnn}"
+				resizable="true" width="75"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;"
+				filterMaxLength="3">
+				<h:outputText 
+					value="#{tablaResumen.idaPnn}"
+					title="#{tablaResumen.idaPnn}">
+				</h:outputText>
+	   		</p:column>
+
+			<f:facet name="footer">
+				<p:outputLabel value="Total fijo: " />
+				<h:outputText value="#{cc.attrs.nameBean.totalFijo} "/>
+				
+				<p:outputLabel value="Total movil " />
+				<h:outputText value="#{cc.attrs.nameBean.totalMovil} "/>
+				
+				<p:outputLabel value="Total movil-CPP: " />
+				<h:outputText value="#{cc.attrs.nameBean.totalCpp} "/>
+				
+				<p:outputLabel value="Total movil-MPP: " />
+				<h:outputText value="#{cc.attrs.nameBean.totalMpp} "/>
+				
+				<p:outputLabel value="Total numeraciones: " />
+				<h:outputText value="#{cc.attrs.nameBean.totalNum} "/>
+				
+				<p:outputLabel value="Total registros: " />
+				<h:outputText value="#{cc.attrs.nameBean.totalReg}"/>
+				
+				<p:commandButton 
+					value="Eliminar" id="bt_eliminar" process="@this" 
+					actionListener="#{cc.attrs.nameBean.eliminarAction}"
+					update=":#{cc.attrs.formAsignacion}" rendered="#{cc.attrs.nameBean.tabHabilitado}"
+					style="height:30px; width:100px; font-size:12px; margin:12px"
+					icon="ui-icon-circle-close">
+				</p:commandButton> 
+				
+				<p:commandButton 
+					value="Eliminar" id="bt_eliminar_ter" process="@this" 
+					actionListener="#{cc.attrs.nameBean.eliminarAction}"
+					update=":#{cc.attrs.formAsignacion}" rendered="#{!cc.attrs.nameBean.tabHabilitado}"
+					style="height:30px; width:100px; font-size:12px; margin:12px"
+					icon="ui-icon-circle-close">
+					<p:confirm 
+						header="#{msg['confirmacion.titulo']}"
+						message="#{msg['confirmacion.mensaje.modificar']}" 
+						icon="ui-icon-alert">
+					</p:confirm>
+				</p:commandButton>
+    		</f:facet>
+		</p:dataTable>
+
+		<p:panel id="panel_boton" styleClass="botonera alaDcha">
+			<p:commandButton 
+				value="#{msg['manual.generales.btn.guardar']}" 
+				id="btn_guardar" 
+				process="@this"
+				disabled="#{cc.attrs.nameBean.habilitarGuardar eq false}"
+				icon="ui-icon-disk"
+				actionListener="#{cc.attrs.nameBean.guardar}"
+				update=":#{cc.attrs.formAsignacion}" 
+				style="height:30px; width:94px ;margin-right:20px;">
+			</p:commandButton>
+		</p:panel>
+		
+		<p:confirmDialog 
+			global="true" 
+			showEffect="fade" hideEffect="explode" 
+			closeOnEscape="true" closable="false" 
+			severity="alert" widgetVar="cd">
+	        <p:commandButton 
+	        	value="#{msg['confirmacion.aceptar']}" 
+	        	type="button"  					
+				styleClass="ui-confirmdialog-yes">
+			</p:commandButton>
+	        <p:commandButton 
+	        	value="#{msg['confirmacion.rechazar']}" 
+	        	styleClass="ui-confirmdialog-no">
+	        </p:commandButton>
+	    </p:confirmDialog>
+
+	</composite:implementation>
+</html>

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<h:form id="FORM_cargaLineasActivas" enctype="multipart/form-data">
+	<p:wizard 
+	widgetVar="wiz_cargaLineasActivas" 
+	id="wizard_cargaLineasActivas" 
+	showNavBar="false" 
+	style="min-width: 800px">
+		<p:tab id="tab_cargaLineasActivas"
+			title="#{msg['lineasActivas.cargaLineas.tab']}">	
+				<p:messages id="MSG_CargaArchivo" showDetail="true" showSummary="true" closable="false" showIcon="false"/>
+				<h:panelGrid columns="1">
+					<h:panelGrid columns="2" style="float:left" cellpadding="3" cellspacing="3">
+						<h:outputLabel for="seltipo" value="#{msg['lineasActivas.tipoReporte']}" />
+						<p:selectOneMenu 
+							id="seltipo" 
+							value="#{cargaLineasActivasNngBean.tabCargaArchivo.tipoReporte}" 
+			 				converter="#{tipoReporteConverter}"> 
+							<f:selectItem itemLabel="Seleccionar"/>
+							<f:selectItems
+								value="#{cargaLineasActivasNngBean.tabCargaArchivo.listaTiposReporte}"
+								var="tipoReporte"
+								itemLabel="#{tipoReporte.descripcion}"
+								itemValue="#{tipoReporte}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					</h:panelGrid>
+					<h:panelGrid columns="3" style="float:left" cellpadding="3" cellspacing="3">
+						<h:outputLabel for="uploadedFile" value="#{msg['lineasActivas.ficheroCarga']}" />
+						<p:fileUpload id="uploadedFile" sizeLimit="#{cargaLineasActivasNngBean.maxTamFichero}" fileLimit="1" 
+							mode="advanced" allowTypes="/(\.|\/)(xlsx)$/"
+							value="#{cargaLineasActivasNngBean.tabCargaArchivo.uploadedFile}"
+							fileUploadListener="#{cargaLineasActivasNngBean.tabCargaArchivo.uploadAttachment}"
+							uploadLabel="#{msg['automatica.Subir']}"
+							cancelLabel="#{msg['automatica.Cancelar']}"
+							label="Examinar"
+							fileLimitMessage="#{msg['automatica.Limite']}"
+							invalidFileMessage="#{msg['automatica.Archivo.Invalido']}"
+							invalidSizeMessage="#{msg['automatica.Archivo.Tamaño']}"
+							update="MSG_CargaArchivo">
+						</p:fileUpload>
+						<p:commandButton id="BTN_Procesar"
+							value="#{msg['automatica.Ejecutar']}"
+							actionListener="#{cargaLineasActivasNngBean.tabCargaArchivo.ejecutarProceso}"
+							update="MSG_ArchivoProcesado PNG_errores PNG_detalleReporte">
+						</p:commandButton>
+					 </h:panelGrid>
+					 
+					 <p:messages id="MSG_ArchivoProcesado" showDetail="true" showSummary="true" closable="false" showIcon="false"/>
+					 
+					 <h:panelGrid id="PNG_errores">
+						 <p:dataTable id="TBLGN_errores" rows="5"
+							styleClass="ui-datatable ui-widget"
+							value="#{cargaLineasActivasNngBean.tabCargaArchivo.procesaFichero.lErrores}"
+							var="error" paginator="true"
+							rendered="#{cargaLineasActivasNngBean.tabCargaArchivo.renderTablaErrores}">
+							<f:facet name="header">
+								<p:outputLabel value="#{msg['automatica.Errores']}"
+									style="background: none;"
+									styleClass="text-title-table ui-datatable-header ui-widget-header ui-corner-top" />
+								<h:commandLink>
+									<p:graphicImage style="background:#7ac142;"
+										value="/img/ico-excel.png" />
+									<p:dataExporter type="xls" target="TBLGN_errores"
+										fileName="lista_errores" pageOnly="false" />
+								</h:commandLink>
+							</f:facet>
+							<p:column headerText="#{msg['automatica.Tabla.Clasificacion']}"
+								style="text-align: left; text-align:center; width:20%">
+								<h:outputText value="#{error.codigo}" />
+							</p:column>
+							<p:column headerText="#{msg['automatica.Tabla.Descripcion']}"
+								style="text-align: left; width:80%">
+								<h:outputText value="#{error.descripcion}" />
+							</p:column>
+						</p:dataTable>
+					</h:panelGrid>
+						
+					<h:panelGrid id="PNG_detalleReporte" >
+
+						<p:fieldset legend="#{msg['lineasActivas.tabla.lineasActivas']}" rendered="#{cargaLineasActivasNngBean.tabCargaArchivo.renderLineasActivas}">
+							<p:dataTable id="TBL_lineasActivas" 
+								scrollable="true" scrollWidth="95%" resizableColumns="true"
+								value="#{cargaLineasActivasNngBean.tabCargaArchivo.listaResumenLineasActivas}"
+								var="resumen" paginator="true" paginatorPosition="bottom" rows="10"
+								lazy="true">
+								<p:column headerText="#{msg['lineasActivas.tabla.nombrePst']}" width="30%">
+									<h:outputText value="#{cargaLineasActivasNngBean.tabCargaArchivo.procesaFichero.reporte.solicitudLineasActivas.proveedorSolicitante.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['catalogo.clave.servicio']}" width="15%" style="text-align:center;">
+									<h:outputText value="#{resumen.claveServicio.codigo}"/>
+								</p:column>	
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadoSerie']}" width="15%">
+									<h:outputText value="#{resumen.numeracionAsignadaSerie}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadoRango']}" width="15%">
+									<h:outputText value="#{resumen.numeracionAsignadaRango}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadoEspecifico']}" width="15%">
+									<h:outputText value="#{resumen.numeracionAsignadaEspecifica}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaSerie']}" width="15%">
+									<h:outputText value="#{resumen.numeracionActivaSerie}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaRango']}" width="15%">
+									<h:outputText value="#{resumen.numeracionActivaRango}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaEspecifico']}" width="15%">
+									<h:outputText value="#{resumen.numeracionActivaEspecifica}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.porcentajeUsoSerie']}" width="15%">
+									<h:outputText value="#{resumen.porcentajeUsoSerie}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.porcentajeUsoRango']}" width="15%">
+									<h:outputText value="#{resumen.porcentajeUsoRango}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.porcentajeUsoEspecifico']}" width="15%">
+									<h:outputText value="#{resumen.porcentajeUsoEspecifica}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.porcentajeUsoTotal']}" width="15%">
+									<h:outputText value="#{resumen.porcentajeUsoTotal}"/>
+								</p:column>
+
+								<f:facet name="footer">
+									<p:commandButton value="#{msg['lineasActivas.descarga']}" id="BTN_descargaLineaActiva" 
+										style="margin: 12px;" ajax="false">
+											<p:dataExporter type="xls" target="TBL_lineasActivas"
+												fileName="reporte_lineas_activas" pageOnly="false" />
+									</p:commandButton>
+								</f:facet>
+							</p:dataTable>
+
+						</p:fieldset>
+						
+						<p:fieldset legend="#{msg['lineasActivas.tabla.lineasActivasDet']}" rendered="#{cargaLineasActivasNngBean.tabCargaArchivo.renderLineasActivasDet}">
+							<p:dataTable id="TBL_lineasActivasDet"
+								scrollable="true" scrollWidth="95%" resizableColumns="true"
+								value="#{cargaLineasActivasNngBean.tabCargaArchivo.listaResumenLineasActivas}"
+								var="resumen" paginator="true" paginatorPosition="bottom" rows="10"
+								lazy="true">
+								<p:column headerText="#{msg['lineasActivas.tabla.nombrePst']}" width="30%">
+									<h:outputText value="#{cargaLineasActivasNngBean.tabCargaArchivo.procesaFichero.reporte.solicitudLineasActivas.proveedorSolicitante.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['catalogo.clave.servicio']}" width="15%" style="text-align:center;">
+									<h:outputText value="#{resumen.claveServicio.codigo}"/>
+								</p:column>	
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadoSerie']}" width="15%">
+									<h:outputText value="#{resumen.numeracionAsignadaSerie}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadoRango']}" width="15%">
+									<h:outputText value="#{resumen.numeracionAsignadaRango}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadoEspecifico']}" width="15%">
+									<h:outputText value="#{resumen.numeracionAsignadaEspecifica}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaSerie']}" width="15%">
+									<h:outputText value="#{resumen.numeracionActivaSerie}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaRango']}" width="15%">
+									<h:outputText value="#{resumen.numeracionActivaRango}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaEspecifico']}" width="15%">
+									<h:outputText value="#{resumen.numeracionActivaEspecifica}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.porcentajeUsoSerie']}" width="15%">
+									<h:outputText value="#{resumen.porcentajeUsoSerie}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.porcentajeUsoRango']}" width="15%">
+									<h:outputText value="#{resumen.porcentajeUsoRango}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.porcentajeUsoEspecifico']}" width="15%">
+									<h:outputText value="#{resumen.porcentajeUsoEspecifica}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.porcentajeUsoTotal']}" width="15%">
+									<h:outputText value="#{resumen.porcentajeUsoTotal}"/>
+								</p:column>
+								<f:facet name="footer">
+									<p:commandButton value="#{msg['lineasActivas.descarga']}" id="BTN_descargaLineaActivaDet" 
+										style="margin: 12px;" ajax="false">
+											<p:dataExporter type="xls" target="TBL_lineasActivasDet"
+												fileName="reporte_lineas_activas" pageOnly="false" />
+									</p:commandButton>
+								</f:facet>
+							</p:dataTable>
+
+						</p:fieldset>
+						<p:fieldset legend="#{msg['lineasActivas.tabla.lineasArrendatario']}" rendered="#{cargaLineasActivasNngBean.tabCargaArchivo.renderLineasArrendatario}">
+							<p:dataTable id="TBL_lineasArrendador"
+								resizableColumns="true"
+								value="#{cargaLineasActivasNngBean.tabCargaArchivo.listaResumenLineasActivas}"
+								var="resumen" paginator="true" paginatorPosition="bottom" rows="10"
+								lazy="true">
+									<p:column headerText="#{msg['lineasActivas.tabla.nombrePst']}" width="30%">
+										<h:outputText value="#{cargaLineasActivasNngBean.tabCargaArchivo.procesaFichero.reporte.solicitudLineasActivas.proveedorSolicitante.nombre}"/>
+									</p:column>
+									<p:column headerText="#{msg['catalogo.clave.servicio']}" width="15%" style="text-align:center;">
+										<h:outputText value="#{resumen.claveServicio.codigo}"/>
+									</p:column>
+									<p:column headerText="#{msg['lineasActivas.tabla.totalRentada']}" width="20%">
+										<h:outputText value="#{resumen.numeracionRentada}"/>
+									</p:column>
+									<p:column headerText="#{msg['lineasActivas.tabla.arrendatario']}" width="30%">
+										<h:outputText value="#{resumen.arrendador.nombre}"/>
+									</p:column>
+									<p:column headerText="#{msg['lineasActivas.tabla.idaabc']}" width="10%">
+										<h:outputText value="#{resumen.abc}"/>
+									</p:column>
+								<f:facet name="footer">
+									<p:commandButton value="#{msg['lineasActivas.descarga']}" id="BTN_descargaLineaArrendatario" 
+										style="margin: 12px;" ajax="false">
+											<p:dataExporter type="xls" target="TBL_lineasArrendador	"
+												fileName="reporte_lineas_arrendatario" pageOnly="false" />
+									</p:commandButton>
+								</f:facet>
+							</p:dataTable>
+						</p:fieldset>
+
+						<p:fieldset legend="#{msg['lineasActivas.tabla.lineasArrendada']}" rendered="#{cargaLineasActivasNngBean.tabCargaArchivo.renderLineasArrendada}">
+							<p:dataTable id="TBL_lineasArrendada"
+								resizableColumns="true"
+								value="#{cargaLineasActivasNngBean.tabCargaArchivo.listaResumenLineasActivas}"
+								var="resumen" paginator="true" paginatorPosition="bottom" rows="10"
+								lazy="true">
+									<p:column headerText="#{msg['lineasActivas.tabla.nombrePst']}" width="30%">
+										<h:outputText value="#{cargaLineasActivasNngBean.tabCargaArchivo.procesaFichero.reporte.solicitudLineasActivas.proveedorSolicitante.nombre}"/>
+									</p:column>
+									<p:column headerText="#{msg['catalogo.clave.servicio']}" width="15%" style="text-align:center;">
+										<h:outputText value="#{resumen.claveServicio.codigo}"/>
+									</p:column>
+									<p:column headerText="#{msg['lineasActivas.tabla.totalRentada']}" width="20%">
+										<h:outputText value="#{resumen.numeracionRentada}"/>
+									</p:column>
+									<p:column headerText="#{msg['lineasActivas.tabla.arrendatario']}" width="30%">
+										<h:outputText value="#{resumen.arrendatario.nombre}"/>
+									</p:column>
+									<p:column headerText="#{msg['proveedor.abc']}" width="10%">
+										<h:outputText value="#{resumen.abc}"/>
+									</p:column>
+									
+									<f:facet name="footer">
+										<p:commandButton value="#{msg['lineasActivas.descarga']}" id="BTN_descargaLineaArrendada" 
+											style="margin: 12px;" ajax="false">
+												<p:dataExporter type="xls" target="TBL_lineasArrendada"
+													fileName="reporte_lineas_arrendada" pageOnly="false" />
+										</p:commandButton>
+									</f:facet>
+								
+							</p:dataTable>
+						</p:fieldset>
+
+					</h:panelGrid>
+				</h:panelGrid>
+		</p:tab>
+	</p:wizard>
+	
+		<!-- <p:ajaxStatus id="triggerblockuiliniasact" onstart="PF('bui_lineas_activas').show()" onsuccess="PF('bui_lineas_activas').hide()">
+    
+  		</p:ajaxStatus>
+		
+		<p:blockUI block="FORM_cargaLineasActivas" widgetVar="bui_lineas_activas" >
+			 	<ui:include src="/componentes/loader.xhtml"/>
+ 		</p:blockUI> -->
+</h:form>
+</html>

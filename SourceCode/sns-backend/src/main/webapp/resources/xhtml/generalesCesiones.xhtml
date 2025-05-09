@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+	
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+	</composite:interface>
+	
+	<composite:implementation>
+	<div id="topGeneralesCesion"></div>
+	
+		<p:messages id="MSG_GeneralesCesiones" showDetail="false" showSummary="true" autoUpdate="false" closable="true" showIcon="false"/>
+		<p:fieldset id="PNL_InfoSolicitud">
+			<h:panelGrid columns="6" cellspacing="3" cellpadding="3">
+				<p:outputLabel for="TXT_Referencia" value="#{msg['manual.generales.referencia']}" />
+				<p:inputText 
+					id="TXT_Referencia" required="true" 
+					label="#{msg['manual.generales.referencia']}"
+					value="#{cc.attrs.nameBean.solicitud.referencia}" 
+					maxlength="60"
+					style="width:150px"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<p:ajax 
+						update="btnSalvar" global="false"
+						listener="#{cc.attrs.nameBean.habilitarSalvarBoton}">
+					</p:ajax>
+				</p:inputText>
+ 
+				<p:outputLabel for="DTE_FechaSolicitud" value="#{msg['cesion.fsolicitud']}" />
+				<p:calendar 
+                    id="DTE_FechaSolicitud" style="width:90px" locale="mx_MX"
+                    value="#{cc.attrs.nameBean.solicitud.fechaSolicitud}" navigator="true" yearRange="1995:c+10"
+					pattern="dd/MM/yyyy" mask="true" required="true"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<p:ajax 
+						event="dateSelect" global="false"
+						update="btnSalvar"
+						listener="#{cc.attrs.nameBean.habilitarSalvarBoton}">
+					</p:ajax>
+					<p:ajax
+						event="keyup" global="false"
+						update="btnSalvar"
+						listener="#{cc.attrs.nameBean.habilitarSalvarBoton}">
+					</p:ajax>
+				</p:calendar>
+				
+				<p:outputLabel value="#{msg['manual.generales.consecutivo']}" />
+			 	<p:inputText value="#{cc.attrs.nameBean.solicitud.id}" disabled="true"/>
+			</h:panelGrid>
+			
+			<h:panelGrid columns="1">
+ 				<p:outputLabel for="TXT_Comentarios" value="#{msg['manual.generales.comentarios']}" style="float:left;"/>
+				<p:inputTextarea
+					id="TXT_Comentarios"
+					rows="2" 
+					cols="70" 
+					maxlength="700" 
+					style="resize: none"
+					autoResize="false"
+					value="#{cc.attrs.nameBean.solicitud.comentarios}"
+					required="false"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+				</p:inputTextarea>
+			</h:panelGrid>
+			<h:panelGrid width="100%">
+				<h:panelGroup style="display:block; text-align:right">
+					<p:commandButton 
+						id="btnSalvar" value="#{msg['manual.generales.btn.guardar']}"
+						icon="ui-icon-disk" 
+						actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+						disabled="#{!(cc.attrs.nameBean.salvarHabilitado and cc.attrs.nameBean.tabHabilitado)}" 
+						update="PNL_InfoSolicitud MSG_GeneralesCesiones"
+						style="height:30px;  width:96px">
+					</p:commandButton>
+				</h:panelGroup>
+			</h:panelGrid>
+		</p:fieldset>
+
+	</composite:implementation>
+</html>

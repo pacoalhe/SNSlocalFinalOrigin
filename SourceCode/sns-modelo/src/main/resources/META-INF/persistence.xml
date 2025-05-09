@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+	version="2.0">
+
+	<persistence-unit name="sns" transaction-type="JTA">
+		<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+
+		<jta-data-source>jdbc/SNS</jta-data-source>
+
+		<class>mx.ift.sns.modelo.abn.Abn</class>
+		<class>mx.ift.sns.modelo.abn.AbnCentral</class>
+		<class>mx.ift.sns.modelo.abn.AbnCentralPK</class>
+		<class>mx.ift.sns.modelo.abn.EstadoAbn</class>
+		<class>mx.ift.sns.modelo.abn.VCatalogoAbn</class>
+		<class>mx.ift.sns.modelo.usu.Rol</class>
+		<class>mx.ift.sns.modelo.usu.Usuario</class>
+		<class>mx.ift.sns.modelo.bitacora.Bitacora</class>
+		<class>mx.ift.sns.modelo.central.Central</class>
+		<class>mx.ift.sns.modelo.central.CentralesRelacion</class>
+		<class>mx.ift.sns.modelo.central.CentralesRelacionPK</class>
+		<class>mx.ift.sns.modelo.central.Marca</class>
+		<class>mx.ift.sns.modelo.central.Modelo</class>
+		<class>mx.ift.sns.modelo.central.TipoCentral</class>
+		<class>mx.ift.sns.modelo.central.TipoMedioTransmision</class>
+		<class>mx.ift.sns.modelo.config.Parametro</class>
+		<class>mx.ift.sns.modelo.cpsn.CodigoCPSN</class>
+		<class>mx.ift.sns.modelo.cpsn.EquipoSenalCPSN</class>
+		<class>mx.ift.sns.modelo.cpsn.EquipoSenalCPSNWarn</class>
+		<class>mx.ift.sns.modelo.cpsn.EstatusCPSN</class>
+		<class>mx.ift.sns.modelo.cpsn.TipoBloqueCPSN</class>
+		<class>mx.ift.sns.modelo.cpsn.VEstudioCPSN</class>
+		<class>mx.ift.sns.modelo.lineas.DetLineaActivaDet</class>
+		<class>mx.ift.sns.modelo.lineas.DetLineaArrendatario</class>
+		<class>mx.ift.sns.modelo.lineas.DetalleLineaActiva</class>
+		<class>mx.ift.sns.modelo.lineas.DetalleReporte</class>
+		<class>mx.ift.sns.modelo.lineas.LineaActivaDet</class>
+		<class>mx.ift.sns.modelo.lineas.LineaArrendada</class>
+		<class>mx.ift.sns.modelo.lineas.LineaArrendatario</class>
+		<class>mx.ift.sns.modelo.lineas.Reporte</class>
+		<class>mx.ift.sns.modelo.lineas.ReporteLineasActivas</class>
+		<class>mx.ift.sns.modelo.lineas.TipoReporte</class>
+		<class>mx.ift.sns.modelo.ng.AbnConsolidar</class>
+		<class>mx.ift.sns.modelo.ng.Cesion</class>
+		<class>mx.ift.sns.modelo.ng.CesionSolicitadaNg</class>
+		<class>mx.ift.sns.modelo.solicitud.EstadoCesionSolicitada</class>
+		<class>mx.ift.sns.modelo.solicitud.EstadoLiberacionSolicitada</class>
+		<class>mx.ift.sns.modelo.ng.Liberacion</class>
+		<class>mx.ift.sns.modelo.ng.LiberacionSolicitadaNg</class>
+		<class>mx.ift.sns.modelo.ng.NumeracionAsignada</class>
+		<class>mx.ift.sns.modelo.ng.NumeracionRedistribuida</class>
+		<class>mx.ift.sns.modelo.ng.NumeracionSolicitada</class>
+		<class>mx.ift.sns.modelo.ng.RedistribucionSolicitadaNg</class>
+		<class>mx.ift.sns.modelo.ng.SolicitudAsignacion</class>
+		<class>mx.ift.sns.modelo.ng.SolicitudCesionNg</class>
+		<class>mx.ift.sns.modelo.ng.SolicitudConsolidacion</class>
+		<class>mx.ift.sns.modelo.ng.SolicitudLiberacionNg</class>
+		<class>mx.ift.sns.modelo.ng.SolicitudRedistribucionNg</class>
+		<class>mx.ift.sns.modelo.nng.CesionSolicitadaNng</class>
+		<class>mx.ift.sns.modelo.nng.HistoricoRangoSerieNng</class>
+		<class>mx.ift.sns.modelo.nng.HistoricoRedistribucionNng</class>
+		<class>mx.ift.sns.modelo.nng.LiberacionSolicitadaNng</class>
+		<class>mx.ift.sns.modelo.nng.NumeracionAsignadaNng</class>
+		<class>mx.ift.sns.modelo.nng.NumeracionSolicitadaNng</class>
+		<class>mx.ift.sns.modelo.nng.RedistribucionSolicitadaNng</class>
+		<class>mx.ift.sns.modelo.nng.SolicitudAsignacionNng</class>
+		<class>mx.ift.sns.modelo.nng.SolicitudCesionNng</class>
+		<class>mx.ift.sns.modelo.nng.SolicitudLiberacionNng</class>
+		<class>mx.ift.sns.modelo.nng.SolicitudRedistribucionNng</class>
+		<class>mx.ift.sns.modelo.nng.TipoAsignacion</class>
+		<class>mx.ift.sns.modelo.oficios.Oficio</class>
+		<class>mx.ift.sns.modelo.oficios.OficioBlob</class>
+		<class>mx.ift.sns.modelo.oficios.Plantilla</class>
+		<class>mx.ift.sns.modelo.oficios.PlantillaPK</class>
+		<class>mx.ift.sns.modelo.oficios.TipoDestinatario</class>
+		<class>mx.ift.sns.modelo.ot.Estado</class>
+		<class>mx.ift.sns.modelo.ot.ExportMunicipio</class>
+		<class>mx.ift.sns.modelo.ot.Municipio</class>
+		<class>mx.ift.sns.modelo.ot.Poblacion</class>
+		<class>mx.ift.sns.modelo.pnn.Plan</class>
+		<class>mx.ift.sns.modelo.pnn.TipoPlan</class>
+		<class>mx.ift.sns.modelo.pnn.TipoPlanRol</class>
+		<class>mx.ift.sns.modelo.pnn.TipoPlanRolPK</class>
+		<class>mx.ift.sns.modelo.port.NumeroCancelado</class>
+		<class>mx.ift.sns.modelo.port.NumeroPortado</class>
+		<class>mx.ift.sns.modelo.port.EstatusSincronizacion</class>
+		<class>mx.ift.sns.modelo.pst.Contacto</class>
+		<class>mx.ift.sns.modelo.pst.Proveedor</class>
+		<class>mx.ift.sns.modelo.pst.ProveedorConvenio</class>
+		<class>mx.ift.sns.modelo.pst.TipoContacto</class>
+		<class>mx.ift.sns.modelo.pst.TipoModalidad</class>
+		<class>mx.ift.sns.modelo.pst.TipoProveedor</class>
+		<class>mx.ift.sns.modelo.pst.TipoRed</class>
+		<class>mx.ift.sns.modelo.pst.TipoServicio</class>
+		<class>mx.ift.sns.modelo.ng.SolicitudLineasActivas</class>
+		<class>mx.ift.sns.modelo.reporteabd.SerieArrendada</class>
+		<class>mx.ift.sns.modelo.reporteabd.SerieArrendadaPK</class>
+		<class>mx.ift.sns.modelo.reporteabd.SerieArrendadaPadre</class>
+		<class>mx.ift.sns.modelo.reporteabd.SerieArrendadaPadrePK</class>
+		<class>mx.ift.sns.modelo.nng.ClaveServicio</class>
+		<class>mx.ift.sns.modelo.series.EstadoRango</class>
+		<class>mx.ift.sns.modelo.series.HistoricoSerie</class>
+		<class>mx.ift.sns.modelo.series.Nir</class>
+		<class>mx.ift.sns.modelo.ng.RangoSerie</class>
+		<class>mx.ift.sns.modelo.nng.RangoSerieNng</class>
+		<class>mx.ift.sns.modelo.ng.RangoSeriePK</class>
+		<class>mx.ift.sns.modelo.ng.Serie</class>
+		<class>mx.ift.sns.modelo.nng.SerieNng</class>
+		<class>mx.ift.sns.modelo.nng.SerieNngPK</class>
+		<class>mx.ift.sns.modelo.ng.SeriePK</class>
+		<class>mx.ift.sns.modelo.series.VCatalogoSerie</class>
+		<class>mx.ift.sns.modelo.solicitud.EstadoSolicitud</class>
+		<class>mx.ift.sns.modelo.solicitud.Solicitud</class>
+		<class>mx.ift.sns.modelo.solicitud.TipoSolicitud</class>
+		<class>mx.ift.sns.modelo.cpsn.LiberacionSolicitadaCpsn</class>
+		<class>mx.ift.sns.modelo.cpsn.SolicitudLiberacionCpsn</class>
+		<class>mx.ift.sns.modelo.lineas.ReporteNng</class>
+		<class>mx.ift.sns.modelo.nng.SolicitudLineasActivasNng</class>
+		<class>mx.ift.sns.modelo.lineas.DetalleLineaActivaNng</class>
+		<class>mx.ift.sns.modelo.lineas.DetalleLineaActivaDetNng</class>
+		<class>mx.ift.sns.modelo.lineas.DetalleLineaArrendatarioNng</class>
+		<class>mx.ift.sns.modelo.lineas.ReporteLineaActivaNng</class>
+		<class>mx.ift.sns.modelo.lineas.ReporteLineaActivaDetNng</class>
+		<class>mx.ift.sns.modelo.lineas.ReporteLineaArrendadorNng</class>
+		<class>mx.ift.sns.modelo.lineas.ReporteLineaArrendatarioNng</class>
+		<class>mx.ift.sns.modelo.lineas.DetalleLineaArrendadorNng</class>
+		<class>mx.ift.sns.modelo.cpsn.SolicitudCesionCPSN</class>
+		<class>mx.ift.sns.modelo.cpsn.CesionSolicitadaCPSN</class>
+		<class>mx.ift.sns.modelo.cpsi.LiberacionSolicitadaCpsi</class>
+		<class>mx.ift.sns.modelo.cpsi.SolicitudLiberacionCpsi</class>
+		<class>mx.ift.sns.modelo.cpsi.CesionSolicitadaCpsi</class>
+		<class>mx.ift.sns.modelo.cpsi.SolicitudCesionCpsi</class>
+		<class>mx.ift.sns.modelo.cpsi.CpsiAsignado</class>
+		<class>mx.ift.sns.modelo.cpsi.SolicitudAsignacionCpsi</class>
+		<class>mx.ift.sns.modelo.central.ReporteCentralVm</class>
+		<class>mx.ift.sns.modelo.cpsi.EquipoSenalCpsi</class>
+		<class>mx.ift.sns.modelo.series.HistoricoSerieNng</class>
+		<class>mx.ift.sns.modelo.tareas.ControlTarea</class>
+		
+		<shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+		<!-- <properties> <property name="eclipselink.logging.level" value="FINE" 
+			/> <property name="eclipselink.logging.level.sql" value="FINE" /> <property 
+			name="eclipselink.logging.parameters" value="true" /> </properties> -->
+		<properties>
+			<property name="eclipselink.logging.level" value="INFO" />
+			<property name="eclipselink.logging.level.sql" value="INFO" />
+			<property name="eclipselink.logging.parameters" value="false" />
+		</properties>
+
+	</persistence-unit>
+</persistence>

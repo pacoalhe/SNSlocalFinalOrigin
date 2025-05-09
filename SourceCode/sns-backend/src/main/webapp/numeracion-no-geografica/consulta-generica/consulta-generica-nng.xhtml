@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+
+		<p:messages id="MSG_ConsultaGenericaNNG" showDetail="false"	autoUpdate="false" closable="true" showIcon="false"/>
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionNoGeografica']}/#{msg['mainMenu.Generica']}</legend>
+
+			<h:form id="FRM_ConsultaGenericaNNG">
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['buscador.solicitud']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda" columns="8" style="float:left">
+						<h:outputLabel value="#{msg['consultar.Consecutivo']}" />
+						<p:inputText id="TXT_Consecutivo" required="false" minValue="9"
+							maxlength="9" mask="9"
+							value="#{consultaGenericaNngBean.consecutivo}"
+							label="#{msg['consultar.Consecutivo']}" style="width: 141px;">
+						</p:inputText>
+
+						<h:outputLabel for="selproveedor" value="#{msg['consultar.PST']}" />
+						<p:selectOneMenu id="selproveedor" autoWidth="false" style="width:150px;"
+							value="#{consultaGenericaNngBean.proveedorSeleccionado}"
+							converter="#{proveedorConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultaGenericaNngBean.listaProveedores}"
+								var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['consultar.Numero_oficio']}" />
+						<p:inputText id="TXT_Oficio" required="false" maxlength="51"
+							value="#{consultaGenericaNngBean.oficioPstSolicitante}"
+							label="#{msg['consultar.Numero_oficio']}" style="width: 141px;">
+						</p:inputText>
+
+						<h:outputLabel for="selstatus" value="#{msg['consultar.Estatus']}" />
+						<p:selectOneMenu id="selstatus"
+							value="#{consultaGenericaNngBean.estatusSeleccionado}"
+							style="width:150px" required="false"
+							label="#{msg['consultar.Estatus']}"
+							converter="#{estatusSolicitudConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultaGenericaNngBean.listaEstadosSolicidud}"
+								var="status" itemLabel="#{status.descripcion}"
+								itemValue="#{status}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['consultar.Inicio_solicitud']}" />
+						<p:calendar id="fchIniSolicitud" required="false" locale="mx_MX"
+							value="#{consultaGenericaNngBean.fechaIniSolicitud}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Inicio_solicitud']}" navigator="true"
+							yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fchFinSolicitud"
+								listener="#{consultaGenericaNngBean.habilitarFechaFinSoli}"
+								global="false" />
+							<p:ajax event="change" global="false"
+								listener="#{consultaGenericaNngBean.habilitarFechaFinSoli}"
+								update="fchFinSolicitud">
+							</p:ajax>
+						</p:calendar>
+
+						<h:outputLabel value="#{msg['consultar.Final_solicitud']}" />
+						<p:calendar id="fchFinSolicitud" required="false" locale="mx_MX"
+							value="#{consultaGenericaNngBean.fechaFinSolicitud}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Final_solicitud']}"
+							disabled="#{!consultaGenericaNngBean.fechaSoliHabilitada}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<h:outputLabel value="#{msg['consultar.Inicio.tramitacion']}" />
+						<p:calendar id="fchIniTramitacion" required="false" locale="mx_MX"
+							value="#{consultaGenericaNngBean.fechaIniTramitacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Inicio.tramitacion']}" navigator="true"
+							yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fchFinTramitacion"
+								listener="#{consultaGenericaNngBean.habilitarFechaFinTram}"
+								global="false" />
+							<p:ajax event="change" global="false"
+								listener="#{consultaGenericaNngBean.habilitarFechaFinTram}"
+								update="fchFinTramitacion">
+							</p:ajax>
+						</p:calendar>
+
+						<h:outputLabel value="#{msg['consultar.Final.tramitacion']}" />
+						<p:calendar id="fchFinTramitacion" required="false" locale="mx_MX"
+							value="#{consultaGenericaNngBean.fechaFinTramitacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Final.tramitacion']}"
+							disabled="#{!consultaGenericaNngBean.fechaTramHabilitada}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<h:outputLabel for="seltramite"
+							value="#{msg['consultaGenerica.tramites']}" />
+						<p:selectOneMenu id="seltramite" autoWidth="false"
+							value="#{consultaGenericaNngBean.tipoSolicitudSelecc}"
+							style="width:150px" required="false"
+							label="#{msg['consultar.Estatus']}"
+							converter="#{tipoSolicitudConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultaGenericaNngBean.listaTipoSolicidud}"
+								var="tipoSol" itemLabel="#{tipoSol.descripcion}"
+								itemValue="#{tipoSol}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultaGenericaNngBean.realizarBusqueda}"
+						update=":MSG_ConsultaGenericaNNG TBL_ConsultaSolicitudes"
+						style="height:30px; width:82px">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultaGenericaNngBean.limpiarBusqueda}"
+						update="PNL_Busqueda TBL_ConsultaSolicitudes :MSG_ConsultaGenericaNNG"
+						style="margin-right:20px;height:30px; width:82px" process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['consultaGenerica.consultar']}</legend>
+					<p:dataTable id="TBL_ConsultaSolicitudes" widgetVar="tabla"
+						var="solicitud" lazy="true"
+						value="#{consultaGenericaNngBean.solicitudesModel}"
+						paginator="true" paginatorPosition="bottom"
+						rows="#{consultaGenericaNngBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column headerText="#{msg['consultar.Consecutivo']}" width="10%">
+							<h:outputText value="#{solicitud.id}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultaGenerica.tipoTramite']}"
+							width="10%">
+							<h:outputText value="#{solicitud.tipoSolicitud.descripcion}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.PST']}" width="25%">
+							<h:outputText value="#{solicitud.proveedorSolicitante.nombre}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_solicitud']}"
+							width="10%" style="text-align:center;">
+							<h:outputText value="#{solicitud.fechaSolicitud}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_asignacion']}"
+							width="10%" style="text-align:center;">
+							<h:outputText value="#{solicitud.fechaAsignacion}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Numero_oficio']}"
+							width="10%">
+							<h:outputText value="#{solicitud.numOficioSolicitante}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consolidacion.Estado']}" width="10%" style="text-align:center;">
+							<h:outputText value="#{solicitud.estadoSolicitud.descripcion}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Operaciones']}" width="10%" style="text-align:center;">
+							<p:commandButton title="#{msg.detalle}" icon="ui-icon-pencil"
+								action="#{consultaGenericaNngBean.editarSolicitud}"
+								update=":modalSolicitud TBL_ConsultaSolicitudes"
+								oncomplete="abrirDialogo(xhr, status, args);"
+								rendered="#{solicitud.tipoSolicitud.cdg != 6}">
+								<f:setPropertyActionListener value="#{solicitud}"
+									target="#{consultaGenericaNngBean.solicitudSeleccionada}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+
+							<p:commandButton title="#{msg.cancelar}"
+								icon="ui-icon-circle-close" update="TBL_ConsultaSolicitudes"
+								onclick="PF('DLG_Eliminar').show()" global="false"
+								rendered="#{solicitud.tipoSolicitud.cdg != 6 and solicitud.estadoSolicitud.codigo != 'C'}">
+								<f:setPropertyActionListener value="#{solicitud}"
+									target="#{consultaGenericaNngBean.solicitudSeleccionada}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+
+					</p:dataTable>
+				</fieldset>
+
+
+
+			</h:form>
+
+
+			<!-- Modal Genérica-->
+			<p:dialog id="modalSolicitud" widgetVar="modalSolicitud"
+				header="#{consultaGenericaNngBean.header}" modal="true"
+				scrollable="true" resizable="true" appendTo="@(body)" width="97%"
+				height="500" closable="false">
+				<p:commandButton id="BTN_Salir_Editar"
+					styleClass="customCloseModal" value="X"
+					onclick="PF('DLG_Salir_Editar').show()" global="false">
+				</p:commandButton>
+				
+				<ui:include src="#{consultaGenericaNngBean.src}" />
+			</p:dialog>
+			
+			<!-- Diálogo de confirmación eliminar -->
+			<p:dialog id="DLG_Eliminar" 
+				widgetVar="DLG_Eliminar"
+				closeOnEscape="true"
+				closable="false" 
+				resizable="false"
+				header="#{msg['consultas.generales.cancelar.confirmar']}" 
+				modal="true"
+				appendTo="@(body)" 
+				width="250"
+				height="50">
+				<sns:confirm-custom-dialog
+					blockUIWidgetVar="ConfirmarElimiar_BUI"
+					confirmActionListener="#{consultaGenericaNngBean.eliminarSolicitud}"
+					dialogWidgetVar="DLG_Eliminar"
+					updateComponentId=":FRM_ConsultaGenericaNNG:TBL_ConsultaSolicitudes :MSG_ConsultaGenericaNNG">
+				</sns:confirm-custom-dialog>
+			</p:dialog>
+			
+			<!-- Confirmación al salir editar central-->
+			<p:dialog id="DLG_Salir_Editar"
+				widgetVar="DLG_Salir_Editar" 
+				modal="true" resizable="false"
+				closeOnEscape="true" 
+				closable="false"
+				header="Salir"
+				appendTo="@(body)" 
+				width="250"
+				height="115">
+				<sns:exit-custom-dialog 
+					message="#{msg['cerrarDialogo.mensaje']}"
+					blockUIWidgetVar="salirEditarCentral_BUI"
+					confirmActionListener="#{consultaGenericaNngBean.resetTabs}"
+					onCompleteExit="PF('DLG_Salir_Editar').hide(); PF('modalSolicitud').hide();"
+					onCompleteCancel="PF('DLG_Salir_Editar').hide();"
+					updateComponentId=":FRM_ConsultaGenericaNNG:TBL_ConsultaSolicitudes :MSG_ConsultaGenericaNNG"
+					resetValues="true">
+					</sns:exit-custom-dialog>
+				</p:dialog>
+			<script type="text/javascript">
+				function abrirDialogo(xhr, status, args) {
+					PF('modalSolicitud').show();
+				}
+			</script>
+
+		</fieldset>
+		<p:ajaxStatus id="triggerblockuiGenerica"
+			onstart="PF('statusConsultaGenericaNngDialog').show()"
+			onsuccess="PF('statusConsultaGenericaNngDialog').hide()">
+		</p:ajaxStatus>
+	<p:dialog widgetVar="statusConsultaGenericaNngDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+    <ui:include src="/componentes/loader.xhtml"/>
+</p:dialog>
+		<!-- <p:blockUI block="FRM_ConsultaGenericaNNG" widgetVar="genericaNng_bui">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:blockUI> -->
+
+	</ui:define>
+</ui:composition>
+</html>

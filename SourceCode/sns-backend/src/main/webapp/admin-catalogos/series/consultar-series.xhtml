@@ -1,0 +1,291 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusSeriesDialog').show();
+			}
+
+			function hideStatus() {
+				PF('statusSeriesDialog').hide();
+			}
+		</script>
+
+		<p:messages id="MSG_ConsultarSeries" showDetail="true"
+			autoUpdate="false" closable="true" showIcon="false" />
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogos.title']}/#{msg['catalogo.series.consulta.resultado.titulo']}</legend>
+
+			<h:form id="FRM_ConsultarSeries">
+			
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.series.buscador']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda" columns="6" cellpadding="3"
+						cellspacing="3" style="width:75%">
+						<h:outputLabel for="TXT_Abn"
+							value="#{msg['catalogo.series.consulta.abn']}"
+							style="width:50px;" />
+						<p:inputText id="TXT_Abn" required="false" size="3" maxlength="3"
+							value="#{consultarCatalogoSeriesBean.abn}"
+							label="#{msg['catalogo.series.consulta.abn']}"
+							style="width: 50px;"
+							validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+							<p:ajax event="change" global="false"
+								update="SEL_Nir :MSG_ConsultarSeries"
+								listener="#{consultarCatalogoSeriesBean.cargarNirs}">
+							</p:ajax>
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['catalogo.series.consulta.nir']}"
+							style="width:50px;" />
+						<p:selectOneMenu id="SEL_Nir" style="width: 100px;"
+							value="#{consultarCatalogoSeriesBean.nir}"
+							converter="#{nirConverter}">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{consultarCatalogoSeriesBean.listadoNir}"
+								var="nirSel" itemLabel="#{nirSel.codigo}" itemValue="#{nirSel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel for="TXT_Sna"
+							value="#{msg['catalogo.series.consulta.serie']}"
+							style="width:50px;" />
+						<p:inputText id="TXT_Sna" required="false" maxlength="5"
+							value="#{consultarCatalogoSeriesBean.sna}"
+							label="#{msg['catalogo.series.consulta.serie']}"
+							style="width: 50px;"
+							validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['catalogo.series.consulta.estatus']}"
+							style="width:50px;" />
+						<p:selectOneMenu id="SEL_Estatus" style="width: 100px;"
+							value="#{consultarCatalogoSeriesBean.estatus}"
+							converter="#{estatusConverter}">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{consultarCatalogoSeriesBean.listadoEstatus}"
+								var="estatus" itemLabel="#{estatus.descripcion}"
+								itemValue="#{estatus}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarCatalogoSeriesBean.realizarBusqueda}"
+						update=":MSG_ConsultarSeries TBL_Series BTN_exportarSeries"
+						style="height:30px;  width:82px;">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarCatalogoSeriesBean.limpiarBusqueda}"
+						update="TXT_Abn SEL_Nir TXT_Sna SEL_Estatus TBL_Series :MSG_ConsultarSeries BTN_exportarSeries"
+						style="height:30px; width:82px; margin-right:20px;"
+						process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset id="PNL_Resultados"
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.series.consulta.resultado.titulo']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton
+								value="#{msg['catalogo.series.consulta.expansion']}"
+								title="Editar" icon="ui-icon-pencil"
+								update="TBL_Series :MDL_ExspandirSeries"
+								oncomplete="PF('MDL_ExspandirSeries').show();">
+							</p:commandButton>
+							<p:commandButton id="BTN_exportarSeries"
+								disabled="#{consultarCatalogoSeriesBean.emptySearch}"
+								value="#{msg.exportar}" title="#{msg.exportar}"
+								onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)"
+								ajax="false">
+								<p:fileDownload
+									value="#{consultarCatalogoSeriesBean.exportarConsultaSeries}" />
+							</p:commandButton>
+							<p:commandButton id="BTN_CambioEstado"
+								value="#{msg['catalogo.series.consulta.estado']}"
+								title="Cambio de Estado"
+								update=":MSG_ConsultarSeries :FRM_ConsultarSeries:TBL_Series"
+								disabled="#{!consultarCatalogoSeriesBean.habilitarBoton}"
+								onclick="PF('MDL_CambioEstado').show();" global="false">
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_Series" widgetVar="TBL_Series"
+						var="listaSeries" rowSelectMode="checkbox"
+						value="#{consultarCatalogoSeriesBean.seriesLazyModel}" lazy="true"
+						selection="#{consultarCatalogoSeriesBean.multiSelectionManager.seleccionTabla}"
+						rowKey="#{listaSeries.id}" paginator="true"
+						paginatorPosition="bottom"
+						rows="#{consultarCatalogoSeriesBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+
+						<p:ajax event="toggleSelect"
+							listener="#{consultarCatalogoSeriesBean.seleccionPagina}"
+							update=":FRM_ConsultarSeries">
+
+						</p:ajax>
+
+						<p:ajax event="rowSelectCheckbox"
+							listener="#{consultarCatalogoSeriesBean.seleccionSerie}"
+							update=":FRM_ConsultarSeries">
+						</p:ajax>
+
+						<p:ajax event="rowUnselectCheckbox"
+							listener="#{consultarCatalogoSeriesBean.deSeleccionSerie}"
+							update=":FRM_ConsultarSeries">
+						</p:ajax>
+
+						<p:column selectionMode="multiple" headerText="" width="75"
+							style="font-size:12px;">
+						</p:column>
+
+
+						<p:column headerText="#{msg['catalogo.series.consulta.abn']}" style="text-align:center;">
+							<h:outputText value="#{listaSeries.idAbn}" />
+						</p:column>
+						<p:column headerText="#{msg['catalogo.series.consulta.nir']}" style="text-align:center;">
+							<h:outputText value="#{listaSeries.cdgNir}" />
+						</p:column>
+						<p:column headerText="#{msg['catalogo.series.consulta.serie']}" style="text-align:center;">
+							<h:outputText value="#{listaSeries.idSna}" />
+						</p:column>
+						<p:column
+							headerText="#{msg['catalogo.series.consulta.numInicial']}" style="text-align:center;">
+							<h:outputText value="#{listaSeries.numInicial}" />
+						</p:column>
+						<p:column headerText="#{msg['catálogo.series.consulta.numFinal']}" style="text-align:center;">
+							<h:outputText value="#{listaSeries.numFinal}" />
+						</p:column>
+						<p:column headerText="#{msg['catalogo.abn.estatus']}" style="text-align:center;">
+							<h:outputText value="#{listaSeries.nombreEstatus}" />
+						</p:column>
+					</p:dataTable>
+				</fieldset>
+					<br></br>
+			</h:form>
+
+			<!-- Confirmación al salir de expansió0n de series-->
+			<p:dialog id="DLG_Salir_Expansion_Serie"
+				widgetVar="DLG_Salir_Expansion_Serie" 
+				closeOnEscape="true"
+				closable="false" 
+				header="Salir" 
+				resizable="false" 
+				appendTo="@(body)" 
+				modal="true" 
+				width="250"
+				height="115">
+				<sns:exit-custom-dialog message="#{msg['cerrarDialogo.mensaje']}"
+					blockUIWidgetVar="salirSerie_BUI"
+					confirmActionListener="#{expansionSeriesBean.resetTab}"
+					onCompleteExit="PF('DLG_Salir_Expansion_Serie').hide();PF('MDL_ExspandirSeries').hide();"
+					onCompleteCancel="PF('DLG_Salir_Expansion_Serie').hide();"
+					updateComponentId=":FRM_ConsultarSeries:PNL_Busqueda :FRM_ConsultarSeries:TBL_Series :MSG_ConsultarSeries"
+					resetValues="true">
+				</sns:exit-custom-dialog>
+				<p:ajax event="close" listener="#{consultarCatalogoSeriesBean.limpiarSeleccionSerieTabla}" update=":FRM_ConsultarSeries:TBL_Series"/>
+			</p:dialog>
+
+			<p:dialog id="MDL_ExspandirSeries" 
+				widgetVar="MDL_ExspandirSeries"
+				header="#{msg['catalogo.series.consulta.resultado.titulo']}"
+				modal="true" 
+				scrollable="true" 
+				closable="false" 
+				resizable="true"
+				appendTo="@(body)" 
+				width="80%" 
+				height="500">
+				<p:commandButton id="BTN_Salir_Expansion"
+					styleClass="customCloseModal" 
+					value="X"
+					onclick="PF('DLG_Salir_Expansion_Serie').show()" 
+					global="false">
+				</p:commandButton>
+
+				<ui:include src="/admin-catalogos/series/expandir-serie.xhtml" />
+			</p:dialog>
+
+			<!-- Confirmación al guardar la expansió0n de series-->
+			<p:dialog id="DLG_ConfirmarExpansion"
+				widgetVar="DLG_ConfirmarExpansion" 
+				modal="true" 
+				closeOnEscape="true"
+				closable="false" 
+				resizable="false"
+				header="#{msg['catalogo.series.expandir.titulo']}"
+				severity="alert" 
+				appendTo="@(body)" 
+				width="250"
+				height="50">
+
+				<sns:confirm-custom-dialog
+					blockUIWidgetVar="ConfirmarExpansion_BUI"
+					confirmActionListener="#{expansionSeriesBean.guardar}"
+					dialogWidgetVar="DLG_ConfirmarExpansion"
+					updateComponentId=":FRM_expandirSerie:MSG_ExpandirSerie :FRM_expandirSerie:BTN_Guardar 
+					:FRM_expandirSerie:TBL_Nirs :FRM_expandirSerie:SEL_Nir">
+				</sns:confirm-custom-dialog>
+			</p:dialog>
+
+			<!-- Confirmación de cambiar el estado a las series seleccionadas-->
+			<p:dialog id="MDL_CambioEstado" 
+				widgetVar="MDL_CambioEstado"
+				modal="true" 
+				closeOnEscape="true" 
+				closable="false"
+				header="#{msg['catalogo.series.cancelar.confirmar']}" 
+				resizable="false"
+				appendTo="@(body)" 
+				width="250"
+				height="50">
+				<sns:confirm-custom-dialog
+					blockUIWidgetVar="confirmarCambioEstado_BUI"
+					confirmActionListener="#{consultarCatalogoSeriesBean.cambiarEstado}"
+					dialogWidgetVar="MDL_CambioEstado"
+					updateComponentId=":FRM_ConsultarSeries:TBL_Series :MSG_ConsultarSeries">
+				</sns:confirm-custom-dialog>
+			</p:dialog>
+			<p:ajaxStatus id="triggerblockuiSerie"
+				onstart="PF('statusSeriesDialog').show()"
+				onsuccess="PF('statusSeriesDialog').hide()">
+			</p:ajaxStatus>
+			<p:dialog widgetVar="statusSeriesDialog" 
+				modal="true" 
+				draggable="false" 
+				closable="false" 
+				resizable="false" 
+				showHeader="false">
+    			<ui:include src="/componentes/loader.xhtml"/>
+			</p:dialog>
+<!-- 
+			<p:blockUI block="FRM_ConsultarSeries" widgetVar="serie_bui">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:blockUI> -->
+
+		</fieldset>
+	
+	</ui:define>
+</ui:composition>
+</html>

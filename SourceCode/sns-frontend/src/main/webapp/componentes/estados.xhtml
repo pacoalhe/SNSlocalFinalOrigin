@@ -1,0 +1,402 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+<p:panel rendered="#{areasGeoNumeracionMainBean.estateTable}"
+	styleClass="mycustompanel">
+	<p:messages id="MSG_AreasFront" showDetail="true" autoUpdate="false" closable="true" showIcon="false"/>
+	<p:ajaxStatus id="FORM_areas1_AS"
+		onstart="PF('statusEstadosDialog').show()"
+		onsuccess="PF('statusEstadosDialog').hide()">
+	</p:ajaxStatus>
+	<p:dialog widgetVar="statusEstadosDialog" modal="true" draggable="false"
+			closable="false" resizable="false" showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+	<!-- <p:blockUI block="FORM_areas1" widgetVar="FORM_areas1_BUI">
+		<ui:include src="/componentes/loader.xhtml" />
+	</p:blockUI> -->
+</p:panel>
+
+<p:panel id="P_containerMap" styleClass="mycustompanel">
+	<map name="mapNir">
+		<ui:repeat id="repaeatArea" var="areaNir"
+			value="#{areasGeoNumeracionMainBean.listaAreasNir}">
+			<area shape="poly" coords="#{areaNir.coordenadas}"
+				onclick="document.getElementById('FORM_areas1:repaeatNirId:#{areasGeoNumeracionMainBean.generaIdLink(areasGeoNumeracionMainBean.listaAreasNir.size())}:N').click();return false;"
+				href="#"></area>
+		</ui:repeat>
+	</map>
+</p:panel>
+<h:form id="FORM_areas1">
+	<!-- Vista 2 NIR/estado -->
+	<p:panel id="P_containerVista2" styleClass="mycustompanel">
+		<ui:repeat var="areaEstado" id="repaeatNirId"
+			value="#{areasGeoNumeracionMainBean.listaAreasNir}">
+			<p:commandLink id="N" oncomplete="PF('infomunicipio').show();"
+				actionListener="#{abnInfoBean.mapaNir(areaEstado.id.idNir)}"
+				update=":FORM_areas1:P_containerVista2 :MDL_infomunicipio"></p:commandLink>
+		</ui:repeat>
+		<p:panelGrid id="PG_nirEstado" styleClass="mycustomgridMapa"
+			rendered="#{areasGeoNumeracionMainBean.estateTable}" layout="grid"
+			columns="1">
+			<f:facet name="header">
+				<p:row>
+					<p:column colspan="7">
+		            Consulta Estatal de Mapas de Áreas Geográficas de Numeración Local
+		            </p:column>
+				</p:row>
+
+			</f:facet>
+			<p:row>
+				<p:column>
+					<div class="ui-grid ui-grid-responsive">
+						<div class="ui-grid-row"
+							style="padding-top: 30px; padding-bottom: 15px;">
+							<div class="ui-grid-col-12">
+								<p:outputLabel
+									value="Para consultar otro Estado puede seleccionarlo en la siguiente lista o seleccione regresar:"
+									for="L_estados2"></p:outputLabel>
+								&nbsp;&nbsp;&nbsp;
+								<p:commandButton value="Regresar" id="BTN_volver"
+									action="/areas-geograficas-numeracion/areas-numeracion.xhtml?faces-redirect=true"
+									update="P_containerVista2"
+									style="width: auto; height: auto; font-size: 13px; background-color:#D4D4D4"
+									icon="ui-icon-arrowreturnthick-1-w" styleClass="sombreado"/>
+							</div>
+						</div>
+						<div class="ui-grid-row" style="padding-bottom: 15px;">
+							<div class="ui-grid-col-12">
+								<!-- Lista desplegable de selección de Estados -->
+								<p:selectOneMenu id="L_estados2"
+									value="#{areasGeoNumeracionMainBean.estadoSelected}">
+									<p:ajax event="change"
+										listener="#{areasGeoNumeracionMainBean.searchEstado}"
+										update="P_containerVista2 :P_containerMap"></p:ajax>
+									<f:selectItem itemLabel="Seleccione un estado de la lista"
+										selected="true" itemDisabled="true" />
+									<f:selectItems
+										value="#{areasGeoNumeracionMainBean.listaEstado}" var="estado"
+										itemLabel="#{estado.nombre}" itemValue="#{estado.codEstado}"
+										selected="false">
+									</f:selectItems>
+
+								</p:selectOneMenu>
+							</div>
+						</div>
+						<div class="ui-grid-row"
+							style="outline: #D4D4D4 solid 2px; background-color: white; padding-top: 30px; padding-bottom: 15px;">
+							<div class="ui-grid-col-6">
+								<p:graphicImage
+									value="#{areasGeoNumeracionMainBean.pathMapaNir}" ismap="true"
+									usemap="#mapNir"></p:graphicImage>
+							</div>
+
+							<div class="ui-grid-col-6" style="padding-right: 50px">
+								<!-- tabla info Estado -->
+
+								<p:panelGrid id="TBL_mapas"
+									rendered="#{areasGeoNumeracionMainBean.estateTable}"
+									columns="2" layout="grid" styleClass="mycustomtable">
+
+									<f:facet name="header">
+           			INFORMACIÓN GENERAL DEL ESTADO
+       			</f:facet>
+									<p:row>
+										<p:column>
+											<h:outputText value="Nombre" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText
+												value="#{areasGeoNumeracionMainBean.estado.nombre}" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText value="Capital" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText
+												value="#{areasGeoNumeracionMainBean.estado.capital}" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText value="Clave INEGI" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText value="#{areasGeoNumeracionMainBean.codEstado}" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText
+												value="Numeración asignada (no representa líneas en serivicio)" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText
+												value="#{areasGeoNumeracionMainBean.numeracionEstadoFormat}" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText
+												value="Empresas que prestan el servicio telefónico" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+
+											<p:commandLink update=":MDL_infoProveedor P_containerVista2"
+												oncomplete="PF('infoProveedor').show();"
+												actionListener="#{dialogInfoBean.setAndActivatedProveedorEstado(areasGeoNumeracionMainBean.concesionariosEstado)}">
+												<h:outputText
+													value="#{areasGeoNumeracionMainBean.numeroConcesionariosEstado}" />
+											</p:commandLink>
+										</p:column>
+
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText value="Poblaciones con numeración asignada" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<p:commandLink update=":MDL_infoPoblacionEstado"
+												actionListener="#{poblacionEstadoBean.setDetallePoblacionEstado(areasGeoNumeracionMainBean.poblacionesNumeracionEstado)}"
+												oncomplete="PF('infoPoblacionEstado').show();">
+												<h:outputText
+													value="#{areasGeoNumeracionMainBean.poblacionesNumeracionEstado.size()}" />
+											</p:commandLink>
+
+
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText value="Áreas de servicio local" />
+										</p:column>
+									</p:row>
+									<p:row>
+										<p:column>
+											<h:outputText
+												value="#{areasGeoNumeracionMainBean.numeroAbnEstado}" />
+										</p:column>
+									</p:row>
+
+
+								</p:panelGrid>
+							</div>
+						</div>
+					</div>
+				</p:column>
+
+			</p:row>
+
+
+
+		</p:panelGrid>
+		<p:fieldset legend="Información del Área Geográfica de Numeración"
+			rendered="#{areasGeoNumeracionMainBean.estateTable}">
+			<p:fieldset id="FS_b1"
+				legend="Búsqueda por Área Geográfica de Numeración">
+				<div class="ui-grid ui-grid-responsive">
+					<br></br>
+
+					<div class="ui-grid-col-4">
+						<p:outputLabel
+							value="Para obtener Información de un Área Geográfica de Numeración seleccione un área y un número identificador de región:" />
+					</div>
+
+
+					<div class="ui-grid-col-4"
+						style="text-align: left; padding-left: 10%">
+						<h:outputLabel for="L_Abn">Área Geográfica de Numeración</h:outputLabel>
+						<p:selectOneMenu id="L_Abn"
+							value="#{areasGeoNumeracionMainBean.numeroAbn}"
+							disabled="#{!areasGeoNumeracionMainBean.listAbnActivated}">
+							<p:ajax event="change"
+								listener="#{areasGeoNumeracionMainBean.searchNirAbn}"
+								update="P_containerVista2 L_Nir "></p:ajax>
+							<f:selectItem itemLabel="Seleccione un Área Geográfica de Numeración"
+								itemDisabled="true" selected="true" />
+							<f:selectItems value="#{areasGeoNumeracionMainBean.comparaABN()}"
+								var="abn" itemLabel="#{abn.nombre}" itemValue="#{abn.codigoAbn}">
+							</f:selectItems>
+
+						</p:selectOneMenu>
+
+					</div>
+					<div class="ui-grid-col-4"
+						style="text-align: left; padding-left: 10%">
+						<h:outputLabel for="L_Nir">Número de identificación regional</h:outputLabel>
+						<p:selectOneMenu id="L_Nir"
+							value="#{areasGeoNumeracionMainBean.nirSelected}"
+							disabled="#{!areasGeoNumeracionMainBean.listNirActivated}">
+							<p:ajax event="change"
+								listener="#{areasGeoNumeracionMainBean.setSubmit1Activate(false)}"
+								update="P_containerVista2 BTN_submitMapas1"></p:ajax>
+							<f:selectItem itemLabel="Seleccione NIR" selected="true"
+								itemDisabled="false" />
+							<f:selectItems value="#{areasGeoNumeracionMainBean.listaNirAbn}"
+								var="nir" itemLabel="#{nir.codigo}  #{nir.abn.nombre}"
+								itemValue="#{nir.codigo}">
+							</f:selectItems>
+
+						</p:selectOneMenu>
+					</div>
+					<div class="ui-grid-col-12" style="text-align: center">
+						<br />
+					</div>
+					<div class="ui-grid-col-4">
+						<p:commandButton value="Activar" id="BTN_Abn"
+							disabled="#{!areasGeoNumeracionMainBean.btnBusquedaABN}"
+							actionListener="#{areasGeoNumeracionMainBean.activeBusquedaAbn}"
+							update="P_containerVista2"
+							style="width: auto; height: auto; font-size: 13px; background: #D4D4D4;"
+							icon="ui-icon-lightbulb" styleClass="sombreado"/>
+					</div>
+
+
+					<div class="ui-grid-col-4">
+						<p:commandButton value="Buscar" id="BTN_submitMapas1"
+							disabled="#{areasGeoNumeracionMainBean.submit1Activate}"
+							actionListener="#{abnInfoBean.searchLocalInfoWithNir}"
+							update="P_containerVista2 BTN_submitMapas1 :MDL_infomunicipio"
+							oncomplete="PF('infomunicipio').show();"
+							style="width: auto; height: auto; font-size: 13px"
+							icon="ui-icon-search" styleClass="sombreado"/>
+						<p:commandButton value="Limpiar" id="BTN_clean1"
+							disabled="#{areasGeoNumeracionMainBean.btnClean1}"
+							actionListener="#{areasGeoNumeracionMainBean.cleanAbn}"
+							update="P_containerVista2 L_Abn L_Nir"
+							style="width: auto; height: auto; font-size: 13px"
+							icon="ui-icon-arrowrefresh-1-e" styleClass="sombreado"/>
+					</div>
+
+				</div>
+			</p:fieldset>
+			<p:fieldset id="FS_b2" legend="Búsqueda por municipio"
+				rendered="#{areasGeoNumeracionMainBean.estateTable}">
+				<div class="ui-grid ui-grid-responsive">
+
+					<div class="ui-grid-col-4">
+						<p:outputLabel
+							value="Para obtener información de un municipio seleccione uno de la siguiente lista:" />
+					</div>
+
+					<div class="ui-grid-col-4"
+						style="text-align: left; padding-left: 10%">
+						<!-- Lista desplegable de selección de Municipios -->
+						<h:outputLabel for="L_municipios">Municipio</h:outputLabel>
+						<p:selectOneMenu id="L_municipios"
+							value="#{areasGeoNumeracionMainBean.municipioSelected}"
+							disabled="#{!areasGeoNumeracionMainBean.listMunicipioActivated}">
+							<p:ajax event="change"
+								listener="#{areasGeoNumeracionMainBean.searchNirMunicipio}"
+								update="P_containerVista2 L_municipiosNir"></p:ajax>
+							<f:selectItem itemLabel="Seleccione un municipio de la lista"
+								itemDisabled="true" selected="true" />
+							<f:selectItems
+								value="#{areasGeoNumeracionMainBean.municipiosEstado}"
+								var="municipio" itemLabel="#{municipio.nombre}"
+								itemValue="#{municipio.id.codMunicipio}">
+							</f:selectItems>
+
+						</p:selectOneMenu>
+					</div>
+					<div class="ui-grid-col-4"
+						style="text-align: left; padding-left: 10%">
+						<!-- Lista desplegable de selección de NirMunicipios -->
+						<h:outputLabel for="L_municipiosNir">Número de identificación regional</h:outputLabel>
+						<p:selectOneMenu id="L_municipiosNir"
+							value="#{areasGeoNumeracionMainBean.nirSelected}"
+							disabled="#{!areasGeoNumeracionMainBean.listNirMunicipioActivated}">
+							<p:ajax event="change"
+								listener="#{areasGeoNumeracionMainBean.setSubmit2Activate(false)}"
+								update="P_containerVista2 BTN_M"></p:ajax>
+							<f:selectItem itemLabel="Seleccione un NIR" selected="true"
+								itemDisabled="false" />
+							<f:selectItems
+								value="#{areasGeoNumeracionMainBean.listNirMunicipio}" var="nir"
+								itemLabel="#{nir.codigo}" itemValue="#{nir.codigo}">
+							</f:selectItems>
+
+						</p:selectOneMenu>
+					</div>
+
+					<div class="ui-grid-col-12" style="text-align: center">
+						<br />
+					</div>
+
+					<div class="ui-grid-col-4">
+						<p:commandButton value="Activar" id="BTN_clearM"
+							disabled="#{!areasGeoNumeracionMainBean.btnBusquedaMunicipio}"
+							actionListener="#{areasGeoNumeracionMainBean.activeBusquedaMunicipio}"
+							update="P_containerVista2"
+							style="width: auto; height: auto; font-size: 13px; background: #D4D4D4;"
+							icon="ui-icon-lightbulb" styleClass="sombreado"/>
+					</div>
+					<div class="ui-grid-col-4">
+						<p:commandButton value="Buscar" id="BTN_M"
+							disabled="#{areasGeoNumeracionMainBean.submit2Activate}"
+							actionListener="#{abnInfoBean.searchNirMunicipio}"
+							update="P_containerVista2 BTN_M :MDL_infomunicipio"
+							oncomplete="PF('infomunicipio').show();"
+							style="width: auto; height: auto; font-size: 13px"
+							icon="ui-icon-search" styleClass="sombreado"/>
+						<p:commandButton value="Limpiar" id="BTN_clean2"
+							disabled="#{areasGeoNumeracionMainBean.btnClean2 }"
+							actionListener="#{areasGeoNumeracionMainBean.cleanMunicipio}"
+							update="P_containerVista2 L_municipios L_municipiosNir "
+							style="width: auto; height: auto; font-size: 13px"
+							icon="ui-icon-arrowrefresh-1-e" styleClass="sombreado"/>
+					</div>
+
+				</div>
+			</p:fieldset>
+		</p:fieldset>
+	</p:panel>
+	<br></br>
+</h:form>
+
+
+<!-- Modal 'municipio info' -->
+<p:dialog id="MDL_infomunicipio" widgetVar="infomunicipio" modal="true"
+	scrollable="true" resizable="false" appendTo="@(body)" height="500"
+	width="95%">
+	<ui:include src="/areas-geograficas-numeracion/info-abn.xhtml" />
+</p:dialog>
+<!-- Modal 'municipio info' -->
+<p:dialog id="MDL_infoProveedor" widgetVar="infoProveedor" modal="true"
+	scrollable="true" resizable="false" appendTo="@(body)" height="500"
+	width="95%">
+	<ui:include src="/areas-geograficas-numeracion/proveedor-info.xhtml" />
+</p:dialog>
+<!-- Modal 'poblacion Estado info' -->
+<p:dialog id="MDL_infoPoblacionEstado" widgetVar="infoPoblacionEstado"
+	modal="true" scrollable="true" resizable="false" appendTo="@(body)"
+	height="500" width="95%">
+	<ui:include src="/areas-geograficas-numeracion/poblacion-estado.xhtml" />
+</p:dialog>
+<!-- Modal 'municipio info' -->
+<p:dialog id="MDL_infoPobEstado" widgetVar="infoPobEstado" modal="true"
+	scrollable="true" resizable="false" appendTo="@(body)" height="500"
+	width="95%">
+	<ui:include
+		src="/areas-geograficas-numeracion/info-poblacion-estado.xhtml" />
+</p:dialog>
+</html>

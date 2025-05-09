@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui" 
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<ui:composition template="/WEB-INF/templates/plantilla2.xhtml">
+  <ui:define name="centro">
+  <form method="post" action="j_security_check">
+  
+	<div class="dialogoLogin">
+
+        <div data-widget="widget_j_idt17" class="ui-panel ui-widget ui-widget-content ui-corner-all centered" id="j_idt17">
+          <div class="ui-panel-titlebar ui-widget-header ui-helper-clearfix ui-corner-all" id="j_idt17_header"><span class="ui-panel-title">Login</span></div>
+          <div class="grupoCampos">
+			<div class="ui-messages-error ui-corner-all"><span class="ui-messages-error-summary">#{msg['login.error']}</span></div>
+            <div class="ui-panel-content ui-widget-content" id="j_idt17_content">
+            <table>
+              <tbody>
+                <tr>
+                  <td><label> Usuario</label></td>
+                  <td><input autocomplete="off" readonly="readonly" onfocus="$(this).removeAttr('readonly');" type="text" class="ui-corner-all" title="Inserte su usuario" required="required" name="j_username"/></td>
+                </tr>
+                <tr>
+                  <td><label> Clave</label></td>
+                  <td><input autocomplete="off" readonly="readonly" onfocus="$(this).removeAttr('readonly');" type="password" class="ui-corner-all" title="Inserte su clave" required="required" name="j_password"/></td>
+                </tr>
+              </tbody>
+            </table>
+            <table style="margin: 10px auto;">
+              <tbody>
+                <tr>
+                   <td><input type="submit" class="ui-state-default ui-corner-all" value="Entrar" autocomplete="off"/></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          </div>
+         </div>
+       </div>
+  </form>
+  </ui:define>
+</ui:composition>
+</html>

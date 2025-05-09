@@ -1,0 +1,211 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusHistoricoNngDialog').show();
+			}
+			function hideStatus() {
+				PF('statusHistoricoNngDialog').hide();
+			}
+		</script>
+
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionNoGeografica']}/#{msg['historico']}</legend>
+
+			<p:messages id="MSG_Historico" showDetail="false" showSummary="true"
+				autoUpdate="false" closable="true" showIcon="false" />
+
+			<h:form id="FRM_Historico">
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.series.buscador']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda" columns="8" style="float:left"
+						cellpadding="3" cellspacing="3">
+
+						<h:outputLabel for="TXT_Clave"
+							value="#{msg['catalogo.clave.servicio']}" style="width:30px;" />
+						<p:inputText id="TXT_Clave" required="false" minValue="1"
+							maxlength="3" value="#{historicoNngBean.claveServicio}" size="3">
+							<f:validator validatorId="claveServicioValidator" />
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['cesion.serie']}" />
+						<p:inputText id="TXT_Serie" required="false" minValue="1"
+							maxlength="4" value="#{historicoNngBean.serie}" size="4">
+							<f:validator validatorId="SerieNngValidator" />
+						</p:inputText>
+
+						<h:outputLabel value="Numero inicial" />
+						<p:inputText id="TXT_Nir" required="false" minValue="1"
+							maxlength="4" value="#{historicoNngBean.numIni}"
+							label="Numero inicial" size="4">
+							<f:validator validatorId="NumeroInternoValidator" />
+						</p:inputText>
+
+						<h:outputLabel value="Numero final" />
+						<p:inputText id="TXT_Nir2" required="false" minValue="1"
+							maxlength="4" value="#{historicoNngBean.numFin}"
+							label="Numero final" size="4">
+							<f:validator validatorId="NumeroInternoValidator" />
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['historico.serie.fInicial']}" />
+						<p:calendar id="fAsignacionDesde" required="false" locale="mx_MX"
+							value="#{historicoNngBean.fechaDesdeAsignacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['historico.serie.fInicial']}" navigator="true"
+							size="9" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fAsignacionHasta"
+								global="false" />
+						</p:calendar>
+
+						<h:outputLabel value="#{msg['historico.serie.fFinal']}" />
+						<p:calendar id="fAsignacionHasta" required="false" locale="mx_MX"
+							value="#{historicoNngBean.fechaHastaAsignacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['historico.serie.fFinal']}"
+							disabled="#{historicoNngBean.fechaDesdeAsignacion == null}"
+							navigator="true" size="9" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						actionListener="#{historicoNngBean.buscar}"
+						update=":MSG_Historico TBL_HistoricoSeries BTN_generaListado"
+						ajax="true" style="height:30px; width:82px">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{historicoNngBean.limpiar}"
+						style="margin-right:20px; height:30px;  width:82px"
+						update=":MSG_Historico PNL_Busqueda TBL_HistoricoSeries BTN_generaListado"
+						process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">Series</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton value="#{msg.exportar}" id="BTN_generaListado"
+								disabled="#{historicoNngBean.emptySearch}" ajax="false">
+								<p:fileDownload
+									value="#{historicoNngBean.ficheroHistoricoSeries}" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_HistoricoSeries" var="consultar"
+						value="#{historicoNngBean.model}" lazy="true" paginator="true"
+						paginatorPosition="bottom"
+						rows="#{historicoNngBean.registroPorPagina}"
+						resizableColumns="true" emptyMessage="No hay datos.">
+
+						<p:column headerText="#{msg['consultar.Consecutivo']}">
+							<h:outputText value="#{consultar.consecutivo}" />
+						</p:column>
+
+						<p:column headerText="#{msg['historico.serie.numOficio']}">
+							<h:outputText value="#{consultar.numeroOficio}" />
+						</p:column>
+
+						<p:column headerText="#{msg['historico.serie.tipoMovimiento']}">
+							<h:outputText value="#{consultar.tipoMovimiento}" />
+						</p:column>
+
+						<p:column headerText="#{msg['historico.serie.fechaTramite']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.fechaTramite}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['historico.serie.nombrePst']}">
+							<h:outputText value="#{consultar.nombrePst}" />
+						</p:column>
+
+						<!--p:column headerText="#{msg['historico.serie.abc']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.abc}" />
+						</p:column-->
+
+						<p:column headerText="#{msg['historico.serie.ido']}"
+								  style="text-align:center;">
+							<h:outputText value="#{consultar.pst.ido}" />
+						</p:column>
+
+						<p:column headerText="#{msg['historico.serie.bcd']}"
+								  style="text-align:center;">
+							<h:outputText value="#{consultar.pst.bcd}" />
+						</p:column>
+
+						<p:column headerText="#{msg['historico.serie.ida']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.ida}" />
+						</p:column>
+
+						<p:column headerText="#{msg['historico.serie.claveServicio']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.claveServicio}" />
+						</p:column>
+
+						<p:column headerText="#{msg['historico.serie.sna']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.serieAsString}" />
+						</p:column>
+
+						<p:column headerText="#{msg['historico.serie.nInicial']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.numInicial}" />
+						</p:column>
+
+						<p:column headerText="#{msg['historico.serie.nFinal']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.numFinal}" />
+						</p:column>
+
+
+					</p:dataTable>
+
+				</fieldset>
+
+			</h:form>
+		</fieldset>
+
+		<p:ajaxStatus id="temporizador_historico_BUI"
+			onstart="PF('statusHistoricoNngDialog').show()"
+			onsuccess="PF('statusHistoricoNngDialog').hide()" />
+		<p:dialog widgetVar="statusHistoricoNngDialog" modal="true"
+			draggable="false" closable="false" resizable="false"
+			showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+		<!-- <p:blockUI block="FRM_Historico" widgetVar="hist_bui">
+			 	<ui:include src="/componentes/loader.xhtml"/>
+ 			</p:blockUI>	 -->
+
+
+
+
+	</ui:define>
+</ui:composition>
+</html>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<h:form id="FORM_CargarEquipos" enctype="multipart/form-data">
+		<p:messages id="MSG_CargarEquipos" showDetail="false" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		
+		<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['cpsn.equiposSenalizacion.cargarExcel']}</legend>
+						
+			<h:panelGrid columns="1">
+				<h:panelGrid columns="2" style="float:left" cellpadding="3" cellspacing="3">
+					<h:outputLabel for="SEL_Pst" value="#{msg.proveedor}" />
+					<p:selectOneMenu 
+						id="SEL_Pst" 
+						value="#{cargarEquiposCpsnBean.pst}" 
+		 				converter="#{proveedorConverter}"> 
+						<f:selectItem itemLabel="Seleccionar"/>
+						<f:selectItems
+							value="#{cargarEquiposCpsnBean.listaProveedores}"
+							var="proveedor"
+							itemLabel="#{proveedor.nombre}"
+							itemValue="#{proveedor}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</h:panelGrid>
+	
+				<h:panelGrid columns="3" style="float:left" cellpadding="3" cellspacing="3">
+					<h:outputLabel for="uploadedFile" value="#{msg.ficheroCarga}" />
+					<p:fileUpload 
+						id="uploadedFile" 
+						sizeLimit="#{cargarEquiposCpsnBean.maxTamFichero}" 
+						fileLimit="1" 
+						mode="advanced" 
+						allowTypes="/(\.|\/)(xls|xlsx)$/"
+						value="#{cargarEquiposCpsnBean.archivo}"
+						fileUploadListener="#{cargarEquiposCpsnBean.subirArchivo}"
+						uploadLabel="#{msg.subir}"
+						cancelLabel="#{msg.cancelar}"
+						label="Examinar"
+						fileLimitMessage="#{msg['archivo.limite.excedido']}"
+						invalidFileMessage="#{msg['archivo.invalido']}"
+						invalidSizeMessage="#{msg['archivo.tamaño.invalido']}"
+						update="MSG_CargarEquipos BTN_Procesar">
+					</p:fileUpload>
+					<p:commandButton id="BTN_Procesar"
+						value="#{msg['archivo.procesar']}"
+						actionListener="#{cargarEquiposCpsnBean.cargarEquipos}"
+						disabled="#{!cargarEquiposCpsnBean.habilitarProcesado}"
+						update="FORM_CargarEquipos">
+					</p:commandButton>
+			 	</h:panelGrid>
+			 </h:panelGrid>
+			</fieldset>
+			
+			<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">Resultado de la Importación</legend>	 
+				
+				<h:panelGrid id="PNG_Info" columns="2" cellpadding="3" cellspacing="3">
+					<h:outputLabel value="Nombre Fichero:"/>
+					<h:outputText value="#{cargarEquiposCpsnBean.detalle.nombreFichero}"/>
+					<h:outputLabel value="Registros Leidos:"/>
+					<h:outputText value="#{cargarEquiposCpsnBean.detalle.numEquiposLeidos}"/>
+					<h:outputLabel value="Registros Procesados:"/>
+					<h:outputText value="#{cargarEquiposCpsnBean.detalle.numEquiposProcesados}"/>
+					<h:outputLabel value="Registros Erróneos:"/>
+					<h:outputText value="#{cargarEquiposCpsnBean.detalle.numEquiposErroneos}"/>
+				</h:panelGrid>
+				
+				<h:panelGrid columns="1">		 
+				 <h:panelGrid rendered="#{cargarEquiposCpsnBean.existeErrores}" id="PNG_Errores" style="float:left; overflow-y: auto; width:100%;">
+					 <p:dataTable 
+					 	id="TBL_Errores" 
+						styleClass="ui-datatable ui-widget"
+						value="#{cargarEquiposCpsnBean.detalle.erroresValidacion}"
+						var="error" 
+						style="width:100%"
+						scrollHeight="150"
+						scrollable="true"
+						resizableColumns="true"						
+						rowStyleClass="#{error.tipoAviso == 'Warning' ? 'aviso' : 'error'}">
+
+						<p:column headerText="#{msg['registro.error.numRegistro']}" width="50" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							<h:outputText title="#{error.numRegistro}" value="#{error.numRegistro}" />
+						</p:column>
+						<p:column headerText="CPS" width="50" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							<h:outputText title="#{error.cps}" value="#{error.cps}" />
+						</p:column>
+						<p:column headerText="#{msg['registro.error.tipoAviso']}" width="50" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							<h:outputText title="#{error.tipoAviso}" value="#{error.tipoAviso}" />
+						</p:column>
+						<p:column headerText="#{msg['registro.error.columna']}" width="50" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							<h:outputText title="#{error.columna}" value="#{error.columna}" />
+						</p:column>
+						<p:column headerText="#{msg['registro.error.descripcion']}" width="150" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							<h:outputText title="#{error.descripcion}" value="#{error.descripcion}" />
+						</p:column>
+					</p:dataTable>
+				</h:panelGrid>
+			</h:panelGrid>
+		</fieldset>
+		
+	<!-- 	<p:ajaxStatus 
+			id="CLK_CargarEquipos" 
+			onstart="PF('bui_cargar_equipos').show()" 
+			onsuccess="PF('bui_cargar_equipos').hide()">
+  		</p:ajaxStatus>
+		
+		<p:blockUI block="FORM_CargarEquipos" widgetVar="bui_cargar_equipos" >
+		 	<ui:include src="/componentes/loader.xhtml"/>
+ 		</p:blockUI> -->
+	</h:form>
+</html>

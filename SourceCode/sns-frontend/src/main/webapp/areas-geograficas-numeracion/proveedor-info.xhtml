@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+	<!-- Tabla dialog proveedores/estado -->
+	<p:dataTable id="TBL_proveedoresEstado"
+		rendered="#{dialogInfoBean.tablaProvEstadoActivated}" var="proveedor"
+		value="#{dialogInfoBean.concesionariosEstado}" paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{dialogInfoBean.numeroRegistros}" 
+		paginatorPosition="bottom" styleClass="mycustomtable">
+		<f:facet name="header">EMPRESAS DE TELEFONÍA LOCAL CON PRESENCIA EN EL ESTADO DE <h:outputText
+				value="#{areasGeoNumeracionMainBean.estado.nombre}" />
+		</f:facet>
+		<p:columnGroup type="header">
+			<p:row>
+				<p:column headerText="EMPRESAS DE TELEFONÍA" sortBy="#{proveedor.nombreCorto}"/>
+			</p:row>
+		</p:columnGroup>
+		<p:column style="text-align:center" >
+			<h:outputText value="#{proveedor.nombreCorto}" />
+		</p:column>
+		<p:effect type="clip" event="render" />
+	</p:dataTable>
+
+	<!-- Tabla dialog proveedoresABN -->
+
+	<p:dataTable id="TBL_proveedoresNir"
+		rendered="#{dialogInfoBean.tablaProvAbnActivated}" var="proveedorAbn"
+		value="#{abnInfoBean.proveedorNumeracionNir}" paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{dialogInfoBean.numeroRegistros}" paginatorPosition="bottom"
+		styleClass="mycustomtable">
+		<f:facet name="header">EMPRESAS QUE PRESTAN EL SERVICIO DE TELEFONÍA LOCAL</f:facet>
+		<p:columnGroup type="header" >
+			<p:row>
+				<p:column headerText="CONCESIONARIO" sortBy="#{proveedorAbn.nombreCorto}"/>
+			</p:row>
+		</p:columnGroup>
+		<p:column style="text-align:center" >
+			<h:outputText value="#{proveedorAbn.nombreCorto}" />
+		</p:column>
+		<p:effect type="clip" event="render" />
+	</p:dataTable>
+	<!-- Tabla dialog proveedoresMunicipio -->
+
+	<p:dataTable id="TBL_proveedoreMunicipio"
+		rendered="#{dialogInfoBean.tableMunicipioActivated}"
+		var="provMunicipio"
+		value="#{areasGeoNumeracionMainBean.proveedorMunicipio}"
+		paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{dialogInfoBean.numeroRegistros}"  paginatorPosition="bottom"
+		styleClass="mycustomtable">
+		<f:facet name="header">EMPRESAS QUE PRESTAN EL SERVICIO DE TELEFONÍA LOCAL</f:facet>
+		<p:columnGroup type="header">
+			<p:row>
+				<p:column headerText="CONCESIONARIO" sortBy="#{provMunicipio.nombreCorto}"/>
+				<!-- <p:column headerText="PÁGINA WEB" /> -->
+			</p:row>
+		</p:columnGroup>
+		<p:column style="text-align:center" >
+			<h:outputText value="#{provMunicipio.nombreCorto}" />
+		</p:column>
+		<p:effect type="clip" event="render" />
+	</p:dataTable>
+
+
+</html>

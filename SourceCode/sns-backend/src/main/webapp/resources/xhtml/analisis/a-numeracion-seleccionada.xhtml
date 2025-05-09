@@ -1,0 +1,284 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+	<ui:composition>
+	
+		<h:panelGrid 
+			id="PGD_numeracionInicial"  
+			columns="10" 
+			style="margin-top:20px" 
+			cellpadding="3"
+			cellspacing="3"
+			rendered="#{cc.attrs.nameBean.renderSerieSelected}">
+			
+			<p:outputLabel value="Numeracion Inicial:" />
+			<p:inputText id="IPT_numeracionInicial" label="Numeracion Inicial" value="#{cc.attrs.nameBean.numeracionInicial}" maxlength="4" required="true">
+				<p:ajax 
+					event="keyup" 
+					listener="#{cc.attrs.nameBean.numeracionInicialKeyUp}" 
+					update="IPT_numeracionFinal" 
+					global="false">
+				</p:ajax>
+			</p:inputText>
+			<p:outputLabel value="Numeracion Final: " />
+			<p:inputText id="IPT_numeracionFinal" label="Numeracion Final" value="#{cc.attrs.nameBean.numeracionFinal}" maxlength="10" required="false" disabled="true"/>
+					
+			<!-- Boton que muestra la lista de sugerencia -->
+			<p:commandButton 
+				id="BTN_sugerir"
+				value="Sugerir" 
+				rendered="#{(cc.attrs.nameBean.renderSerieOcupada eq true) and (cc.attrs.nameBean.tabHabilitado)}"
+				disabled="#{(cc.attrs.nameBean.cantidadAsignar eq 0) 
+							or (cc.attrs.nameBean.cantidadAsignar > cc.attrs.nameBean.cantidadSolicitada 
+							or cc.attrs.nameBean.cantidadAsignar > cc.attrs.nameBean.cantidadPorAsignar)}"
+				actionListener="#{cc.attrs.nameBean.sugerirAction}"
+				oncomplete="PF('sugerirNumeraciones').show()"
+				update=":#{cc.attrs.idSugerencia}:FORM_sugerencia" 
+				global="false"
+				style="height:30px; width:92px ;margin-right:20px; margin: 12px;">
+			</p:commandButton>
+				
+			<p:commandButton 
+				id="BTN_sugerir_term"
+				value="Sugerir" 
+				rendered="#{(cc.attrs.nameBean.renderSerieOcupada eq true) and (!cc.attrs.nameBean.tabHabilitado)}"
+				disabled="#{(cc.attrs.nameBean.cantidadAsignar eq 0) 
+							or (cc.attrs.nameBean.cantidadAsignar > cc.attrs.nameBean.cantidadSolicitada 
+							or cc.attrs.nameBean.cantidadAsignar > cc.attrs.nameBean.cantidadPorAsignar)}"
+				actionListener="#{cc.attrs.nameBean.sugerirAction}"
+				oncomplete="PF('sugerirNumeraciones').show()"
+				update=":#{cc.attrs.idSugerencia}:FORM_sugerencia" 
+				global="false"
+				style="height:30px;  width:92px ;margin-right:20px; margin: 12px;">
+				
+				<p:confirm 
+					header="#{msg['confirmacion.titulo']}" 
+					message="#{msg['confirmacion.mensaje.modificar']}" 
+					icon="ui-icon-alert">
+				</p:confirm>
+			</p:commandButton>
+				
+			<!-- Boton que selecciona la numeración a asignar-->
+			<p:commandButton
+				id="BTN_seleccionar"
+				value="Seleccionar" 
+				oncomplete="PF('wid_numeracionSeleccionada').filter()"
+				actionListener="#{cc.attrs.nameBean.seleccionarAction}"
+				update="#{cc.attrs.update}"
+				rendered="#{cc.attrs.nameBean.tabHabilitado}"
+				style="margin: 12px;height:30px; width:82">
+			</p:commandButton>
+				
+			<p:commandButton
+				id="BTN_seleccionar_term"
+				value="Seleccionar" 
+				oncomplete="PF('wid_numeracionSeleccionada').filter()"
+				actionListener="#{cc.attrs.nameBean.seleccionarAction}"
+				update="#{cc.attrs.update}" 
+				rendered="#{!cc.attrs.nameBean.tabHabilitado}"
+				style="margin: 12px;height:30px; width:82">
+				
+				<p:confirm 
+					header="#{msg['confirmacion.titulo']}" 
+					message="#{msg['confirmacion.mensaje.modificar']}" 
+					icon="ui-icon-alert">
+				</p:confirm>
+			</p:commandButton>
+		</h:panelGrid>
+			
+		<!--  Tabla numeración selecionada -->
+		<p:fieldset>
+			<p:dataTable 
+				widgetVar="wid_numeracionSeleccionada" 
+				id="TBLGN_numeracionSeleccionada" 
+				var="numeracionAsignada"
+				value="#{cc.attrs.nameBean.solicitud.numeracionAsignadas}"
+				filteredValue="#{cc.attrs.nameBean.listNumAsigFiltradas}"
+				rowKey="#{numeracionAsignada.id}" 
+				selectionMode="multiple"
+				selection="#{cc.attrs.nameBean.selectedNumeracionSeleccionada}"
+				rows="#{cc.attrs.nameBean.registroPorPagina}" resizableColumns="true"
+	        	paginator="true" paginatorPosition="bottom"  
+				emptyMessage="#{msg['buscador.noresultados']}">
+			
+				<f:facet name="header">Numeración seleccionada</f:facet>
+				
+				<p:ajax event="rowSelect" listener="#{cc.attrs.nameBean.numeracionSeleccionadaSelect}"/>
+				<p:ajax event="rowUnselect" listener="#{cc.attrs.nameBean.numeracionSeleccionadaSelect}"/>
+				
+				<p:column
+					headerText="#{msg['analisis.abn']}"
+					filterBy="#{numeracionAsignada.nir.abn.codigoAbn}"
+					filterMaxLength="3">
+					<h:outputText
+						width="75" style="font-size:12px; text-align:center; text-overflow:ellipsis;"
+						value="#{numeracionAsignada.nir.abn.codigoAbn}">
+					</h:outputText>
+				</p:column>
+				
+				<p:column
+					headerText="NIR"
+					filterBy="#{numeracionAsignada.cdgNirInicial}"
+					filterMaxLength="3">
+					<h:outputText
+						width="75" style="font-size:12px; text-align:center; text-overflow:ellipsis;" 
+						value="#{numeracionAsignada.cdgNirInicial}">
+					</h:outputText>
+				</p:column>
+				
+				<p:column
+					headerText="SNA"
+					filterBy="#{numeracionAsignada.idSerieInicialAsString}" 
+					filterMaxLength="5">
+					<h:outputText
+						width="75" style="font-size:12px; text-align:center; text-overflow:ellipsis;" 
+						value="#{numeracionAsignada.idSerieInicialAsString}">
+					</h:outputText>
+				</p:column>
+				
+				<p:column
+					headerText="Numero inicial" 
+					filterBy="#{numeracionAsignada.inicioRango}"
+					filterMaxLength="4">
+					<h:outputText
+						width="100" style="font-size:12px; text-align:center; text-overflow:ellipsis;"
+						value="#{numeracionAsignada.inicioRango}" >
+					</h:outputText>
+				</p:column>
+				
+				<p:column 
+					headerText="Numero Final"
+					filterBy="#{numeracionAsignada.finRango}"
+					filterMaxLength="4">
+					<h:outputText
+						width="100" style="font-size:12px; text-align:center; text-overflow:ellipsis;" 
+						value="#{numeracionAsignada.finRango}">
+					</h:outputText>
+				</p:column>
+				
+				<p:column
+					headerText="Estatus"
+					filterBy="#{numeracionAsignada.estatus.descripcion}">
+					<h:outputText 
+						width="100" style="font-size:12px; text-align:center; text-overflow:ellipsis;"
+						value="#{numeracionAsignada.estatus.descripcion}">
+					</h:outputText>
+				</p:column>
+				
+				<p:column 
+					headerText="Cantidad"
+					filterBy="#{numeracionAsignada.finRangoAsInt - numeracionAsignada.inicioRangoAsInt + 1}">
+					<h:outputText
+						width="75" style="font-size:12px; text-overflow:ellipsis;" 
+						value="#{numeracionAsignada.finRangoAsInt - numeracionAsignada.inicioRangoAsInt + 1}">
+					</h:outputText>
+				</p:column>
+				
+				<p:column
+					headerText="Tipo de Servicio"
+					filterBy="#{numeracionAsignada.numeracionSolicitada.tipoRed.descripcion}">
+					<h:outputText
+						width="100" style="font-size:12px; text-overflow:ellipsis;" 
+						value="#{numeracionAsignada.numeracionSolicitada.tipoRed.descripcion}"
+						rendered="#{numeracionAsignada.numeracionSolicitada.tipoRed.cdg != 'M'}">
+					</h:outputText>
+					<h:outputText
+						width="100" style="font-size:12px; text-overflow:ellipsis;"
+						value="#{numeracionAsignada.numeracionSolicitada.tipoRed.descripcion}-#{numeracionAsignada.numeracionSolicitada.tipoModalidad.cdg}" 
+						rendered="#{numeracionAsignada.numeracionSolicitada.tipoRed.cdg == 'M'}">
+					</h:outputText>
+				</p:column>
+				
+				<p:column
+					headerText="IDO PNN"
+					filterBy="#{numeracionAsignada.numeracionSolicitada.idoPnn}" 
+					filterMaxLength="3">
+					<h:outputText
+						width="75" style="font-size:12px; text-align:center; text-overflow:ellipsis;"
+						value="#{numeracionAsignada.numeracionSolicitada.idoPnn}">
+					</h:outputText>
+				</p:column>
+				
+				<p:column
+					headerText="IDA PNN"
+					filterBy="#{numeracionAsignada.numeracionSolicitada.idaPnn}" 
+					filterMaxLength="3">
+					<h:outputText
+						width="75" style="font-size:12px; text-align:center; text-overflow:ellipsis;"
+						value="#{numeracionAsignada.numeracionSolicitada.idaPnn}">
+					</h:outputText>
+				</p:column>
+				
+				<f:facet name="footer">
+						<div>
+							<p:outputLabel value="Total registros: "/>
+							<h:outputText value="#{cc.attrs.nameBean.solicitud.numeracionAsignadas.size()}"/>
+						</div>
+						<p:panelGrid style="display:block;">
+				       		<p:commandButton 
+				       			id="BTN_regresarSeleccion"
+				       			icon="ui-icon-circle-close"
+				       			value="Regresar" 
+				       			oncomplete="PF('wid_numeracionSeleccionada').filter()" 	 
+								actionListener="#{cc.attrs.nameBean.regresarSeleccionAction}"
+								update="#{cc.attrs.update}" 
+								rendered="#{cc.attrs.nameBean.tabHabilitado}"
+								style="height:30px; width:100px; margin-top:10px;">
+							</p:commandButton>
+							
+							<p:commandButton 
+								id="BTN_regresarSeleccion_term"
+								icon="ui-icon-circle-close"
+								value="Regresar" 
+								oncomplete="PF('wid_numeracionSeleccionada').filter()" 
+								actionListener="#{cc.attrs.nameBean.regresarSeleccionAction}"
+								update="#{cc.attrs.update}" 
+								rendered="#{!cc.attrs.nameBean.tabHabilitado}"
+								style="height:30px; width:100px; margin-top:10px;">
+								<p:confirm 
+									header="#{msg['confirmacion.titulo']}" 
+									message="#{msg['confirmacion.mensaje.modificar']}" 
+									icon="ui-icon-alert">
+								</p:confirm>
+							</p:commandButton>
+						</p:panelGrid>
+				
+	    		</f:facet>
+			</p:dataTable>
+		</p:fieldset>
+		
+		<p:panel id="panel_boton" styleClass="botonera alaDcha">		
+			 <p:commandButton 
+			 	id="BTN_guardarSeleccion"
+			 	value="Guardar" 
+				icon="ui-icon-disk"
+				actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+				update="#{cc.attrs.update}">
+			</p:commandButton>
+		</p:panel>
+			
+		<p:confirmDialog 
+			global="true" 
+			showEffect="fade" 
+			hideEffect="explode" 
+			closeOnEscape="true" 
+			closable="false"
+			severity="alert"
+			widgetVar="cd">
+	        
+	        <p:commandButton 
+	        	value="#{msg['confirmacion.aceptar']}" 
+	        	type="button"  					
+				styleClass="ui-confirmdialog-yes">
+			</p:commandButton>
+	        <p:commandButton 
+	        	value="#{msg['confirmacion.rechazar']}" 
+	        	styleClass="ui-confirmdialog-no">
+	        </p:commandButton>
+	    </p:confirmDialog>
+
+	</ui:composition>
+</html>

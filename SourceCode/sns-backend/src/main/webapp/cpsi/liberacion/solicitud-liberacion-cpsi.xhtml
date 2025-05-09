@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<h:form id="FORM_SolicitudLiberacionCPSI">
+		<p:messages id="MSG_Wizard_SolicitudLiberacionCPSI" showDetail="true" autoUpdate="false" closable="true" showIcon="false"/>
+		<p:wizard 
+			widgetVar="WIZ_SolicitudLiberacion"
+			id="WIZ_SolicitudLiberacion" 
+			flowListener="#{solicitudLiberacionCpsiBean.siguientePaso}"
+			showNavBar="true"
+			nextLabel="#{msg['manual.tab.siguiente']}" 
+			backLabel="#{msg['manual.tab.anterior']}"
+			style="min-width: 1050px">
+
+ 			<p:tab id="WIZ_SolicitudLiberacion_TAB_Proveedor" title="#{msg.proveedor}">
+				<sns:generalesLiberaciones 
+					id="TAB_Generales_LiberacionCPSI"
+					nameBean="#{solicitudLiberacionCpsiBean.tabGenerales}">
+				</sns:generalesLiberaciones>
+			</p:tab>
+			
+			<p:tab id="WIZ_SolicitudLiberacion_TAB_Liberacion" title="#{msg.liberacion}">
+				<sns:liberacionesCpsi nameBean="#{solicitudLiberacionCpsiBean.tabLiberacion}"/>
+			</p:tab>
+			
+			<p:tab id="WIZ_SolicitudLiberacion_TAB_Oficios" title="#{msg.oficio}">
+				<sns:generarOficio nameBean="#{solicitudLiberacionCpsiBean.tabGenerarOficio}"/>
+			</p:tab>
+		</p:wizard>
+	</h:form>
+	
+	<!-- Modal de Edición de Proveedores. -->
+	<p:dialog
+		id="MDL_Proveedores" widgetVar="MDL_Proveedores"
+		modal="true" appendTo="@(body)" closable="false"
+		header="#{msg['catalogo.proveedores.edicion.cabecera']}" 
+		scrollable="true" resizable="true" width="1280" height="500">
+		<p:ajax 
+			event="close"
+			listener="#{solicitudLiberacionCpsiBean.tabGenerales.actualizarEdicionProveedor}"
+			update="FORM_SolicitudLiberacionCPSI:TAB_Generales_LiberacionCPSI">
+		</p:ajax>
+		<p:commandButton
+			id="BTN_Salir" global="false"
+			styleClass="customCloseModal"
+			value="X" closable="false"
+			onclick="PF('MDL_Proveedores').hide()">
+			<p:resetInput target="FORM_GestionProveedor" />	
+		</p:commandButton>
+		<ui:include src="/admin-catalogos/proveedor/edicion-proveedoresV2.xhtml"/>
+	</p:dialog>
+
+	<!-- <p:ajaxStatus
+		id="FORM_SolicitudLiberacionCPSI_AS"
+		onstart="PF('FORM_SolicitudLiberacionCPSI_BUI').show()"
+		onsuccess="PF('FORM_SolicitudLiberacionCPSI_BUI').hide()">
+	</p:ajaxStatus> -->
+	
+	<!-- <p:blockUI
+		widgetVar="FORM_SolicitudLiberacionCPSI_BUI"
+		block="FORM_SolicitudLiberacionCPSI">
+		<ui:include src="/componentes/loader.xhtml"/>
+	</p:blockUI> -->
+
+</html>

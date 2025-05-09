@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<ui:composition template="/WEB-INF/templates/plantillaFront.xhtml">
+
+	<ui:define name="centro">
+
+		<h:form id="error">
+			<p:panel header="Error" styleClass="dialogoLogin">
+
+				<h:panelGrid columns="1" style="margin-left:80px">
+
+					<p:commandButton icon="ui-icon-arrowreturnthick-1-w" value="Volver"
+						action="/index.xhml?faces-redirect=true"
+						style="width: auto; height: auto; font-size: 13px; margin-bottom: 2%; background: #D4D4D4;"></p:commandButton>
+
+
+				</h:panelGrid>
+			</p:panel>
+		</h:form>
+
+	</ui:define>
+
+</ui:composition>
+</html>

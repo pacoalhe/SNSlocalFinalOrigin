@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<!-- <p:ajaxStatus id="FORM_poblacionInfo_AS"
+	onstart="PF('FORM_poblacionInfo_BUI').show()"
+	onsuccess="PF('FORM_poblacionInfo_BUI').hide()">
+</p:ajaxStatus>
+<p:blockUI block="FORM_poblacionInfo" widgetVar="FORM_poblacionInfo_BUI">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI>
+ -->
+<h:form id="FORM_poblacionInfo">
+	<p:panelGrid columns="2" layout="grid" id="TBL_PoblacionInfoTable"
+		styleClass="mycustomtablesa">
+		<f:facet name="header">
+           		INFORMACIÓN BÁSICA DE <h:outputText
+				value="#{detallePoblacionBean.poblacionDetalle.nombre}" />
+		</f:facet>
+		<p:row>
+			<h:outputText
+				value="Número(s) Identificador(es) de Región (Claves de Larga Distancia)" />
+		</p:row>
+		<p:row>
+			<ui:repeat var="nir"
+				value="#{detallePoblacionBean.poblacionDetalle.abn.nirs}"
+				varStatus="status">
+				<h:outputText styleClass="nirs #{status.last?'last':''}"
+					value="#{nir.codigo}" />
+			</ui:repeat>
+		</p:row>
+		<p:row>
+			<h:outputText
+				value="Concesionarios que prestan el servicio de telefonía local" />
+		</p:row>
+		<p:row>
+			<p:commandLink
+				actionListener="#{detallePoblacionBean.activateAndSetProveedor(detallePoblacionBean.poblacionDetalle)}"
+				update=":DLG_detallePoblacionMunicipioProveedor"
+				oncomplete="PF('detallePoblacionMunicipioProveedor').show();" global="false">
+				<h:outputText
+					value="#{detallePoblacionBean.concesionariosPoblacion.size()}" />
+			</p:commandLink>
+		</p:row>
+		<h:outputText
+			value="Numeración asignada (no representa líneas en servicio)" />
+		<h:outputText value="#{detallePoblacionBean.numAsignadaPobFormat}" />
+		<h:outputText value=" Clave INEGI" />
+		<h:outputText value="#{detallePoblacionBean.poblacionDetalle.inegi}" />
+	</p:panelGrid>
+
+	<p:panelGrid columns="2" layout="grid" id="TBL_AbnInfoTable"
+		styleClass="mycustomtablesa">
+
+		<f:facet name="header">
+           			INFORMACIÓN BÁSICA DEL ÁREA GEOGRÁFICA DE NUMERACIÓN
+       			</f:facet>
+
+		<p:row>
+			<h:outputText
+				value="Número(s) Identificador(es) de región (Claves de larga distancia)" />
+		</p:row>
+		<p:row>
+			<ui:repeat var="nir"
+				value="#{detallePoblacionBean.poblacionDetalle.abn.nirs}"
+				varStatus="status">
+				<h:outputText styleClass="nirs #{status.last?'last':''}"
+					value="#{nir.codigo}" />
+			</ui:repeat>
+		</p:row>
+		<h:outputText value="Longitud del número nacional" />
+		<ui:repeat var="nir"
+			value="#{detallePoblacionBean.poblacionDetalle.abn.nirs}">
+			<h:outputText value="#{detallePoblacionBean.getDigitos(nir)} dígitos" />
+		</ui:repeat>
+
+		<p:row>
+			<h:outputText value="Marcación Nacional desde un número fijo o móvil" />
+		</p:row>
+		<p:row>
+			<h:panelGroup style="display:block;">
+				<h:outputText styleClass="greenText" value="" />
+				<h:outputText value="Número nacional (10 dígitos)" />
+			</h:panelGroup>
+
+
+		</p:row>
+
+
+		<p:row>
+			<h:outputText value="Marcación desde los Estados Unidos y Canadá" />
+		</p:row>
+		<p:row>
+			<h:outputText value="011 52 " />
+			<h:outputText value="+ Número nacional (10 dígitos)" />
+		</p:row>
+
+		<p:row>
+			<h:outputText value="Marcación desde el resto del Mundo" />
+		</p:row>
+
+		<p:row>
+			<h:outputText value="+52 " />
+			<h:outputText value="+ Número nacional (10 dígitos)" />
+		</p:row>
+
+		<h:outputText value="Ciudad con mayor cantidad de numeración asignada"
+			rendered="#{detallePoblacionBean.poblacionMaxNumAsignada != null}" />
+		<h:outputText
+			value="#{detallePoblacionBean.poblacionMaxNumAsignada.nombre}"
+			rendered="#{detallePoblacionBean.poblacionMaxNumAsignada != null}" />
+
+		<p:row>
+			<h:outputText value="Poblaciones con servicio de telefonía local" />
+		</p:row>
+		<p:row>
+			<ui:repeat var="nir"
+				value="#{detallePoblacionBean.poblacionDetalle.abn.nirs}">
+				<h:outputText
+					value=" NIR #{nir.codigo}: #{detallePoblacionBean.getPoblacionesNumeracionAsignadaNir(nir).size()}" />
+				<p:commandLink
+					actionListener="#{detallePoblacionBean.activateAndSetPoblacion(nir)}"
+					update=":DLG_detallePoblacionMunicipioProveedor"
+					oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
+					<h:outputText value=" (Consultar)" />
+				</p:commandLink>
+			</ui:repeat>
+		</p:row>
+		<p:row>
+			<h:outputText value="Municipios que forman el área" />
+		</p:row>
+		<p:row>
+			<ui:repeat var="nir"
+				value="#{detallePoblacionBean.poblacionDetalle.abn.nirs}">
+				<h:outputText
+					value=" NIR #{nir.codigo}: #{detallePoblacionBean.getMunicipiosByNir(nir).size()}" />
+
+				<p:commandLink
+					actionListener="#{detallePoblacionBean.activateAndSetMunicipio(detallePoblacionBean.poblacionDetalle.abn, nir)}"
+					update=":DLG_detallePoblacionMunicipioProveedor"
+					oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
+
+					<h:outputText value=" (Consultar)" />
+
+				</p:commandLink>
+			</ui:repeat>
+		</p:row>
+		<p:row>
+			<h:outputText
+				value="Concesionarios que prestan servicio de telefonía local" />
+		</p:row>
+
+		<p:row>
+			<ui:repeat var="nir"
+				value="#{detallePoblacionBean.poblacionDetalle.abn.nirs}">
+				<h:outputText
+					value=" NIR #{nir.codigo}: #{detallePoblacionBean.getProveedoresNumeracionAsignadaNir(nir).size()} " />
+				<p:commandLink
+					actionListener="#{detallePoblacionBean.activateAndSetConcesionarioPoblacion(nir)}"
+					update=":DLG_detallePoblacionMunicipioProveedor"
+					oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
+
+					<h:outputText value=" (Consultar)" />
+
+				</p:commandLink>
+			</ui:repeat>
+		</p:row>
+
+		<h:outputText
+			value="Numeración asignada
+(no representa líneas en servicio)" />
+		<ui:repeat var="nir"
+			value="#{detallePoblacionBean.poblacionDetalle.abn.nirs}">
+			<h:outputText
+				value="NIR #{nir.codigo}: #{detallePoblacionBean.getNumeracionNir(nir)}" />
+		</ui:repeat>
+	</p:panelGrid>
+</h:form>
+
+
+</html>

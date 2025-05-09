@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+
+<h:form id="FORM_Estado">			
+			<p:messages id="MSG_Estado_Edit" showDetail="false"  showSummary="true" autoUpdate="false" closable="true" showIcon="false"/>
+			
+			<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+				<p:outputLabel value="#{msg['catalogo.estados.codigo']}"/>
+				<p:inputText value="#{consultarEstadosBean.estadoSeleccionadoEdicion.codEstado}" disabled="true" style="width:50px;"/>
+						
+				<p:outputLabel value="#{msg['catalogo.estados.nombre']}" for="TXT_Nombre"/>
+				<p:inputText id="TXT_Nombre"  value="#{consultarEstadosBean.estadoSeleccionadoEdicion.nombre}" required="true" style="width:200px;" maxlength="50"/>
+						
+				<p:outputLabel value="#{msg['catalogo.estados.abreviatura']}"/>
+				<p:inputMask 
+						required="false"
+						value="#{consultarEstadosBean.estadoSeleccionadoEdicion.abreviatura}"  
+						size="5"
+						style="width: 200px;"
+						maxlength="5"
+						mask="?aaaaa">
+				</p:inputMask>
+						
+				<p:outputLabel value="#{msg['catalogo.estados.capital']}"/>
+				<p:inputText value="#{consultarEstadosBean.estadoSeleccionadoEdicion.capital}"  style="width:200px;" maxlength="60"/>
+						
+			</h:panelGrid>
+			
+			<p:panel id="panel_boton" styleClass="botonera">
+				<p:commandButton 
+					id="btnSalvar" value="#{msg['manual.generales.btn.guardar']}"
+					icon="ui-icon-disk" 
+					actionListener="#{consultarEstadosBean.guardarCambios}"
+					update="MSG_Estado_Edit" 
+					style="height:30px;  width:96px ;margin-right:20px;">
+				</p:commandButton>
+			</p:panel>
+			
+
+</h:form>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+<ui:composition template="/WEB-INF/templates/plantillaFront.xhtml">
+	<ui:define name="centro">
+		<p:messages id="MSG_NoGeo" showDetail="true" autoUpdate="false"
+			closable="true" showIcon="false" />
+		<p:ajaxStatus id="FORM_noGeo_AS"
+			onstart="PF('statusNNGDialog').show()"
+			onsuccess="PF('statusNNGDialog').hide()">
+		</p:ajaxStatus>
+		<p:dialog widgetVar="statusNNGDialog" modal="true" draggable="false"
+			closable="false" resizable="false" showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+		<!-- <p:blockUI block="FORM_noGeo" widgetVar="FORM_noGeo_BUI">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:blockUI> -->
+		<h:form id="FORM_noGeo">
+
+			<div class="ui-grid ui-grid-responsive">
+				<div class="ui-grid-col-1">
+					<br></br>
+				</div>
+				<div class="ui-grid-col-9">
+					<p:panelGrid id="PG_NoGeo" styleClass="mycustomgrid" columns="1"
+						layout="grid">
+						<f:facet name="header">
+							<p:row>
+								<p:column colspan="7">
+		            Consulta de Numeración No Geográfica
+		            </p:column>
+							</p:row>
+
+						</f:facet>
+						<p:row>
+							<p:column>
+
+								<div class="ui-grid ui-grui-responsive">
+									<div class="ui-grid-col-12"
+										style="font-size: 14px; margin: 5px;">
+										<h:outputText
+											value="	Ingrese
+										7 letras o números o la combinación de ellos para obtener el
+										número específico deseado. (Sin espacios)" />
+									</div>
+									<div class="ui-grid-col-12"
+										style="font-size: 14px; margin-top: 30px;">
+										<div class="ui-grid-col-6">
+											<p:outputLabel
+												value="Seleccione la clave de servicio no geográfico:" />
+											<br></br>
+											<p:selectOneMenu id="L_clave"
+												value="#{consultaNoGeograficaBean.claveSelected}"
+												style="margin-top:10px">
+												<f:selectItem itemLabel="Seleccione una clave de servicio"
+													selected="true" itemDisabled="false" />
+												<f:selectItems
+													value="#{consultaNoGeograficaBean.clavesServicio}"
+													var="clave" itemLabel="#{clave.codigo}"
+													itemValue="#{clave.codigo}">
+												</f:selectItems>
+
+											</p:selectOneMenu>
+										</div>
+										<div class="ui-grid-col-6" style="text-align: rigth;">
+											<p:outputLabel value="Seleccione número específico:" />
+											<br></br>
+											<p:inputText id="I_numEs" style="width: 50%; margin-top:10px"
+												value="#{consultaNoGeograficaBean.numeroIntroducido}"
+												maxlength="7" minLength="7" autocomplete="off" type="tel">
+												<p:ajax event="keyup"
+													listener="#{consultaNoGeograficaBean.checkStatus}"
+													update="BTN_NoGeoSubmit" global="false">
+												</p:ajax>
+											</p:inputText>
+										</div>
+
+
+									</div>
+
+
+
+									<div class="ui-grid-col-12">
+										<p:commandButton style="font-size:14px;  margin-top: 50px;"
+											value="Buscar" id="BTN_NoGeoSubmit"
+											actionListener="#{consultaNoGeograficaBean.searchNumeroNoGeo}"
+											update="panel_container :MSG_NoGeo PG_NoGeo"
+											disabled="#{consultaNoGeograficaBean.submitActivate}"
+											icon="ui-icon-search" styleClass="sombreado" />
+
+										<p:commandButton style="font-size:14px" value="Limpiar"
+											id="BTN_CleanNoGeo"
+											update="PG_NoGeo panel_container :MSG_NoGeo"
+											actionListener="#{consultaNoGeograficaBean.clearAll}"
+											global="false" icon="ui-icon-arrowrefresh-1-e"
+											styleClass="sombreado">
+										</p:commandButton>
+
+									</div>
+									<div class="ui-grid-col-12"
+										style="font-size: 13px; margin-top: 25px; margin-bottom: 25px">
+										<p style="margin: 0px">
+											<b>Ejemplos:</b> 300(MIMARCA), 800(2228353), 900(MUNDO07)
+
+										</p>
+									</div>
+
+								</div>
+
+							</p:column>
+						</p:row>
+
+					</p:panelGrid>
+				</div>
+				<div class="ui-grid-col-12">
+					<br></br>
+				</div>
+				<div class="ui-grid-col-1">
+					<br></br>
+				</div>
+				<div class="ui-grid-col-9">
+					<p:panel id="panel_container" styleClass="mycustompanel">
+						<p:panelGrid id="TBL_infoNumNo" columns="6" layout="grid"
+							styleClass="mycustomtablesa"
+							rendered="#{consultaNoGeograficaBean.tablaActivated}">
+
+							<f:facet name="header">
+           			RESULTADO DE LA CONSULTA
+       			</f:facet>
+							<p:row>
+								<p:column>
+									<p style="font-size: 13px; margin: 0px;">
+										<b>Clave</b>
+									</p>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p style="font-size: 13px; margin: 0px;">
+										<b>Serie</b>
+									</p>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p style="font-size: 13px; margin: 0px">
+										<b>Número</b>
+									</p>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p style="font-size: 13px; margin: 0px;">
+										<b>Status</b>
+									</p>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p style="font-size: 13px; margin: 0px">
+										<b>Operador que presta servicio</b>
+									</p>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<p style="font-size: 13px; margin: 0px">
+										<b>Forma de asignación</b>
+									</p>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{consultaNoGeograficaBean.claveServicio}"
+										style="font-size: 13px;"></h:outputText>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{consultaNoGeograficaBean.sna}"
+										style="font-size: 13px;"></h:outputText>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<h:outputText value="#{consultaNoGeograficaBean.numAsignada}"
+										style="font-size: 13px;"></h:outputText>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<h:outputText
+										value="#{consultaNoGeograficaBean.statusConsulta.descripcion}"
+										style="font-size: 13px;"></h:outputText>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+								
+									<h:outputText rendered="#{consultaNoGeograficaBean.proveedorConsulta != null}"
+										value="#{consultaNoGeograficaBean.proveedorConsulta.nombreCorto}"
+										style="font-size: 13px;"></h:outputText>
+											<h:outputText rendered="#{consultaNoGeograficaBean.proveedorConsulta == null}"
+										value="La numeración consultada no se encuentra asignada en el SNS"
+										style="font-size: 13px;"></h:outputText>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<h:outputText
+										value="#{consultaNoGeograficaBean.formaAsignacion}"
+										style="font-size: 13px;"></h:outputText>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+					</p:panel>
+					<br></br>
+				</div>
+			</div>
+		</h:form>
+
+	</ui:define>
+</ui:composition>
+</html>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui" 
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<ui:composition template="/WEB-INF/templates/plantilla2.xhtml">
+  <ui:define name="centro">
+  <form id="FORM_loginB" method="post" action="j_security_check" autocomplete="off"> 
+
+     <div class="dialogoLogin">
+
+        <div id="j_idt17" class="ui-corner-all ui-panel ui-widget ui-widget-content">
+          <div  id="j_idt17_header" class="ui-panel-titlebar ui-widget-header ui-helper-clearfix ui-corner-all"><span class="ui-panel-title">Login</span></div>
+          <div class="grupoCampos">
+
+            <div id="j_idt17_content" class="ui-panel-content ui-widget-content">
+            <table>
+              <tbody>
+                <tr>
+                  <td><label> Usuario</label></td>
+                  <td><input autocomplete="off" readonly="readonly" onfocus="$(this).removeAttr('readonly');" type="text" class="ui-corner-all" title="Inserte su usuario" required="required" name="j_username"/></td>
+                </tr>
+                <tr>
+                  <td><label> Clave</label></td>
+                  <td><input autocomplete="off" readonly="readonly" onfocus="$(this).removeAttr('readonly');" type="password" class="ui-corner-all" title="Inserte su clave" required="required" name="j_password"/></td>
+                </tr>
+              </tbody>
+            </table>
+            <table style="margin: 10px auto;">
+              <tbody>
+                <tr>
+                   <td><input type="submit" class="ui-state-default ui-corner-all" value="Entrar" autocomplete="off"/></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          </div>
+         </div>
+       </div>
+    
+	</form>
+  </ui:define>
+</ui:composition>
+</html>

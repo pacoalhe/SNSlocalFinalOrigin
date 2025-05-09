@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+	<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+		<ui:define name="centro">
+			
+	        <fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all" style="text-align:center;">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['menu.CPSN']}/#{msg['cpsn.codigos.CPSN']}</legend>
+			
+				<h:form id="FRM_ConsultarCodigosCPSN" style="width:100%;">
+					<p:messages id="MSG_ConsultarCodigosCPSN" showDetail="false" autoUpdate="false" closable="true" showIcon="false"/>
+					<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+						<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['cpsn.codigos.CPSN.busqueda']}</legend>
+						
+						<h:panelGrid columns="6" cellpadding="3" cellspacing="3" style="text-align:center;">
+							<p:outputLabel value="#{msg['cpsn.codigos.CPSN.consulta.pst']}" style="width:50px;"/>
+							<p:selectOneMenu autoWidth="false"
+								id="selProveedor" 
+								style="width: 150px;"
+								value="#{consultarCodigosCPSNBean.proveedorSeleccionado}" 
+								converter="#{proveedorConverter}"> 
+								<f:selectItem itemLabel="Seleccionar"/>
+								<f:selectItems 
+									value="#{consultarCodigosCPSNBean.listadoProveedores}" 
+									var="proveedorSel" 
+									itemLabel="#{proveedorSel.nombre}" 
+									itemValue="#{proveedorSel}">
+								</f:selectItems>
+							</p:selectOneMenu>
+							<h:outputLabel value="#{msg['cpsn.codigos.CPSN.consulta.tipoBloque']}"/>
+							<p:selectOneMenu
+								id="selTipoBloque" 
+								style="width: 150px;"
+								value="#{consultarCodigosCPSNBean.tipoBloqueCPSNSeleccionado}" 
+								converter="#{tipoBloqueCPSNConverter}"> 
+								<f:selectItem itemLabel="Seleccionar"/>
+								<f:selectItems 
+									value="#{consultarCodigosCPSNBean.listadoTiposBloqueCPSN}" 
+									var="tipoBloqueCPSNSel" 
+									itemLabel="#{tipoBloqueCPSNSel.descripcion}" 
+									itemValue="#{tipoBloqueCPSNSel}">
+								</f:selectItems>
+							</p:selectOneMenu>
+							<h:outputLabel value="#{msg['cpsn.codigos.CPSN.consulta.estatus']}"/>
+							<p:selectOneMenu
+								id="selEstatus" 
+								style="width: 150px;"
+								value="#{consultarCodigosCPSNBean.estatusCPSNSeleccionado}" 
+								converter="#{estatusCPSNConverter}"> 
+								<f:selectItem itemLabel="Seleccionar"/>
+								<f:selectItems 
+									value="#{consultarCodigosCPSNBean.listadoEstatusCPSN}" 
+									var="estatusCPSNSel" 
+									itemLabel="#{estatusCPSNSel.descripcion}" 
+									itemValue="#{estatusCPSNSel}">
+								</f:selectItems>
+							</p:selectOneMenu>
+						</h:panelGrid>
+					</fieldset>
+					
+					<p:panelGrid style="display:block;">
+						<p:commandButton
+							value="#{msg['consultar.Buscar']}"
+							action="#{consultarCodigosCPSNBean.realizarBusqueda}"
+							update="MSG_ConsultarCodigosCPSN operacionesCodigosCpsn3 FRM_ConsultarCodigosCPSN :#{p:component('BTN_ExportarCodigosCPSN')}">
+						</p:commandButton>
+						<p:commandButton value="#{msg['consultar.Limpiar']}"
+							actionListener="#{consultarCodigosCPSNBean.limpiarBusqueda}"
+							style="margin-right:20px;"
+							update="selProveedor selTipoBloque selEstatus operacionesCodigosCpsn3 FRM_ConsultarCodigosCPSN :#{p:component('BTN_ExportarCodigosCPSN')} "> 
+						</p:commandButton>
+					</p:panelGrid>
+				
+					<sns:operacionesCodigosCpsn
+						id="operacionesCodigosCpsn3" 
+						beanRef="#{consultarCodigosCPSNBean}"
+						form="FRM_ConsultarCodigosCPSN">
+					</sns:operacionesCodigosCpsn>
+				</h:form>
+			</fieldset>
+
+			<p:ajaxStatus
+				id="FRM_ConsultarCodigosCPSN_AS"
+				onstart="PF('statusCodigosCPSNDialog').show()"
+				onsuccess="PF('statusCodigosCPSNDialog').hide()">
+			</p:ajaxStatus>
+			<p:dialog widgetVar="statusCodigosCPSNDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+    <ui:include src="/componentes/loader.xhtml"/>
+</p:dialog>
+		<!-- 	<p:blockUI block="FRM_ConsultarCodigosCPSN" widgetVar="FRM_ConsultarCodigosCPSN_BUI">
+				<ui:include src="/componentes/loader.xhtml"/>
+			</p:blockUI> -->
+			
+		</ui:define>
+	</ui:composition>
+</html>

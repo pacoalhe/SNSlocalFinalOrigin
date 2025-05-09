@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+	
+	<p:fieldset legend="Datos de Control">
+		<h:panelGrid columns="4" cellpadding="3" cellspacing="3" >
+			<p:outputLabel value="Usuario Creación"/>
+			<p:inputText 
+				value="#{edicionEquipoSenalizacionCpsiBean.equipoSenal.usuarioCreacion.userid}"
+				disabled="true"
+				size="20"
+				maxlength="20"/>
+
+			<p:outputLabel value="Fecha Creación"/>
+			<p:inputText 
+				disabled="true"
+				size="20"
+				maxlength="20"
+				value="#{edicionEquipoSenalizacionCpsiBean.equipoSenal.fechaCreacion}" >
+				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			</p:inputText >
+			<p:outputLabel value="Usuario Modificación"/>
+			<p:inputText
+				disabled="true"
+				size="20"
+				maxlength="20" 
+				value="#{edicionEquipoSenalizacionCpsiBean.equipoSenal.usuarioModificacion.userid}"/>
+
+			<p:outputLabel value="Fecha Modificacion"/>
+			<p:inputText
+				disabled="true"
+				size="20"
+				maxlength="20"
+				value="#{edicionEquipoSenalizacionCpsiBean.equipoSenal.fechaModificacion}" >
+				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			</p:inputText>
+			
+			<p:outputLabel value="Nombre Fichero"/>
+			<h:outputText
+				value="#{edicionEquipoSenalizacionCpsiBean.equipoSenal.nombreFichero}" >
+			</h:outputText>
+		</h:panelGrid>
+		<h:panelGrid cellpadding="3" cellspacing="3">			
+			
+		</h:panelGrid>
+	</p:fieldset>
+	
+	<p:dataTable
+		id="TBL_WARN" 
+		widgetVar="TBL_WARN"		
+		var="warnings" 
+		value="#{edicionEquipoSenalizacionCpsiBean.equipoSenal.warnings}"
+		paginator="false"
+		scrollable="true"
+		scrollHeight="100px;"
+		resizableColumns="false"   
+		style="display:block;text-overflow:ellipsis;"
+		emptyMessage="#{msg['buscador.noresultados']}">
+	    <p:column headerText="Warnings" style="text-align:left; text-overflow:ellipsis;">
+	        <h:outputText value="#{warnings.warning}" title="#{warnings.warning}"/>
+	    </p:column>  
+	</p:dataTable>	
+</html>

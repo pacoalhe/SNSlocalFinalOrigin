@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<!-- <p:ajaxStatus id="FORM_detalleproveedor_AS"
+	onstart="PF('FORM_detalleproveedor_BUI').show()"
+	onsuccess="PF('FORM_detalleproveedor_BUI').hide()">
+</p:ajaxStatus>
+<p:blockUI block="FORM_detalleproveedor"
+	widgetVar="FORM_detalleproveedor_BUI">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI> -->
+
+<h:form id="FORM_detalleproveedor">
+	<!-- tabla de poblaciones proveedor -->
+	<p:dataTable id="TBL_poblacionesProveedor"
+		value="#{detalleRepresentanteBean.poblacionesNumeracionProveedor}"
+		var="poblacionProveedor" paginator="true"
+		rendered="#{detalleRepresentanteBean.poblacionesProveedorTabla}"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{detalleRepresentanteBean.numeroRegistros}"
+		styleClass="mycustomtable" paginatorPosition="bottom">
+
+		<f:facet name="header">
+           		CIUDADES Y POBLACIONES DEL PROVEEDOR
+		</f:facet>
+		<p:column
+			headerText="Ciudades y Poblaciones
+			con Servicio de Telefonía Ofrecido por: #{detalleRepresentanteBean.prestadorNumero.nombreCorto}"
+			sortBy="#{poblacionProveedor.poblacion.nombre}">
+			<p:commandLink
+				update=":FORM_myform:P_containernumeracion :FORM_myform:P_containerinfo :FORM_myform:P_containerLocal :FORM_myform:P_containerinfopobNoNir"
+				actionListener="#{consultaPublicaMarcacionBean.infoPoblacionNir(poblacionProveedor.poblacion)}"
+				oncomplete="PF('numeracionResults').hide(); PF('datosnumeracion').hide();   ">
+				<h:outputText value="#{poblacionProveedor.poblacion.nombre}" />
+			</p:commandLink>
+		</p:column>
+		<p:column headerText="EDO" style="text-align:center" 
+			sortBy="#{poblacionProveedor.poblacion.municipio.estado.abreviatura}">
+			<p:commandLink
+				actionListener="#{areasGeoNumeracionMainBean.viewMaps(poblacionProveedor.poblacion.municipio.estado)}"
+				update=":P_containerInclude :P_main"
+				oncomplete="PF('numeracionResults').hide(); PF('datosnumeracion').hide();">
+				<h:outputText
+					value="#{poblacionProveedor.poblacion.municipio.estado.abreviatura}" />
+			</p:commandLink>
+		</p:column>
+		<p:column headerText="NIR" style="text-align:center">
+			<ui:repeat var="nir" 
+				value="#{detalleRepresentanteBean.buscaNirsPoblacion(poblacionProveedor.poblacion)}">
+				<p:commandLink
+					update=":FORM_myform:P_containernumeracion :FORM_myform:P_containerinfo :FORM_myform:P_containerLocal"
+					actionListener="#{consultaPublicaMarcacionBean.infoNir(nir)}"
+					oncomplete="PF('numeracionResults').hide(); PF('datosnumeracion').hide();">
+					<h:outputText value="#{nir.codigo}" />
+				</p:commandLink>
+				
+				<h:outputText
+				
+					rendered="#{nir == null or (detalleRepresentanteBean.buscaNirsPoblacion(poblacionProveedor.poblacion).size() == 0)}"
+					value="Población sin NIR asociado" />
+
+				<br></br>
+			</ui:repeat>
+		</p:column>
+		<p:column
+			headerText="Numeración Asignada (no representa líneas en servicio)" style="text-align:center">
+			<h:outputText
+				value="#{detalleRepresentanteBean.formatoNumeracionAsignada(poblacionProveedor.numeracionAsignada)}" />
+		</p:column>
+
+
+
+	</p:dataTable>
+
+	<!-- tabla de estados proveedor -->
+	<p:dataTable id="TBL_estadosProveedor"
+		value="#{detalleRepresentanteBean.estadosNumeracionProveedor}"
+		var="estadoProveedor" paginator="true"
+		rendered="#{detalleRepresentanteBean.estadosProveedorTabla}"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{detalleRepresentanteBean.numeroRegistros}"
+		styleClass="mycustomtable" paginatorPosition="bottom">
+
+		<f:facet name="header">
+           		ESTADOS DEL PROVEEDOR
+		</f:facet>
+		<p:column
+			headerText="Estados con Servicio Telefónico Ofrecido por: #{detalleRepresentanteBean.prestadorNumero.nombreCorto}"
+			sortBy="#{estadoProveedor.estado.nombre}">
+			<p:commandLink
+				actionListener="#{areasGeoNumeracionMainBean.viewMaps(estadoProveedor.estado)}"
+				update=":P_containerInclude :P_main"
+				oncomplete="PF('numeracionResults').hide(); PF('datosnumeracion').hide();">
+				<h:outputText value="#{estadoProveedor.estado.nombre}" />
+			</p:commandLink>
+		</p:column>
+
+		<p:column
+			headerText="Numeración Asignada (No representa líneas en servicio)" style="text-align:center" >
+			<h:outputText
+				value="#{detalleRepresentanteBean.formatoNumeracionAsignada(estadoProveedor.numeracionAsignada)}" />
+		</p:column>
+		<p:column headerText="Ciudades y Poblaciones con Servicio" style="text-align:center">
+			<p:commandLink oncomplete="PF('proveedorPoblacionEstado').show();"
+				actionListener="#{detallePoblacionProveedorBean.setInfoPoblacionProveedorEstado(consultaPublicaMarcacionBean.prestadorNumero, estadoProveedor.estado)}"
+				update=":ML_pe">
+				<h:outputText value="Consultar" />
+			</p:commandLink>
+
+		</p:column>
+
+	</p:dataTable>
+
+	<!-- tabla de nirs proveedor -->
+	<p:dataTable id="TBL_nirsProveedor"
+		value="#{detalleRepresentanteBean.nirsNumeracionProveedor}"
+		var="nirProveedor" paginator="true"
+		rendered="#{detalleRepresentanteBean.nirsProveedorTabla}"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{detalleRepresentanteBean.numeroRegistros}"
+		styleClass="mycustomtable" paginatorPosition="bottom">
+
+		<f:facet name="header">
+           		NÚMEROS IDENTIFICADORES DE REGIÓN
+		</f:facet>
+
+		<p:column
+			headerText="Números Identificadores de Región con Servicio Telefónico Ofrecido por 
+			#{detalleRepresentanteBean.prestadorNumero.nombreCorto}"
+			sortBy="#{nirProveedor.nir.codigo}" style="text-align:center">
+			<p:commandLink
+				update=":FORM_myform:P_containernumeracion :FORM_myform:P_containerinfo :FORM_myform:P_containerLocal"
+				actionListener="#{consultaPublicaMarcacionBean.infoNir(nirProveedor.nir)}"
+				oncomplete="PF('numeracionResults').hide(); PF('datosnumeracion').hide();   ">
+				<h:outputText value="#{nirProveedor.nir.codigo}" />
+			</p:commandLink>
+		</p:column>
+
+		<p:column
+			headerText="Numeración Asignada (no representa líneas de servicio)" style="text-align:center">
+			<h:outputText
+				value="#{detalleRepresentanteBean.formatoNumeracionAsignada(nirProveedor.numeracionAsignada)}" />
+		</p:column>
+
+		<p:column headerText="Ciudades y Poblaciones con Servicio" style="text-align:center">
+			<p:commandLink oncomplete="PF('proveedorPoblacionNir').show();"
+				actionListener="#{detallePoblacionProveedorBean.setInfoNirProveedor(detalleRepresentanteBean.prestadorNumero, nirProveedor.nir)}"
+				update=":ML_ppnir">
+				<h:outputText value="Consultar" />
+			</p:commandLink>
+
+		</p:column>
+	</p:dataTable>
+
+</h:form>
+
+</html>

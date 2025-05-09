@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+
+	<h:panelGrid columns="1" id="PNL_ErroresFormato" style="background:transparent;">
+		<p:dataTable
+			id="TBL_errores_formato"
+			var="err"  
+			scrollable="true"
+			value="#{pnnABDBean.listaErroresFormato}"
+			paginator="true" 
+			paginatorPosition="bottom" 
+			rows="#{pnnABDBean.registroPorPagina}"
+			scrollHeight="150px;" 
+			resizableColumns="true" 
+			emptyMessage="No hay errores de formato.">
+
+			<f:facet name="header">
+	            <center>Errores de Formato</center>
+	        </f:facet>
+							
+			<p:columnGroup type="header">					
+				<p:row>
+					<p:column colspan="1" headerText="Número inicial" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+					<p:column colspan="1" headerText="Número final" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;  border-right: 1px solid #000000;"/>
+					<p:column colspan="1" headerText="IDO Arrendador" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+					<p:column colspan="1" headerText="IDO Arrendatario" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+					<p:column colspan="1" headerText="Nombre Fichero" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				</p:row>
+			</p:columnGroup>
+			
+			<p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+   				<h:outputText value="#{err.numberFrom}" title="#{err.numberFrom}"/>
+			</p:column>
+
+			<p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+ 				<h:outputText value="#{err.numberTo}" title="#{err.numberTo}"/>
+			</p:column>
+							
+			<p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+	        	<h:outputText value="#{err.idoArrendador}" title="#{err.idoArrendador}"/>
+		    </p:column>
+		    
+		    <p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+		    	<h:outputText value="#{err.idoArrendatario}" title="#{err.idoArrendatario}"/>
+			</p:column>
+
+		    <p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+		    	<h:outputText value="#{err.nombreFichero}" title="#{err.nombreFichero}"/>
+			</p:column>	 
+
+		</p:dataTable>
+	</h:panelGrid>	
+</html>

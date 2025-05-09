@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+	<script type="text/javascript">
+		function showStatus() {
+			PF('statusAsignacionNngDialog').show();
+		}
+		function hideStatus() {
+			PF('statusAsignacionNngDialog').hide();
+		}
+	</script>
+
+	<h:form id="FORM_SolicitudAsignacionNNG">
+		<p:wizard 
+			id="WIZ_SolicitudAsignacion" 
+			widgetVar="WIZ_SolicitudAsignacion"
+			flowListener="#{solicitudAsignacionNngBean.siguientePaso}"
+			showNavBar="true" 
+			nextLabel="#{msg['manual.tab.siguiente']}"
+			backLabel="#{msg['manual.tab.anterior']}"
+			style="min-width:1150px">
+	
+			<p:tab id="tab_general_asignacion" title="#{msg['manual.tab.generales']}">
+				<sns:generalesAsignacionNng
+					id="TAB_Generales_AsignacionNNG"
+					nameBean="#{solicitudAsignacionNngBean.tabGenerales}">
+				</sns:generalesAsignacionNng>
+			</p:tab>
+	
+			<p:tab id="tab_analisis_asignacion" title="#{msg['manual.tab.analisis']}">
+				<sns:analisisAsignacionNng
+					id="cmp_analisis"
+					nameBean="#{solicitudAsignacionNngBean.tabAnalisis}"
+					formAsignacion="FORM_SolicitudAsignacionNNG">
+				</sns:analisisAsignacionNng>
+			</p:tab>
+	
+			<p:tab id="tab_asignacion" title="#{msg['manual.tab.asignacion']}">
+				<sns:asignacionNng 
+					id="cmp_asignacion"
+					nameBean="#{solicitudAsignacionNngBean.tabAsignacion}"
+					formAsignacion="FORM_SolicitudAsignacionNNG:cmp_asignacion">
+				</sns:asignacionNng>
+			</p:tab>
+	
+			<p:tab id="tab_oficios" title="#{msg.oficio}">
+				<sns:generarOficio nameBean="#{solicitudAsignacionNngBean.tabOficios}" />
+			</p:tab>
+		</p:wizard>
+		
+<!-- 		<p:ajaxStatus 
+			id="FORM_SolicitudAsignacionNNG_AS"
+			onstart="PF('FORM_SolicitudAsignacionNNG_BUI').show()"
+			onsuccess="PF('FORM_SolicitudAsignacionNNG_BUI').hide()">
+		</p:ajaxStatus>
+		
+		<p:blockUI block="FORM_SolicitudAsignacionNNG" widgetVar="FORM_SolicitudAsignacionNNG_BUI">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:blockUI> -->
+	</h:form>
+	
+	<!-- Modal de Edición de Proveedores. -->
+	<p:dialog
+		id="MDL_Proveedores" widgetVar="MDL_Proveedores"
+		modal="true" appendTo="@(body)" closable="false"
+		header="#{msg['catalogo.proveedores.edicion.cabecera']}" 
+		scrollable="true" resizable="true" width="1280" height="500">
+		<p:ajax 
+			event="close"
+			listener="#{solicitudAsignacionNngBean.tabGenerales.actualizarEdicionProveedor}"
+			update="FORM_SolicitudAsignacionNNG:TAB_Generales_AsignacionNNG">
+		</p:ajax>
+		<p:commandButton
+			id="BTN_Salir" global="false"
+			styleClass="customCloseModal"
+			value="X" closable="false"
+			onclick="PF('MDL_Proveedores').hide()">
+			<p:resetInput target="FORM_GestionProveedor" />	
+		</p:commandButton>
+		<ui:include src="/admin-catalogos/proveedor/edicion-proveedoresV2.xhtml"/>
+	</p:dialog>
+	
+	<!-- Modal de Edición de Claves de Servicio. -->
+	<p:dialog 
+		id="MDL_ClaveServicio" widgetVar="MDL_ClaveServicio"
+		modal="true" appendTo="@(body)" closable="false"
+		header="#{msg['catalogo.clave.servicio']}" scrollable="true"
+		resizable="true" width="600" height="250">
+		<p:ajax 
+			event="close" global="false"
+			listener="#{solicitudAsignacionNngBean.tabAnalisis.reset}"
+			update=":FORM_SolicitudAsignacionNNG :FRM_EdicionClaveServicio :FORM_SolicitudAsignacionNNG:tab_analisis_asignacion">
+		</p:ajax>
+		<p:commandButton 
+			id="BTN_Salir_ClaveServicio"
+			styleClass="customCloseModal" value="X"
+			onclick="PF('DLG_Salir_ClaveServicio').show()" global="false">
+			<p:resetInput target=":#{p:component('FRM_EdicionClaveServicio')}" />
+		</p:commandButton>
+		<ui:include src="/admin-catalogos/clave-servicio/editar-clave-servicio.xhtml" />
+	</p:dialog>
+	
+	<!-- Confirmación al salir nueva clave servicio-->
+	<p:dialog 
+		id="DLG_Salir_ClaveServicio"
+		widgetVar="DLG_Salir_ClaveServicio" 
+		modal="true" 
+		closeOnEscape="true"
+		closable="false" 
+		resizable="false" 
+		width="250"
+		height="115"
+		header="Salir" 
+		appendTo="@(body)">
+		<sns:exit-custom-dialog-no-listener 
+			message="#{msg['cerrarDialogo.mensaje']}"
+			blockUIWidgetVar="salirNuevaCalveServicio_BUI"
+			onCompleteExit="PF('DLG_Salir_ClaveServicio').hide();PF('MDL_ClaveServicio').hide();"
+			onCompleteCancel="PF('DLG_Salir_ClaveServicio').hide();"
+			updateComponentId=":FORM_SolicitudAsignacionNNG :FRM_EdicionClaveServicio :FORM_SolicitudAsignacionNNG:tab_general_asignacion"
+			resetValues="true">
+		</sns:exit-custom-dialog-no-listener>
+	</p:dialog>
+	
+	<!-- Dialog 'sugerir Numeraciones' -->
+	<p:dialog 
+		id="sugerirNumeraciones" widgetVar="sugerirNumeraciones"
+		header="SUGERENCIAS" appendTo="@(body)" modal="true" resizable="false"
+		width="250">
+		<sns:sugerencia id="cmp_sugerencia"
+			nameBean="#{solicitudAsignacionNngBean.tabAnalisis}"
+			update=":FORM_SolicitudAsignacionNNG">
+		</sns:sugerencia>
+	</p:dialog>
+	
+
+
+</html>

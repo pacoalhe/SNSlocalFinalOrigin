@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+	<!-- Tabla dialog municipios/Nir -->
+	<p:dataTable id="TBL_municipiosNir" var="municipio"
+		value="#{dialogInfoBean.municipiosNir}" paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{dialogInfoBean.numeroRegistros}" 
+		paginatorPosition="bottom" styleClass="mycustomtable">
+		<f:facet name="header">MUNICIPIOS CON SERVICIO LOCAL</f:facet>
+		<p:columnGroup type="header">
+			<p:row>
+				<p:column headerText="NOMBRE" sortBy="#{municipio.nombre}"/>
+				<p:column headerText="INEGI" sortBy="#{abnInfoBean.createInegiMunicipio(municipio.id)}"/>
+			
+			</p:row>
+		</p:columnGroup>
+		<p:column >
+			<h:outputText value="#{municipio.nombre}" />
+		</p:column>
+		<p:column  style="text-align:center" >
+			<h:outputText value="#{abnInfoBean.createInegiMunicipio(municipio.id)}" />
+		</p:column>
+		<p:effect type="clip" event="render" />
+	</p:dataTable>
+</html>

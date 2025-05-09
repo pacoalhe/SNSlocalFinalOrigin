@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<h:form>
+	<p:panel>
+		<p:dataTable id="TBL_EstudioCPSI_linea1"
+			widgetVar="TBL_EstudioCPSI_linea1" var="estudioLinea1"
+			value="#{consultarCodigosCPSIBean.listadoEstudio.linea1EstudioCPSI}"
+			paginator="false" resizableColumns="false"
+			style="width:100%; margin-bottom:5px;" scrollable="false"
+			emptyMessage="#{msg['buscador.noresultados']}"
+			rendered="#{consultarCodigosCPSIBean.listadoEstudio.mostrarLinea1}">
+
+
+			<p:column width="50"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.proveedor']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea1.nombreProveedor}" />
+			</p:column>
+
+			<p:column width="50"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.totalAsignados']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea1.totalAsignados}" />
+			</p:column>
+
+			<p:column width="50"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.totalUtilizados']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea1.totalActivos}" />
+			</p:column>
+
+			<p:column width="50"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.PorcentajeUtilizacion']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea1.utilizacion}%" />
+			</p:column>
+		</p:dataTable>
+
+		<p:dataTable id="TBL_EstudioCPSI_linea2"
+			widgetVar="TBL_EstudioCPSI_linea2" var="estudioLinea2"
+			value="#{consultarCodigosCPSIBean.listadoEstudio.linea2EstudioCPSI}"
+			paginator="false" resizableColumns="false"
+			style="width:100%; margin-bottom:5px;" scrollable="false"
+			emptyMessage="#{msg['buscador.noresultados']}">
+
+
+			<p:column width="50"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.total']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea2.total}" />
+			</p:column>
+
+			<p:column width="75"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.libres']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea2.libres}" />
+			</p:column>
+
+			<p:column width="75"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.reservados']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea2.reservados}" />
+			</p:column>
+
+			<p:column width="50"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.asignados']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea2.asignados}" />
+			</p:column>
+
+			<p:column width="50"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.planificados']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea2.planificados}" />
+			</p:column>
+
+			<p:column width="50"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.cuarentena']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea2.cuarentena}" />
+			</p:column>
+
+			<p:column width="75"
+				headerText="#{msg['cpsi.codigos.CPSI.estudio.porcentaje']}"
+				style="text-align:center;">
+				<h:outputText value="#{estudioLinea2.porcentaje}" />
+			</p:column>
+
+			<f:facet name="footer">
+				<p:commandButton style="text-align:center;" value="#{msg.exportar}"
+					ajax="false"
+					onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+					<p:fileDownload value="#{consultarCodigosCPSIBean.exportarEstudio}" />
+				</p:commandButton>
+			</f:facet>
+		</p:dataTable>
+
+	</p:panel>
+</h:form>
+</html>

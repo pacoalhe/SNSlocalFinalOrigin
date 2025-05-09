@@ -1,0 +1,926 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+<h:form id="FORM_GestionProveedor">
+	<p:panel id="PNL_GestionProveedor">
+		<p:messages id="MSG_Proveedores" showDetail="false" autoUpdate="false"
+			closable="true" escape="false" showIcon="false" />
+		<p:fieldset id="PNL_Proveedor"
+			legend="#{msg['catalogo.proveedores.edicion.cabecera']}"
+			style="width:900px">
+			<h:panelGrid columns="8" cellpadding="3" cellspacing="3"
+				style="width:85%">
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_Nombre"
+						value="#{msg['catalogo.proveedores.edicion.nombre']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText style="align:left;" id="TXT_Nombre"
+						value="#{gestionProveedorBean.proveedor.nombre}" required="true"
+						maxlength="100" size="16" autocomplete="false">
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_NombreCorto"
+						value="#{msg['catalogo.proveedores.edicion.nombreCorto']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText style="align:left;" id="TXT_NombreCorto"
+						value="#{gestionProveedorBean.proveedor.nombreCorto}"
+						maxlength="35" size="16" required="true">
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_Usuario"
+						value="#{msg['catalogo.proveedores.edicion.usuario']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText style="text-align:left;" id="TXT_Usuario"
+						value="#{gestionProveedorBean.proveedor.usuario.userid}"
+						maxlength="20" size="16" required="true">
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_Password"
+						value="#{msg['catalogo.proveedores.edicion.password']}" />
+				</p:column>
+
+				<p:column>
+					<p:password style="text-align:left;" id="TXT_Password"
+						value="#{gestionProveedorBean.proveedor.usuario.contrasenna}"
+						redisplay="true" maxlength="40" size="20" required="#{gestionProveedorBean.edicion}" 
+						disabled="#{!gestionProveedorBean.edicion}"
+						title="#{msg['catalogo.proveedores.edicion.password.formato']}">
+						<p:ajax event="change" global="false"
+							update="MSG_Proveedores :#{p:component('mensajeAltaPassword')}">
+						</p:ajax>
+					</p:password>
+					<p:tooltip style="border:5px groove #7AC142" for="TXT_Password"
+						showEvent="focus" hideEvent="blur" showEffect="clip"
+						hideEffect="clip" />
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10 vertical-alignSuper"
+						for="selTipoServicio"
+						value="#{msg['catalogo.proveedores.edicion.tipoServicio']}" />
+				</p:column>
+
+				<p:column>
+					<p:selectOneMenu id="selTipoServicio" style="width: 100px;"
+						value="#{gestionProveedorBean.proveedor.tipoServicio}"
+						converter="#{tipoServicioConverter}" required="true">
+						<f:selectItem itemLabel="Seleccionar" />
+						<f:selectItems
+							value="#{gestionProveedorBean.listadoTiposServicio}"
+							var="tiposServicioSel"
+							itemLabel="#{tiposServicioSel.descripcion}"
+							itemValue="#{tiposServicioSel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10 vertical-alignSuper"
+						for="selTipoProveedor"
+						value="#{msg['catalogo.proveedores.edicion.tipoPst']}" />
+				</p:column>
+
+				<p:column>
+					<p:selectOneMenu id="selTipoProveedor" style="width: 100px;"
+						value="#{gestionProveedorBean.proveedor.tipoProveedor}"
+						converter="#{tipoProveedorConverter}" required="true">
+						<p:ajax event="change" global="false"
+							update="TXT_Ido TXT_Ida TXT_Abc TXT_Bcd MSG_Proveedores"
+							listener="#{gestionProveedorBean.tipoPstChange}">
+						</p:ajax>
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+						<f:selectItems value="#{gestionProveedorBean.listadoTipoPst}"
+							var="tipoPst" itemLabel="#{tipoPst.descripcion}"
+							itemValue="#{tipoPst}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10 vertical-alignSuper"
+						for="selTipoRed"
+						value="#{msg['catalogo.proveedores.edicion.tipoRed']}" />
+				</p:column>
+
+				<p:column>
+					<p:selectOneMenu id="selTipoRed" style="width: 100px;"
+						value="#{gestionProveedorBean.proveedor.tipoRed}"
+						converter="#{tipoRedConverter}" required="true">
+						<p:ajax event="change" global="false"
+							update="DAT_Convenio MSG_Proveedores"
+							listener="#{gestionProveedorBean.tipoRedChange}">
+						</p:ajax>
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+						<f:selectItems value="#{gestionProveedorBean.listadoTiposRed}"
+							var="tipoRed" itemLabel="#{tipoRed.descripcion}"
+							itemValue="#{tipoRed}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10 vertical-alignSuper"
+						for="selTipoRedO"
+						value="#{msg['catalogo.proveedores.edicion.tipoRedOriginal']}" />
+				</p:column>
+
+				<p:column>
+					<p:selectOneMenu id="selTipoRedO" style="width: 100px;"
+						value="#{gestionProveedorBean.proveedor.tipoRedOriginal}"
+						converter="#{tipoRedConverter}" required="true"
+						disabled="#{gestionProveedorBean.edicion}">
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+						<f:selectItems
+							value="#{gestionProveedorBean.listadoTiposRedOriginal}"
+							var="tipoRedO" itemLabel="#{tipoRedO.descripcion}"
+							itemValue="#{tipoRedO}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_Ido"
+						value="#{msg['catalogo.proveedores.edicion.ido']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText id="TXT_Ido" onkeydown="idoInBcd(event)" widgetVar="TXT_Ido"
+						value="#{gestionProveedorBean.proveedor.ido}" maxlength="3"
+						size="4" required="#{gestionProveedorBean.habilitarConcComerc}"
+						disabled="#{!gestionProveedorBean.habilitarConcComerc}">
+						<p:ajax event="keyup" global="false"
+							update="BTN_Guardar :#{p:component('confirmDlg')}"
+							listener="#{gestionProveedorBean.existeIdo}">
+						</p:ajax>
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_Ida"
+						value="#{msg['catalogo.proveedores.edicion.ida']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText id="TXT_Ida"
+						value="#{gestionProveedorBean.proveedor.ida}" maxlength="3"
+						size="4"
+						required="#{gestionProveedorBean.habilitarComercializadora}"
+						disabled="#{!gestionProveedorBean.habilitarComercializadora}">
+						<p:ajax event="keyup" global="false"
+							update="BTN_Guardar :#{p:component('confirmDlg')}"
+							listener="#{gestionProveedorBean.existeIda}">
+						</p:ajax>
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_Abc"
+						value="#{msg['catalogo.proveedores.edicion.abc']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText id="TXT_Abc"
+						value="#{gestionProveedorBean.proveedor.abc}" maxlength="3"
+						size="4" required="false"
+						disabled="true">
+						<p:ajax event="keyup" global="false"
+							update="BTN_Guardar :#{p:component('confirmDlg')}"
+							listener="#{gestionProveedorBean.existeAbc}">
+						</p:ajax>
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_Bcd"
+						value="#{msg['catalogo.proveedores.edicion.bcd']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText id="TXT_Bcd" widgetVar="TXT_Bcd"
+						value="#{gestionProveedorBean.proveedor.bcd}" maxlength="3"
+						size="4" required="false">
+						<p:ajax event="keyup" global="false"
+							update="BTN_Guardar :#{p:component('confirmDlg')}"
+							listener="#{gestionProveedorBean.existeBcd}">
+						</p:ajax>
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10 vertical-alignSuper"
+						for="selEstado"
+						value="#{msg['catalogo.proveedores.edicion.estado']}" />
+				</p:column>
+
+				<p:column>
+					<p:selectOneMenu id="selEstado" style="width: 100px;"
+						value="#{gestionProveedorBean.proveedor.estado}"
+						converter="#{estadoConverter}" required="true">
+						<f:selectItem itemLabel="Seleccionar" />
+						<f:selectItems value="#{gestionProveedorBean.listadoEstados}"
+							var="estadoSel" itemLabel="#{estadoSel.nombre}"
+							itemValue="#{estadoSel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</p:column>
+				<p:column>
+
+					<p:outputLabel styleClass="margin-right10" for="TXT_Calle"
+						value="#{msg['catalogo.proveedores.edicion.calle']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText id="TXT_Calle"
+						value="#{gestionProveedorBean.proveedor.calle}" maxlength="50"
+						size="16" required="true">
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_NumExt"
+						value="#{msg['catalogo.proveedores.edicion.numExt']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText id="TXT_NumExt"
+						value="#{gestionProveedorBean.proveedor.numExt}" maxlength="50"
+						size="16" required="true">
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_NumInt"
+						value="#{msg['catalogo.proveedores.edicion.numInt']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText id="TXT_NumInt"
+						value="#{gestionProveedorBean.proveedor.numInt}" maxlength="50"
+						size="16" required="true">
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_Colonia"
+						value="#{msg['catalogo.proveedores.edicion.colonia']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText id="TXT_Colonia"
+						value="#{gestionProveedorBean.proveedor.colonia}" maxlength="50"
+						size="16" required="true">
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_Ciudad"
+						value="#{msg['catalogo.proveedores.edicion.ciudad']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText id="TXT_Ciudad"
+						value="#{gestionProveedorBean.proveedor.ciudad}" maxlength="50"
+						size="16" required="true">
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10" for="TXT_CodigoPostal"
+						value="#{msg['catalogo.proveedores.edicion.codigoPostal']}" />
+				</p:column>
+
+				<p:column>
+					<p:inputText id="TXT_CodigoPostal"
+						value="#{gestionProveedorBean.proveedor.cp}" maxlength="5"
+						size="5" required="true"
+						onkeypress="if (48 > (event.which || event.keyCode) || (event.which || event.keyCode) > 57) { return false;} return true;">
+					</p:inputText>
+				</p:column>
+
+				<p:column>
+					<p:outputLabel styleClass="margin-right10 vertical-alignSuper"
+						for="selEstatus"
+						value="#{msg['catalogo.proveedores.edicion.estatus']}" />
+				</p:column>
+
+				<p:column>
+					<p:selectOneMenu id="selEstatus" style="width: 100px;"
+						value="#{gestionProveedorBean.proveedor.estatus}"
+						converter="#{estatusConverter}"
+						required="#{gestionProveedorBean.edicion}" disabled="true">
+						<f:selectItem itemLabel="Seleccionar" />
+						<f:selectItems value="#{gestionProveedorBean.listadoEstatus}"
+							var="estatusSel" itemLabel="#{estatusSel.descripcion}"
+							itemValue="#{estatusSel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</p:column>
+			</h:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset
+			legend="#{msg['catalogo.proveedores.edicion.convenios.titulo']}"
+			style="width:900px">
+			<h:panelGrid id="DAT_Convenio" columns="3" cellpadding="3"
+				cellspacing="3" style="width:100%;">
+				<p:column>
+					<p:commandButton
+						value="#{msg['catalogo.proveedores.edicion.convenios.crear']}"
+						action="#{gestionProveedorBean.crearConvenio}"
+						update="MSG_Proveedores DAT_Convenio DAT_Contacto">
+					</p:commandButton>
+				</p:column>
+
+				<p:column rendered="#{gestionProveedorBean.mostrarConvenios}">
+					<p:fieldset style="width:400px;">
+						<h:panelGrid id="DAT_Tipo_Red_Convenio"
+							rendered="#{gestionProveedorBean.mostrarTipoRedConvenio}"
+							columns="2" cellpadding="3" cellspacing="3">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10"
+									for="TXT_Tipo_Red-Convenio"
+									value="#{msg['catalogo.proveedores.edicion.tipoRed']}" />*
+								</p:column>
+
+							<p:column>
+								<p:selectOneMenu id="TXT_Tipo_Red-Convenio"
+									style="width: 100px;"
+									value="#{gestionProveedorBean.convenioTemporal.tipoRed}"
+									converter="#{tipoRedConverter}">
+									<p:ajax event="change"
+										listener="#{gestionProveedorBean.tipoRedConvenioChange}"
+										update="selEdProveedor TXT_Convenio_IDO TXT_Convenio_ABC MSG_Proveedores">
+									</p:ajax>
+									<f:selectItem
+										itemLabel="#{msg['manual.generales.seleccionar']}" />
+									<f:selectItems
+										value="#{gestionProveedorBean.listadoTiposRedConvenio}"
+										var="tipoRedConv" itemLabel="#{tipoRedConv.descripcion}"
+										itemValue="#{tipoRedConv}">
+									</f:selectItems>
+								</p:selectOneMenu>
+							</p:column>
+						</h:panelGrid>
+
+						<h:panelGrid columns="6" cellpadding="3" cellspacing="3">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10" for="selEdProveedor"
+									value="#{msg['catalogo.proveedores.edicion.convenios.pst']}" />*
+								</p:column>
+
+							<p:column>
+								<p:selectOneMenu id="selEdProveedor" style="width:150px;"
+									value="#{gestionProveedorBean.convenioTemporal.proveedorConcesionario}"
+									converter="#{proveedorConverter}"
+									disabled="#{gestionProveedorBean.modoConvenio == 0}">
+									<p:ajax event="change"
+										update="TXT_Convenio_IDO TXT_Convenio_ABC MSG_Proveedores">
+									</p:ajax>
+									<f:selectItem itemLabel="Seleccionar" />
+									<f:selectItems
+										value="#{gestionProveedorBean.listaProveedoresConvenio}"
+										var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+										itemValue="#{proveedorsel}">
+									</f:selectItems>
+								</p:selectOneMenu>
+							</p:column>
+
+							<p:column>
+								<p:outputLabel styleClass="margin-right10"
+									for="TXT_Convenio_IDO"
+									value="#{msg['catalogo.proveedores.edicion.convenios.ido']}" />
+							</p:column>
+
+							<p:column>
+								<p:inputText id="TXT_Convenio_IDO"
+									value="#{gestionProveedorBean.convenioTemporal.proveedorConcesionario.ido}"
+									maxlength="3" size="4" disabled="true">
+								</p:inputText>
+							</p:column>
+
+							<p:column>
+								<p:outputLabel styleClass="margin-right10"
+									for="TXT_Convenio_ABC"
+									value="#{msg['catalogo.proveedores.edicion.convenios.ido.bcd']}" />
+							</p:column>
+
+							<p:column>
+								<p:inputText id="TXT_Convenio_ABC"
+									value="#{gestionProveedorBean.convenioTemporal.proveedorConcesionario.bcd != null ? gestionProveedorBean.convenioTemporal.proveedorConcesionario.bcdAsString : ''}"
+									maxlength="3" size="4" disabled="true">
+								</p:inputText>
+							</p:column>
+						</h:panelGrid>
+
+						<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10"
+									for="TXT_Convenio_Contrato"
+									value="#{msg['catalogo.proveedores.edicion.convenios.contrato']}" />*
+								</p:column>
+
+							<p:column>
+								<p:inputText id="TXT_Convenio_Contrato"
+									value="#{gestionProveedorBean.convenioTemporal.contrato}"
+									maxlength="30" size="16"
+									readonly="#{gestionProveedorBean.modoConvenio == 0}">
+								</p:inputText>
+							</p:column>
+						</h:panelGrid>
+
+						<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10" for="fecInicio"
+									value="#{msg['catalogo.proveedores.edicion.convenios.fecInicio']}" />*
+								</p:column>
+
+							<p:column>
+								<p:calendar id="fecInicio" locale="mx_MX"
+									value="#{gestionProveedorBean.convenioTemporal.fechaInicio}"
+									pattern="dd/MM/yyyy" mask="true" style="width:150px"
+									label="#{msg['catalogo.proveedores.edicion.convenios.fecInicio']}"
+									navigator="true"
+									disabled="#{gestionProveedorBean.modoConvenio == 0}">
+									<p:ajax event="dateSelect" global="false">
+									</p:ajax>
+								</p:calendar>
+							</p:column>
+						</h:panelGrid>
+
+						<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10"
+									for="TXT_Observaciones"
+									value="#{msg['catalogo.proveedores.edicion.convenios.observaciones']}" />
+							</p:column>
+
+							<p:column>
+								<p:inputTextarea id="TXT_Observaciones" cols="32"
+									maxlength="700" autoResize="false" style="resize: none"
+									value="#{gestionProveedorBean.convenioTemporal.observaciones}"
+									readonly="#{gestionProveedorBean.modoConvenio == 0}">
+								</p:inputTextarea>
+							</p:column>
+						</h:panelGrid>
+
+						<h:panelGrid id="PNL_Ref" columns="2" cellpadding="3"
+							cellspacing="3"
+							rendered="#{gestionProveedorBean.modoConvenio == 0}">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10" for="TXT_Referencia"
+									value="#{msg['catalogo.proveedores.edicion.convenios.referenciaBaja']}" />*
+								</p:column>
+
+							<p:column>
+								<p:inputText id="TXT_Referencia" size="16" maxlength="30"
+									value="#{gestionProveedorBean.convenioTemporal.referenciaBaja}">
+								</p:inputText>
+							</p:column>
+						</h:panelGrid>
+
+						<h:panelGrid id="PNL_FecBaja" columns="2" cellpadding="3"
+							cellspacing="3"
+							rendered="#{gestionProveedorBean.modoConvenio == 0}">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10" for="fecFinConvenio"
+									value="#{msg['catalogo.proveedores.edicion.convenios.fecFinConvenio']}" />*
+								</p:column>
+
+							<p:column>
+								<p:calendar id="fecFinConvenio" locale="mx_MX"
+									value="#{gestionProveedorBean.convenioTemporal.fechaFin}"
+									pattern="dd/MM/yyyy" mask="true" style="width:150px"
+									label="#{msg['catalogo.proveedores.edicion.convenios.fecFinConvenio']}">
+									<p:ajax event="dateSelect" global="false">
+									</p:ajax>
+								</p:calendar>
+							</p:column>
+						</h:panelGrid>
+
+						<p:commandButton
+							value="#{msg['catalogo.proveedores.edicion.convenios.agregar']}"
+							action="#{gestionProveedorBean.agregarConvenio}"
+							update="MSG_Proveedores TBL_Convenios DAT_Convenio"
+							rendered="#{gestionProveedorBean.modoConvenio == 1}">
+						</p:commandButton>
+
+						<p:commandButton
+							value="#{msg['catalogo.proveedores.edicion.convenios.baja']}"
+							onsuccess="PF('actualizarDlg').show();" update="MSG_Proveedores"
+							rendered="#{gestionProveedorBean.modoConvenio == 0}">
+						</p:commandButton>
+
+						<p:commandButton
+							value="#{msg['catalogo.proveedores.edicion.convenios.actualizar']}"
+							onsuccess="PF('actualizarDlg').show();" update="MSG_Proveedores"
+							rendered="#{gestionProveedorBean.modoConvenio == 2}">
+						</p:commandButton>
+					</p:fieldset>
+				</p:column>
+
+				<p:column>
+					<p:dataTable id="TBL_Convenios" widgetVar="TBL_Convenios"
+						style="width: 600px;" var="listaConvenios"
+						value="#{gestionProveedorBean.proveedor.conveniosComercializador}"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column
+							headerText="#{msg['catalogo.proveedores.edicion.convenios.idContrato']}">
+							<h:outputText value="#{listaConvenios.contrato}" />
+						</p:column>
+						<p:column
+							headerText="#{msg['catalogo.proveedores.edicion.convenios.pst']}">
+							<h:outputText
+								value="#{listaConvenios.proveedorConcesionario.nombreCorto}" />
+						</p:column>
+						<p:column
+							headerText="#{msg['catalogo.proveedores.edicion.convenios.ido']}"
+							style="text-align:center;">
+							<h:outputText
+								value="#{listaConvenios.proveedorConcesionario.ido}" />
+						</p:column>
+						<p:column
+							headerText="#{msg['catalogo.proveedores.edicion.convenios.ido.bcd']}"
+							style="text-align:center;">
+							<h:outputText
+								value="#{listaConvenios.proveedorConcesionario.bcd}" />
+						</p:column>
+						<p:column
+							headerText="#{msg['catalogo.proveedores.edicion.convenios.fecInicio']}"
+							style="text-align:center;">
+							<h:outputText value="#{listaConvenios.fechaInicio}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+						<p:column headerText="#{msg['consultar.Operaciones']}"
+							width="75px;" style="text-align:center;">
+							<p:remoteCommand name="rcEliminarConvenio"
+								update=":#{p:component('MSG_Proveedores')} :#{p:component('PNL_Proveedor')} :#{p:component('TBL_Convenios')} :#{p:component('DAT_Convenio')} :#{p:component('actualizarDlg')}"
+								actionListener="#{gestionProveedorBean.bajaConvenio}" />
+							<p:remoteCommand name="rcActualizarConvenio"
+								update=":#{p:component('MSG_Proveedores')} :#{p:component('PNL_Proveedor')} :#{p:component('TBL_Convenios')} :#{p:component('DAT_Convenio')} :#{p:component('actualizarDlg')}"
+								actionListener="#{gestionProveedorBean.actualizarConvenio}" />
+							<p:commandButton
+								title="#{msg['catalogo.proveedores.edicion.convenios.editar']}"
+								icon="ui-icon-pencil"
+								action="#{gestionProveedorBean.editarConvenio}"
+								rendered="#{listaConvenios.fechaFin == null}"
+								update=":#{p:component('DAT_Convenio')} :#{p:component('DAT_Contacto')} :#{p:component('MSG_Proveedores')} :#{p:component('actualizarDlg')}">
+								<f:setPropertyActionListener value="#{listaConvenios}"
+									target="#{gestionProveedorBean.proveedorConvenio}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+							<p:commandButton
+								title="#{msg['catalogo.proveedores.edicion.convenios.baja']}"
+								icon="ui-icon-circle-close"
+								action="#{gestionProveedorBean.iniciarBajaConvenio}"
+								rendered="#{listaConvenios.fechaFin == null}"
+								update=":#{p:component('DAT_Convenio')} :#{p:component('DAT_Contacto')} :#{p:component('MSG_Proveedores')} :#{p:component('actualizarDlg')}">
+								<f:setPropertyActionListener value="#{listaConvenios}"
+									target="#{gestionProveedorBean.proveedorConvenio}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:column>
+			</h:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset
+			legend="#{msg['catalogo.proveedores.edicion.contactos.titulo']}"
+			style="width:900px">
+			<h:panelGrid id="DAT_Contacto" columns="3" cellpadding="3"
+				cellspacing="3" style="width:100%;">
+				<p:column>
+					<p:commandButton
+						value="#{msg['catalogo.proveedores.edicion.contactos.crear']}"
+						action="#{gestionProveedorBean.crearContacto}"
+						update="MSG_Proveedores DAT_Contacto DAT_Convenio">
+					</p:commandButton>
+				</p:column>
+
+				<p:column rendered="#{gestionProveedorBean.mostrarContactos}">
+					<p:fieldset style="width:375px;">
+						<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10" for="selTipoContacto"
+									value="#{msg['catalogo.proveedores.edicion.contactos.tipo']}" />*
+								</p:column>
+
+							<p:column>
+								<p:selectOneMenu id="selTipoContacto" style="width:150px;"
+									value="#{gestionProveedorBean.contacto.tipoContacto}"
+									converter="#{tipoContactoConverter}"
+									disabled="#{gestionProveedorBean.modoContacto == 0}">
+									<f:selectItem itemLabel="Seleccionar" />
+									<f:selectItems
+										value="#{gestionProveedorBean.listaTiposContacto}"
+										var="tipoContactoSel"
+										itemLabel="#{tipoContactoSel.descripcion}"
+										itemValue="#{tipoContactoSel}">
+									</f:selectItems>
+								</p:selectOneMenu>
+							</p:column>
+						</h:panelGrid>
+
+						<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10"
+									for="TXT_Contacto_Nombre"
+									value="#{msg['catalogo.proveedores.edicion.contactos.nombre']}" />*
+								</p:column>
+
+							<p:column>
+								<p:inputText id="TXT_Contacto_Nombre"
+									value="#{gestionProveedorBean.contacto.nombre}" maxlength="100"
+									size="16" readonly="#{gestionProveedorBean.modoContacto == 0}">
+								</p:inputText>
+							</p:column>
+						</h:panelGrid>
+
+						<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10"
+									for="TXT_Contacto_Correo"
+									value="#{msg['catalogo.proveedores.edicion.contactos.correo']}" />*
+								</p:column>
+
+							<p:column>
+								<p:inputText id="TXT_Contacto_Correo"
+									value="#{gestionProveedorBean.contacto.email}" maxlength="100"
+									size="16" readonly="#{gestionProveedorBean.modoContacto == 0}">
+								</p:inputText>
+							</p:column>
+						</h:panelGrid>
+
+						<h:panelGrid columns="4" cellpadding="3" cellspacing="3">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10"
+									for="TXT_Contacto_Tel1"
+									value="#{msg['catalogo.proveedores.edicion.contactos.tel1']}" />
+							</p:column>
+
+							<p:column>
+								<p:inputText id="TXT_Contacto_Tel1"
+									value="#{gestionProveedorBean.contacto.telefono1}"
+									maxlength="20" size="10"
+									readonly="#{gestionProveedorBean.modoContacto == 0}">
+								</p:inputText>
+							</p:column>
+
+							<p:column>
+								<p:outputLabel styleClass="margin-right10"
+									for="TXT_Contacto_Tel2"
+									value="#{msg['catalogo.proveedores.edicion.contactos.tel2']}" />
+							</p:column>
+
+							<p:column>
+								<p:inputText id="TXT_Contacto_Tel2"
+									value="#{gestionProveedorBean.contacto.telefono2}"
+									maxlength="20" size="10"
+									readonly="#{gestionProveedorBean.modoContacto == 0}">
+								</p:inputText>
+							</p:column>
+						</h:panelGrid>
+
+						<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+							<p:column>
+								<p:outputLabel styleClass="margin-right10"
+									for="TXT_Contacto_Tel3"
+									value="#{msg['catalogo.proveedores.edicion.contactos.tel3']}" />
+							</p:column>
+
+							<p:column>
+								<p:inputText id="TXT_Contacto_Tel3"
+									value="#{gestionProveedorBean.contacto.telefono3}"
+									maxlength="20" size="10"
+									readonly="#{gestionProveedorBean.modoContacto == 0}">
+								</p:inputText>
+							</p:column>
+						</h:panelGrid>
+
+						<p:commandButton
+							value="#{msg['catalogo.proveedores.edicion.contactos.agregar']}"
+							action="#{gestionProveedorBean.agregarContacto}"
+							update="MSG_Proveedores TBL_Contactos DAT_Contacto"
+							rendered="#{gestionProveedorBean.modoContacto == 1}">
+						</p:commandButton>
+
+						<p:commandButton
+							value="#{msg['catalogo.proveedores.edicion.contactos.actualizar']}"
+							onsuccess="PF('actualizarDlg').show();" update="MSG_Proveedores"
+							rendered="#{gestionProveedorBean.modoContacto == 2}">
+						</p:commandButton>
+
+						<p:commandButton
+							value="#{msg['catalogo.proveedores.edicion.contactos.eliminar']}"
+							onsuccess="PF('actualizarDlg').show();" update="MSG_Proveedores"
+							rendered="#{gestionProveedorBean.modoContacto == 0}">
+						</p:commandButton>
+					</p:fieldset>
+				</p:column>
+
+				<p:column>
+					<p:dataTable id="TBL_Contactos" widgetVar="TBL_Contactos"
+						style="width: 650px;" var="listaContactos"
+						value="#{gestionProveedorBean.proveedor.contactos}"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column
+							headerText="#{msg['catalogo.proveedores.edicion.contactos.tipo']}">
+							<h:outputText value="#{listaContactos.tipoContacto.descripcion}" />
+						</p:column>
+						<p:column
+							headerText="#{msg['catalogo.proveedores.edicion.contactos.nombre']}">
+							<h:outputText value="#{listaContactos.nombre}" />
+						</p:column>
+						<p:column
+							headerText="#{msg['catalogo.proveedores.edicion.contactos.correo']}">
+							<h:outputText value="#{listaContactos.email}" />
+						</p:column>
+						<p:column headerText="#{msg['consultar.Operaciones']}"
+							width="75px;" style="text-align:center;">
+							<p:remoteCommand name="rcEliminarContacto"
+								update=":#{p:component('MSG_Proveedores')} :#{p:component('PNL_Proveedor')} :#{p:component('TBL_Contactos')} :#{p:component('DAT_Contacto')} :#{p:component('actualizarDlg')}"
+								actionListener="#{gestionProveedorBean.bajaContacto}" />
+							<p:remoteCommand name="rcActualizarContacto"
+								update=":#{p:component('MSG_Proveedores')} :#{p:component('PNL_Proveedor')} :#{p:component('TBL_Contactos')} :#{p:component('DAT_Contacto')} :#{p:component('actualizarDlg')}"
+								actionListener="#{gestionProveedorBean.actualizarContacto}" />
+							<p:commandButton
+								title="#{msg['catalogo.proveedores.edicion.contactos.editar']}"
+								icon="ui-icon-pencil"
+								action="#{gestionProveedorBean.editarContacto}"
+								update=":#{p:component('DAT_Contacto')} :#{p:component('DAT_Convenio')} :#{p:component('MSG_Proveedores')} :#{p:component('actualizarDlg')}">
+								<f:setPropertyActionListener value="#{listaContactos}"
+									target="#{gestionProveedorBean.contacto}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+							<p:commandButton
+								title="#{msg['catalogo.proveedores.edicion.contactos.eliminar']}"
+								icon="ui-icon-circle-close"
+								action="#{gestionProveedorBean.iniciarBajaContacto}"
+								update=":#{p:component('DAT_Contacto')} :#{p:component('DAT_Convenio')} :#{p:component('MSG_Proveedores')} :#{p:component('actualizarDlg')}">
+								<f:setPropertyActionListener value="#{listaContactos}"
+									target="#{gestionProveedorBean.contacto}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:column>
+			</h:panelGrid>
+		</p:fieldset>
+
+		<h:panelGrid id="BTN_Guardar" width="100%">
+			<h:panelGroup style="display:block; text-align:center;">
+				<p:remoteCommand name="rcGuardar"
+					update="MSG_Proveedores :#{p:component('mensajeAltaPassword')} PNL_Proveedor"
+					action="#{gestionProveedorBean.guardarCambios}">
+				</p:remoteCommand>
+
+				<p:commandButton id="btnSalvar"
+					rendered="#{!gestionProveedorBean.requiereConfirmacion}"
+					value="#{msg['manual.generales.btn.guardar']}" icon="ui-icon-disk"
+					onsuccess="rcGuardar()" style="height:30px;  width:96px"
+					ajax="true">
+				</p:commandButton>
+
+				<p:commandButton
+					rendered="#{gestionProveedorBean.requiereConfirmacion}"
+					id="btnSalvarConfirm"
+					value="#{msg['manual.generales.btn.guardar']}" icon="ui-icon-disk"
+					onsuccess="PF('confirmDlg').show();"
+					style="height:30px;  width:96px">
+				</p:commandButton>
+			</h:panelGroup>
+		</h:panelGrid>
+	</p:panel>
+</h:form>
+
+<p:confirmDialog id="confirmDlg" widgetVar="confirmDlg" global="true"
+	appendTo="@(body)" closable="false">
+	<f:facet name="message">
+		<h:panelGrid style="text-align:center;" columns="1">
+			<h:outputText rendered="#{gestionProveedorBean.existeIdo == 1}"
+				value="#{msg['catalogo.proveedores.edicion.validar.idoActivo']}" />
+			<h:outputText rendered="#{gestionProveedorBean.existeIdo == 2}"
+				value="#{msg['catalogo.proveedores.edicion.validar.idoInactivo']}" />
+			<h:outputText rendered="#{gestionProveedorBean.existeIda == 1}"
+				value="#{msg['catalogo.proveedores.edicion.validar.idaActivo']}" />
+			<h:outputText rendered="#{gestionProveedorBean.existeIda == 2}"
+				value="#{msg['catalogo.proveedores.edicion.validar.idaInactivo']}" />
+			<h:outputText rendered="#{gestionProveedorBean.existeAbc == 1}"
+				value="#{msg['catalogo.proveedores.edicion.validar.abcActivo']}" />
+			<h:outputText rendered="#{gestionProveedorBean.existeAbc == 2}"
+				value="#{msg['catalogo.proveedores.edicion.validar.abcInactivo']}" />
+			<h:outputText rendered="#{gestionProveedorBean.existeBcd == 1}"
+				value="#{msg['catalogo.proveedores.edicion.validar.bcdActivo']}" />
+			<h:outputText rendered="#{gestionProveedorBean.existeBcd == 2}"
+				value="#{msg['catalogo.proveedores.edicion.validar.bcdInactivo']}" />
+			<h:outputText
+				value="#{msg['catalogo.proveedores.edicion.validar.continuar']}"
+				style="align:center;" />
+		</h:panelGrid>
+	</f:facet>
+
+	<p:commandButton value="Si" type="button"
+		styleClass="ui-confirmdialog-yes" icon="ui-icon-check"
+		onclick="PF('confirmDlg').hide(); rcGuardar();">
+	</p:commandButton>
+	<p:commandButton id="cdNo" value="No" type="button"
+		styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+		onclick="PF('confirmDlg').hide();" />
+</p:confirmDialog>
+
+<p:confirmDialog id="actualizarDlg" widgetVar="actualizarDlg"
+	global="true" appendTo="@(body)" closable="false">
+	<f:facet name="message">
+		<h:panelGrid style="text-align:center;" columns="1">
+			<h:outputText
+				rendered="#{gestionProveedorBean.mostrarConvenios ? (gestionProveedorBean.modoConvenio == 0 ? true : false) : false}"
+				value="#{msg['catalogo.proveedores.edicion.validar.eliminarConvenio']}" />
+			<h:outputText
+				rendered="#{gestionProveedorBean.mostrarConvenios ? (gestionProveedorBean.modoConvenio == 2 ? true : false) : false}"
+				value="#{msg['catalogo.proveedores.edicion.validar.actualizarConvenio']}" />
+			<h:outputText
+				rendered="#{gestionProveedorBean.mostrarContactos ? (gestionProveedorBean.modoContacto == 0 ? true : false) : false}"
+				value="#{msg['catalogo.proveedores.edicion.validar.eliminarContacto']}" />
+			<h:outputText
+				rendered="#{gestionProveedorBean.mostrarContactos ? (gestionProveedorBean.modoContacto == 2 ? true : false) : false}"
+				value="#{msg['catalogo.proveedores.edicion.validar.actualizarContacto']}" />
+			<h:outputText
+				value="#{msg['catalogo.proveedores.edicion.validar.continuar']}"
+				style="align:center;" />
+		</h:panelGrid>
+	</f:facet>
+
+	<p:commandButton
+		rendered="#{gestionProveedorBean.mostrarConvenios ? (gestionProveedorBean.modoConvenio == 0 ? true : false) : false}"
+		value="Si" type="button" styleClass="ui-confirmdialog-yes"
+		icon="ui-icon-check"
+		onclick="PF('actualizarDlg').hide(); rcEliminarConvenio();">
+	</p:commandButton>
+	<p:commandButton
+		rendered="#{gestionProveedorBean.mostrarConvenios ? (gestionProveedorBean.modoConvenio == 2 ? true : false) : false}"
+		value="Si" type="button" styleClass="ui-confirmdialog-yes"
+		icon="ui-icon-check"
+		onclick="PF('actualizarDlg').hide(); rcActualizarConvenio();">
+	</p:commandButton>
+	<p:commandButton
+		rendered="#{gestionProveedorBean.mostrarContactos ? (gestionProveedorBean.modoContacto == 0 ? true : false) : false}"
+		value="Si" type="button" styleClass="ui-confirmdialog-yes"
+		icon="ui-icon-check"
+		onclick="PF('actualizarDlg').hide(); rcEliminarContacto();">
+	</p:commandButton>
+	<p:commandButton
+		rendered="#{gestionProveedorBean.mostrarContactos ? (gestionProveedorBean.modoContacto == 2 ? true : false) : false}"
+		value="Si" type="button" styleClass="ui-confirmdialog-yes"
+		icon="ui-icon-check"
+		onclick="PF('actualizarDlg').hide(); rcActualizarContacto();">
+	</p:commandButton>
+	<p:commandButton id="adNo" value="No" type="button"
+		styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+		onclick="PF('actualizarDlg').hide();" />
+</p:confirmDialog>
+
+<p:dialog id="mensajeAltaPassword" showHeader="true"
+	style="padding-top:0;border:5px groove #7AC142; margin-bottom:30px; margin-top: 0px;"
+	height="650px;" width="500px;" resizable="false"
+	widgetVar="mensajeAltaPassword" closable="true" closeOnEscape="true"
+	modal="true" appendTo="@(body)">
+	<h:panelGrid style="text-align:center;" columns="1">
+		<h:outputText value="#{msg['catalogo.proveedores.alta.mensaje']}" />
+		<h:outputText
+			value="#{msg['catalogo.proveedores.alta.mensaje.password']} #{gestionProveedorBean.proveedor.passSinEncriptar}" />
+	</h:panelGrid>
+	<p:ajax event="close" onsuccess="PF('MDL_Proveedores').hide();">
+	</p:ajax>
+</p:dialog>
+
+<!-- <p:ajaxStatus 
+		id="FORM_GestionProveedor_AS"
+		onstart="PF('FORM_GestionProveedor_BUI').show()"
+		onsuccess="PF('FORM_GestionProveedor_BUI').hide()">
+	</p:ajaxStatus>
+	
+	<p:blockUI block="FORM_GestionProveedor" widgetVar="FORM_GestionProveedor_BUI">
+		<ui:include src="/componentes/loader.xhtml"/>
+	</p:blockUI> -->
+
+</html>

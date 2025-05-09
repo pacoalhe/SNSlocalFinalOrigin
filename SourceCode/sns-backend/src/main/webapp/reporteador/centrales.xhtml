@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+		<ui:define name="centro">
+			<script type="text/javascript">
+				function showStatus() {
+					PF('statusCentralesDialog').show();
+				}
+				function hideStatus() {
+					 PF('statusCentralesDialog').hide();
+				}
+			</script>
+		
+	        <fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['reporteador.title']}/#{msg['reporteador.cpl']}</legend>
+				<p:messages id="MSG_BuscadorCentrales" showDetail="false" showSummary="true" autoUpdate="false" closable="true" showIcon="false"/>
+
+			<h:form id="FORM_Buscador">
+					<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['reporteador.cpl.buscador']}</legend>
+			
+			
+			 		<h:panelGrid id="PNL_Buscador" columns="4" style="margin-bottom:20px;float:left" cellpadding="3" cellspacing="3" >
+			 		    
+						
+						<p:outputLabel for="selPst" value="#{msg['reporteador.ng.pst']}" />
+						<p:selectOneMenu
+							id="selPst" autoWidth="false"
+							value="#{reporteadorCentralesBean.pstSeleccionada}" 
+							converter="#{proveedorConverter}" 
+							style="width:190px"> 
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+							<f:selectItems 
+								value="#{reporteadorCentralesBean.listaPst}" 
+								var="pstsel" 
+								itemLabel="#{pstsel.nombre}"
+								itemValue="#{pstsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selEstado" value="#{msg['reporteador.ng.estado']}" />
+						<p:selectOneMenu autoWidth="false"
+							id="selEstado" 
+							value="#{reporteadorCentralesBean.estadoSeleccionado}" 
+							converter="#{estadoConverter}" 
+							style="width:190px"> 
+							<p:ajax 
+								event="change" listener="#{reporteadorCentralesBean.seleccionEstado()}"
+								update=":MSG_BuscadorCentrales selMunicipio selPoblacion"
+									>
+							</p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+							<f:selectItems 
+								value="#{reporteadorCentralesBean.listaEstado}" 
+								var="estadosel" 
+								itemLabel="#{estadosel.nombre}"
+								itemValue="#{estadosel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+			
+						<p:outputLabel for="selMunicipio" value="#{msg['reporteador.ng.municipio']}" />
+						<p:selectOneMenu autoWidth="false"
+							id="selMunicipio" 
+							value="#{reporteadorCentralesBean.municipioSeleccionado}"
+							converter="#{municipioConverter}" 
+							style="width:190px">
+							<p:ajax 
+								event="change" listener="#{reporteadorCentralesBean.seleccionMunicipio()}"
+								update=":MSG_BuscadorCentrales selPoblacion"
+									>
+							</p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+							<f:selectItems 
+								value="#{reporteadorCentralesBean.listaMunicipio}" 
+								var="municipiosel"
+								itemLabel="#{municipiosel.nombre}"
+								itemValue="#{municipiosel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+						
+						
+						<p:outputLabel for="selPoblacion" value="#{msg['reporteador.ng.poblacion']}" />
+						<p:selectOneMenu autoWidth="false"
+							id="selPoblacion" 
+							value="#{reporteadorCentralesBean.poblacionSeleccionada}"
+							converter="#{poblacionConverter}"
+							style="width:190px;">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+							<f:selectItems 
+								value="#{reporteadorCentralesBean.listaPoblacion}" 
+								var="poblacionsel"
+								itemLabel="#{poblacionsel.nombre}"
+								itemValue="#{poblacionsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+						
+						<p:outputLabel for="TXT_Abn" value="#{msg['reporteador.ng.abn']}" />
+						<p:inputText 
+								id="TXT_Abn"
+								value="#{reporteadorCentralesBean.abnSeleccionada}"
+								maxlength="3" 
+								style="width: 90px;">
+						</p:inputText>
+						
+						
+		 			</h:panelGrid>
+		 		</fieldset>	
+		 			
+		 		<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Limpiar']}" process="@this"
+						actionListener="#{reporteadorCentralesBean.resetPantalla}"
+						update="selPst selEstado selMunicipio selPoblacion TXT_Abn :MSG_BuscadorCentrales" 
+						style="height:30px; width:82px; margin-right:20px;">
+					</p:commandButton>
+					
+					<p:commandButton value="#{msg.exportar}" ajax="false"  style="height:30px">
+							     <p:fileDownload value="#{reporteadorCentralesBean.exportarDatos}" /> 
+					</p:commandButton>
+					
+				</p:panelGrid>
+				
+			</h:form>
+			
+		 			
+		 </fieldset>
+		<p:ajaxStatus id="triggerblockuiCentral" onstart="PF('statusCentralesDialog').show()" onsuccess="PF('statusCentralesDialog').hide()"></p:ajaxStatus>
+		<p:dialog widgetVar="statusCentralesDialog" modal="true"
+			draggable="false" closable="false" resizable="false"
+			showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+		<!--   <p:blockUI block="FORM_Buscador" widgetVar="bui" >
+	        <ui:include src="/componentes/loader.xhtml"/>
+	     </p:blockUI> -->
+		 
+		 
+		</ui:define>
+	</ui:composition>
+</html>

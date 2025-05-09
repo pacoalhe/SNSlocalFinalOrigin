@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+		<composite:attribute name="formAsignacion" required="true"></composite:attribute>
+
+	</composite:interface>
+	
+	<composite:implementation>
+		<p:messages id="MSG_Asignacion" showDetail="false" showSummary="true" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		<p:dataTable id="tbl_num_para_asig" var="rango" 
+			value="#{cc.attrs.nameBean.numeracionPorAsignarList}"
+			scrollable="true" scrollWidth="95%"
+			paginator="true" paginatorPosition="bottom"
+			rows="#{cc.attrs.nameBean.registroPorPagina}"
+			resizableColumns="true" emptyMessage="#{msg['buscador.noresultados']}">
+			<f:facet name="header">#{msg['asignacion.nng.numeracion.asignar']}</f:facet>
+			<p:column headerText="#{msg['catalogo.clave.servicio']}" 
+			width="15%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{rango.claveServicio.codigo}" />
+			</p:column>
+			<p:column headerText="#{msg['asignacion.nng.serie']}" 			
+			width="10%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{rango.snaAsString}" />
+			</p:column>
+			<p:column headerText="#{msg['asignacion.nng.numero.inicial']}" 
+			width="15%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{rango.inicioRango}"/>
+			</p:column>
+			<p:column headerText="#{msg['asignacion.nng.numero.final']}" 
+			width="15%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{rango.finRango}" />
+			</p:column>
+			<p:column headerText="#{msg['asignacion.nng.cliente']}" 
+			width="30%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{rango.numeracionSolicitada.cliente}"/>
+			</p:column>
+			<p:column headerText="#{msg['proveedor.antesBcd']}"
+			width="15%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{rango.numeracionSolicitada.bcd == 0 || rango.numeracionSolicitada.bcd == null ? rango.numeracionSolicitada.concesionario.bcd : rango.numeracionSolicitada.bcd}" />
+			</p:column>
+			<p:column headerText="#{msg['proveedor.ida']}" 
+			width="15%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{cc.attrs.nameBean.pstComercializador?cc.attrs.nameBean.solicitud.proveedorSolicitante.ida:cc.attrs.nameBean.pstConcesionario || cc.attrs.nameBean.pstAmbos?cc.attrs.nameBean.solicitud.proveedorSolicitante.ido:rango.numeracionSolicitada.bcd}" />
+			</p:column>
+			<p:column headerText="#{msg['asignacion.nng.estatus']}" 
+			width="10%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{rango.estatus.descripcion}" />
+			</p:column>
+		</p:dataTable>
+
+		<h:panelGrid id="PNL_Acciones" columns="1" style="text-align:center" width="100%">
+			<h:panelGroup style="display:block; text-align:center">
+				<p:commandButton 
+					id="btn_asignar"
+					value="#{msg['manual.asignar']}"
+					actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+					disabled="#{(!cc.attrs.nameBean.tabHabilitado) or cc.attrs.nameBean.asignado}"
+					style="width:120px;"
+					update="MSG_Asignacion btn_asignar tbl_num_para_asig">
+				</p:commandButton>
+			</h:panelGroup>
+		</h:panelGrid>
+
+	</composite:implementation>
+
+</html>

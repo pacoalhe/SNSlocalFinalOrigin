@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<!-- <p:ajaxStatus id="FORM_proveedorPoblacionNir_AS"
+	onstart="PF('FORM_proveedorPoblacionNir_BUI').show()"
+	onsuccess="PF('FORM_proveedorPoblacionNir_BUI').hide()">
+</p:ajaxStatus>
+<p:blockUI block="FORM_proveedorPoblacionNir"
+	widgetVar="FORM_proveedorPoblacionNir_BUI">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI> -->
+
+
+<h:form id="FORM_proveedorPoblacionNir">
+	<!-- tabla de poblaciones proveedor -->
+	<p:dataTable id="TBL_poblacionesProveedorNir"
+		value="#{detallePoblacionProveedorBean.poblacionNumeracionProveedorEstado}"
+		var="poblacionProveedor" paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{detallePoblacionProveedorBean.numeroRegistros}"
+		styleClass="mycustomtable" paginatorPosition="bottom">
+
+		<f:facet name="header">
+           		CIUDADES Y POBLACIONES DEL PROVEEDOR
+		</f:facet>
+
+		<p:column
+			headerText="Ciudades y Población con numero identificador regional: #{detallePoblacionProveedorBean.nirSeleccionado.codigo}
+			con Servicio de Telefonía Ofrecido por: #{detallePoblacionProveedorBean.prestadorNumero.nombre}"  sortBy="#{poblacionProveedor.poblacion.nombre}">
+			<p:commandLink
+				actionListener="#{consultaPublicaMarcacionBean.infoPoblacionNir(poblacionProveedor.poblacion)}"
+				update=":FORM_myform:P_containernumeracion :FORM_myform:P_containerinfo :FORM_myform:P_containerLocal :FORM_myform:P_containerinfopobNoNir"
+				oncomplete="PF('proveedorPoblacionNir').hide(); PF('numeracionResults').hide(); PF('datosnumeracion').hide();">
+				<h:outputText value="#{poblacionProveedor.poblacion.nombre}" />
+			</p:commandLink>
+		</p:column>
+		<p:column headerText="EDO" style="text-align:center" sortBy="#{poblacionProveedor.poblacion.municipio.estado.abreviatura}">
+			<p:commandLink
+				actionListener="#{areasGeoNumeracionMainBean.viewMaps(poblacionProveedor.poblacion.municipio.estado)}"
+				update=":P_containerInclude :P_main"
+				oncomplete="PF('proveedorPoblacionNir').hide(); PF('numeracionResults').hide(); PF('datosnumeracion').hide();">
+				<h:outputText
+					value="#{poblacionProveedor.poblacion.municipio.estado.abreviatura}"></h:outputText>
+			</p:commandLink>
+		</p:column>
+		<p:column
+			headerText="Numeración Asignada (no representa líneas en servicio)" style="text-align:center">
+			<h:outputText
+				value="#{detallePoblacionProveedorBean.formatoNumeracionAsignada(poblacionProveedor.numeracionAsignada)}" />
+		</p:column>
+
+	</p:dataTable>
+</h:form>
+
+
+</html>

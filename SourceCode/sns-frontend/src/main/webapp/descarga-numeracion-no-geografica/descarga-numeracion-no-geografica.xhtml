@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+<ui:composition template="/WEB-INF/templates/plantillaFront.xhtml">
+	<ui:define name="centro">
+		<h:form id="FORM_DesNoGeo">
+			<p:messages id="MSG_DesNoGeo" showDetail="true" autoUpdate="false"
+				closable="true" showIcon="false" />
+			<div class="ui-grid ui-grid-responsive">
+				<br></br>
+				<div class="ui-grid-col-12">
+					<p:panelGrid id="PG_DesNoGeo" styleClass="mycustomgrid2"
+						columns="1" layout="grid">
+						<f:facet name="header">
+							<p:row>
+								<p:column colspan="7">
+		            Descarga de Numeración No Geográfica
+		            </p:column>
+							</p:row>
+
+						</f:facet>
+						<p:row>
+							<p:column>
+								<p:dataTable id="TBL_descargaNNG" var="plan"
+									value="#{descargaNoGeograficaBean.listaPlanesDescarga}"
+									style="margin:4%" styleClass="sombreado">
+									<p:columnGroup type="header">
+										<p:row>
+											<p:column headerText="Clave de servicio no geográfico" />
+											<p:column headerText="Descripción" />
+											<p:column headerText="Fecha de generación del plan" />
+											<p:column
+												headerText="Pulse el botón correspondiente para iniciar la descarga del archivo"
+												style="font-size:13px">
+											</p:column>
+										</p:row>
+									</p:columnGroup>
+									<p:column style="text-align:center">
+										<h:outputText value="#{plan.claveServicio.codigo}" />
+									</p:column>
+									<p:column>										
+										<h:outputText value="#{plan.claveServicio.descripcion}" />
+									</p:column>
+									<p:column style="text-align:center">
+										<h:outputText
+											value="#{descargaNoGeograficaBean.getFormatoFechaPlanNNGGenerado(plan.fechaGeneracion)}" />
+									</p:column>
+									<p:column style="text-align:center">
+										<p:commandButton value="Descargar" ajax="false"
+											style="width: auto; heigth: auto; font-size: 11px;  margin-bottoms:50px"
+											icon="ui-icon-arrowthickstop-1-s" styleClass="sombreado">
+											<p:fileDownload
+												value="#{descargaNoGeograficaBean.descargarPlanNng(plan.claveServicio)}" />
+										</p:commandButton>
+										<br></br>
+									</p:column>
+
+								</p:dataTable>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+					<br></br>
+				</div>
+			</div>
+			<div class="ui-grid ui-grid-responsive">
+				<div class="ui-grid-col-2">
+					<br></br>
+				</div>
+				<div class="ui-grid-col-8">
+
+					<br></br>
+				</div>
+			</div>
+		</h:form>
+	</ui:define>
+</ui:composition>
+</html>

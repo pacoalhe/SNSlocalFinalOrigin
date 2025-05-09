@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<h:form id="FORM_SolicitudCPSI">
+		<p:wizard 
+			widgetVar="WIZ_Solicitud"
+			id="WIZ_Solicitud" 
+			flowListener="#{solicitudCpsiUitBean.siguientePaso}"
+			showNavBar="true"
+			nextLabel="#{msg['manual.tab.siguiente']}" 
+			backLabel="#{msg['manual.tab.anterior']}"
+			style="min-width: 1050px">
+			
+			<p:tab id="WIZ_Solicitud_TAB_Generales" title="#{msg['manual.tab.generales']}">
+				<sns:generalesCpsiUit nameBean="#{solicitudCpsiUitBean.tabGenerales}" formSolicitud="FORM_SolicitudCPSI"/>
+			</p:tab>
+			
+			<p:tab id="WIZ_Solicitud_TAB_Entregado" title="#{msg['solicitud.tab.entregado']}">
+				<sns:entregadosCpsiUit id="CMP_entregado" nameBean="#{solicitudCpsiUitBean.tabEntregados}" formSolicitud="FORM_SolicitudCPSI"></sns:entregadosCpsiUit>
+			</p:tab>
+			
+			<p:tab id="WIZ_Solicitud_TAB_Oficios" title="#{msg.oficio}">
+				<sns:generarOficio nameBean="#{solicitudCpsiUitBean.tabGenerarOficio}" formSolicitud="FORM_SolicitudCPSI"/>
+			</p:tab>
+		</p:wizard>
+	</h:form>
+
+	<p:ajaxStatus
+		id="FORM_SolicitudCPSI_AS"
+		onstart="PF('FORM_SolicitudCPSI_BUI').show()"
+		onsuccess="PF('FORM_SolicitudCPSI_BUI').hide()">
+	</p:ajaxStatus>
+	
+	<p:blockUI
+		widgetVar="FORM_SolicitudCPSI_BUI"
+		block="FORM_SolicitudCPSI">
+		<ui:include src="/componentes/loader.xhtml"/>
+	</p:blockUI>
+
+</html>

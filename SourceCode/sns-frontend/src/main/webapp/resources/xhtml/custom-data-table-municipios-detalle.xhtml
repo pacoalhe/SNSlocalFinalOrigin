@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+<composite:interface>
+	<composite:attribute name="idForm" required="true"></composite:attribute>
+	<composite:attribute name="rendered" required="true"></composite:attribute>
+	<composite:attribute name="value" required="true"></composite:attribute>
+	<composite:attribute name="rowsPerPageTemplate" required="true"></composite:attribute>
+	<composite:attribute name="nirConsultado" required="true"></composite:attribute>
+	<composite:attribute name="actionListenerLinkNombre"
+		method-signature="java.lang.String action()" required="true"></composite:attribute>
+	<composite:attribute name="updateNombreLink" required="true"></composite:attribute>
+	<composite:attribute name="onCompleteNombreLink" required="true"></composite:attribute>
+	<composite:attribute name="actionListenerLinkEDO"
+		method-signature="java.lang.String action()" required="true"></composite:attribute>
+	<composite:attribute name="updateEDOLink" required="true"></composite:attribute>
+	<composite:attribute name="onCompleteEDOLink" required="true"></composite:attribute>
+</composite:interface>
+<composite:implementation>
+
+
+	<p:dataTable id="#{cc.attrs.idForm}" var="municipioAbn"
+		value="#{cc.attrs.value}" paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{cc.attrs.rowsPerPageTemplate}"
+		styleClass="mycustomtable" paginatorPosition="bottom"
+		rendered="#{cc.attrs.rendered}">
+
+		<f:facet name="header">
+           		MUNICIPIOS PARA EL NIR:
+				<h:outputText value="#{cc.attrs.nirConsultado.codigo}" />
+		</f:facet>
+
+		<p:column sortBy="#{cc.attrs.nirConsultado.codigo}">
+			<f:facet name="header">
+           		Municipios que forman el área de servicio local con NIR:
+           		
+					<h:outputText value="#{municipioAbn.nombre}" />
+			</f:facet>
+			<p:commandLink update="#{cc.attrs.updateNombreLink}"
+				actionListener="#{cc.attrs.actionListenerLinkNombre}"
+				oncomplete="#{cc.attrs.onCompleteNombreLink}">
+				<h:outputText value="#{municipioAbn.nombre}" />
+			</p:commandLink>
+		</p:column>
+		<p:column headerText="EDO" sortBy="#{municipioAbn.estado.abreviatura}"
+			style="text-align:center">
+			<p:commandLink actionListener="#{cc.attrs.actionListenerLinkEDO}"
+				update="#{cc.attrs.updateEDOLink}"
+				oncomplete="#{cc.attrs.onCompleteEDOLink}">
+				<h:outputText value="#{municipioAbn.estado.abreviatura}" />
+			</p:commandLink>
+		</p:column>
+		<p:column headerText="Clave inegi" style="text-align:center"
+			sortBy="#{cc.attrs.refBeanCreateInegi.createInegiMunicipio(municipioAbn.id)}">
+			<h:outputText
+				value="#{detallePoblacionBean.createInegiMunicipio(municipioAbn.id)}" />
+		</p:column>
+
+	</p:dataTable>
+</composite:implementation>
+</html>

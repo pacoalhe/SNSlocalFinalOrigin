@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+
+	<h:panelGrid columns="2" id="PNL_CargarFicheros" style="background:transparent; width:980px;">
+		<p:fieldset legend="#{msg['pnnABD.archivo.pst.arrendatario']}">
+			<h:panelGrid id="PNL_Arrendatario" columns="1" style="width:550px;">
+				<p:fileUpload
+					id="uploadedFileArrendatario"
+					sizeLimit="#{pnnABDBean.fileSizeLimit}" 
+					mode="advanced"
+					allowTypes="/(\.|\/)(csv)$/"
+					value="#{pnnABDBean.uploadedFileArrendatario}"
+					fileUploadListener="#{pnnABDBean.uploadFicheroArrendatario}"
+					uploadLabel="#{msg['automatica.Subir']}"
+					cancelLabel="#{msg['automatica.Cancelar']}" 
+					label="Examinar"
+					fileLimitMessage="#{msg['automatica.Limite']}"
+					invalidFileMessage="#{msg['automatica.Archivo.Invalido']}"
+					invalidSizeMessage="#{msg['automatica.Archivo.Tamaño']}"
+					update="fileArrendatario uploadedFileArrendatario BTN_validar_ficheros"
+					oncomplete="reset(xhr, status, args)" style="width:475px;" />
+	
+				<h:outputLabel id="fileArrendatario" value="#{pnnABDBean.fileNameArrendatario}" style="width:425px" />
+			</h:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset legend="#{msg['pnnABD.archivo.pst.arrendador']}">
+			<h:panelGrid id="panel2" columns="1" style="width:550px;">
+				<p:fileUpload 
+					id="uploadedFileArrendador"
+					sizeLimit="#{pnnABDBean.fileSizeLimit}" 
+					mode="advanced"
+					allowTypes="/(\.|\/)(csv)$/"
+					value="#{pnnABDBean.uploadedFileArrendador}"
+					fileUploadListener="#{pnnABDBean.uploadFicheroArrendador}"
+					uploadLabel="#{msg['automatica.Subir']}"
+					cancelLabel="#{msg['automatica.Cancelar']}" 
+					label="Examinar"
+					fileLimitMessage="#{msg['automatica.Limite']}"
+					invalidFileMessage="#{msg['automatica.Archivo.Invalido']}"
+					invalidSizeMessage="#{msg['automatica.Archivo.Tamaño']}"
+					update="fileArrendador uploadedFileArrendador BTN_validar_ficheros"
+					oncomplete="reset(xhr, status, args)" style="width:475px;" >
+					</p:fileUpload>
+
+				<h:outputLabel id="fileArrendador" value="#{pnnABDBean.fileNameArrendador}" style="width:425px;"/>
+			</h:panelGrid>
+		</p:fieldset>
+	</h:panelGrid>
+	<p:panel styleClass="alaDcha" style="background:transparent">
+		<p:commandButton id="BTN_validar_ficheros"
+			disabled="#{pnnABDBean.disableBotonValidar}" value="Procesar archivos"
+			actionListener="#{pnnABDBean.procesarFicheros}"
+			update="BTN_validar_ficheros">
+		</p:commandButton>
+	</p:panel>
+
+	<p:blockUI block="PNL_CargarFicheros" widgetVar="bui2"
+		trigger="uploadedFileArrendador">
+		<ui:include src="/componentes/loader.xhtml" />
+	</p:blockUI>
+
+
+<script type="text/javascript">
+	function reset(xhr, status, args) {
+		this.clearMessages();
+		return this.init(this.cfg);
+	}
+</script>
+</html>

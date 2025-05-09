@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+	
+	<p:panel id="PNL_Resumen" style="background:transparent; width:980px;">
+		<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">Resúmen</legend>
+				<div class="ui-grid">
+				    <div class="ui-grid-row">
+				        <div class="ui-grid-col-4">
+				        	<p:commandButton 
+						 		id="BTN_generar_ficheros" ajax="false"	  
+								value="Generar Padres e Hijos"
+								disabled="#{pnnABDBean.disableBotonGenerar}"
+								actionListener="#{pnnABDBean.generarRegistrosAbd}"
+								update="BTN_generar_ficheros TBL_resumen_arrendatario"/>
+				        </div>
+				        <div class="ui-grid-col-4">
+				        	
+			        	</div>
+				        <div class="ui-grid-col-4" style="text-align:right;">
+				        	<p:commandButton id="BTN_descargar" value="#{msg.exportar}" ajax="false">
+								<p:dataExporter id="abd-exporter" type="xls" target="TBL_resumen_arrendatario" 
+									fileName="resumen" preProcessor="#{excel.preProcessXLS}" 
+									postProcessor="#{excel.postProcessXLS}"/>
+							</p:commandButton>
+				        </div>
+			        </div>
+				</div>	
+
+			<p:dataTable 
+				id="TBL_resumen_arrendatario" 
+				var="res" 
+				scrollable="false"
+				rows="#{pnnABDBean.registroPorPagina}"
+				scrollHeight="100px;"
+				value="#{pnnABDBean.resumenModelo}"
+				paginator="true" 
+				paginatorPosition="bottom" 
+				lazy="true" 
+				emptyMessage="#{msg['buscador.noresultados']}"
+				resizableColumns="true">
+				
+			 	<p:columnGroup type="header">
+					<p:row>   
+					   <p:column colspan="1" width="15%" resizable="true" headerText="IDO" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+					   <p:column colspan="1" width="15%" resizable="true" headerText="IDA" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+					   <p:column colspan="1" width="15%" resizable="true" headerText="ABN" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+					   <p:column colspan="1" width="15%" resizable="true" headerText="Numero Inicio" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+					   <p:column colspan="1" width="15%" resizable="true" headerText="Numero Final" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+					   <p:column colspan="1" width="15%" resizable="true" headerText="RED" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+					   <p:column colspan="1" width="10%" resizable="true" headerText="MOD" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				  	</p:row>
+				</p:columnGroup>
+			
+				<p:column headerText="IDO" width="15%" style="font-size:12px;text-align:center;">
+       				<h:outputText value="#{res.asignatario.ido}" />
+   				</p:column>
+   				
+   				<p:column headerText="IDA" width="15%" style="font-size:12px;text-align:center;">
+       				<h:outputText value="#{res.asignatario.ida}" />
+   				</p:column>
+   				
+   				<p:column headerText="ABN" width="15%" style="font-size:12px;text-align:center;">
+       				<h:outputText value="#{res.id.idAbn}" />
+   				</p:column>
+   				
+			    <p:column headerText="Numero Inicio" width="15%" style="font-size:12px;text-align:center;">
+			        <h:outputText value="#{res.id.numberFrom}" />
+			    </p:column>
+				 
+			    <p:column headerText="Numero Final" width="15%" style="font-size:12px;text-align:center;">
+			        <h:outputText value="#{res.numberTo}" />
+			    </p:column>
+
+   				<p:column headerText="RED" width="15%" style="font-size:12px;text-align:center;">
+   	 				<h:outputText value="#{res.idTipoRedDesc}" />
+   				</p:column>	
+   				
+   				<p:column headerText="MOD" width="10%" style="font-size:12px;text-align:center;">
+   	 				<h:outputText value="#{res.idTipoModalidadDesc}" />
+   				</p:column>    	    	    
+			</p:dataTable>			
+		</fieldset>
+	</p:panel>          
+</html>

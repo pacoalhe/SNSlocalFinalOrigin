@@ -1,0 +1,229 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+	
+	<ui:composition>
+		<!-- Tabla de numeración solicitada seleccionable -->
+		<p:messages id="MSG_analisis" showDetail="false" showSummary="true" closable="true" showIcon="false"/>
+
+		<p:dataTable 
+			id="TBLGN_resumen" var="tablaResumen"
+			value="#{cc.attrs.nameBean.solicitud.numeracionSolicitadas}"
+			selectionMode="single" selection="#{cc.attrs.nameBean.selectResumenNumeracion}"
+			rowKey="#{tablaResumen.id}"
+			scrollable="true" resizableColumns="true" 
+			paginator="true" paginatorPosition="bottom" 
+			rows="#{cc.attrs.nameBean.registroPorPagina}">
+		
+			<f:facet name="header">#{msg['analisis.tabla.resumen']}</f:facet>
+		
+			<p:ajax 
+				event="rowSelect" 
+				listener="#{cc.attrs.nameBean.numeracionOnRowSelect}"
+				update="#{cc.attrs.update}">
+			</p:ajax>
+			
+			<p:column 
+				headerText="#{msg['analisis.cantidadAsignada']}" 
+				filterBy="#{tablaResumen.cantAsignada}"
+				sortBy="#{tablaResumen.cantAsignada}"
+				width="100" style="font-size:12px; text-overflow:ellipsis; background-color: #20B2AA"
+				filterMaxLength="7">
+				<h:outputText value="#{tablaResumen.cantAsignada}"/>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.cantidad']}"  
+				filterBy="#{tablaResumen.cantSolicitada}"
+				sortBy="#{tablaResumen.cantSolicitada}"
+				width="75" style="font-size:12px; text-overflow:ellipsis;"
+				filterMaxLength="7">
+				<h:outputText value="#{tablaResumen.cantSolicitada}"/>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.claveCensal']}" 
+				filterBy="#{tablaResumen.poblacion.inegi}" 
+				sortBy="#{tablaResumen.poblacion.inegi}" 
+				width="75" style="font-size:12px; text-align:center; text-overflow:ellipsis;"
+				filterMaxLength="9">
+				<h:outputText value="#{tablaResumen.poblacion.inegi}" />
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.estado']}" 
+				filterBy="#{tablaResumen.poblacion.municipio.estado.nombre}"
+				sortBy="#{tablaResumen.poblacion.municipio.estado.nombre}"				
+				width="100" style="font-size:12px; text-align:center; text-overflow:ellipsis;">
+				<h:outputText value="#{tablaResumen.poblacion.municipio.estado.nombre}" />
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.municipio']}" 
+				filterBy="#{tablaResumen.poblacion.municipio.nombre}"
+				sortBy="#{tablaResumen.poblacion.municipio.nombre}"
+				width="100" style="font-size:12px; text-overflow:ellipsis;">
+				<h:outputText value="#{tablaResumen.poblacion.municipio.nombre}"/>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.poblacion']}"  
+				filterBy="#{tablaResumen.poblacion.nombre}"
+				sortBy="#{tablaResumen.poblacion.nombre}"
+				width="100" style="font-size:12px; text-overflow:ellipsis;">
+				<h:outputText value="#{tablaResumen.poblacion.nombre}" />
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.centralOrigen']}" 
+				filterBy="#{tablaResumen.centralOrigen.nombre}"
+				sortBy="#{tablaResumen.centralOrigen.nombre}"
+				width="100" style="font-size:12px; text-overflow:ellipsis;">
+				<h:outputText value="#{tablaResumen.centralOrigen.nombre}"/>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.centralDestino']}" 
+				filterBy="#{tablaResumen.centralDestino.nombre}"
+				sortBy="#{tablaResumen.centralDestino.nombre}"
+				width="100" style="font-size:12px; text-overflow:ellipsis;">
+				<h:outputText value="#{tablaResumen.centralDestino.nombre}" />
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.abn']}" 
+				filterBy="#{tablaResumen.poblacion.abn.codigoAbn}"
+				sortBy="#{tablaResumen.poblacion.abn.codigoAbn}"
+				width="75" style="font-size:12px; text-align:center; text-overflow:ellipsis;"
+				filterMaxLength="3">
+				<h:outputText value="#{tablaResumen.poblacion.abn.codigoAbn}"  />
+			</p:column>
+
+			<p:column 
+				headerText="#{msg['analisis.tipoServicio']}"  
+				filterBy="#{tablaResumen.tipoRed.cdg}"
+				sortBy="#{tablaResumen.tipoRed.cdg}"
+			 	width="100" style="font-size:12px; text-align:center; text-overflow:ellipsis;">
+				<h:outputText 
+					value="#{tablaResumen.tipoRed.descripcion}" 
+					rendered="#{tablaResumen.tipoRed.cdg != 'M'}">
+				</h:outputText>
+				<h:outputText 
+					value="#{tablaResumen.tipoRed.descripcion}-#{tablaResumen.tipoModalidad.descripcion}"
+					rendered="#{tablaResumen.tipoRed.cdg == 'M'}">
+				</h:outputText>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.idoConcesionario']}" 
+				filterBy="#{tablaResumen.concesionario.ido}"
+				sortBy="#{tablaResumen.concesionario.ido}"
+				width="75" style="font-size:12px; text-align:center; text-overflow:ellipsis;"
+				rendered="#{cc.attrs.nameBean.renderColumnasComercializadora}"
+				filterMaxLength="3">
+				<h:outputText value="#{tablaResumen.concesionario.ido}"/>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.concesionario']}" 
+				filterBy="#{tablaResumen.concesionario.nombre}"
+				sortBy="#{tablaResumen.concesionario.nombre}"
+				width="200" style="font-size:12px; text-overflow:ellipsis;"
+				rendered="#{cc.attrs.nameBean.renderColumnasComercializadora}">
+				<h:outputText value="#{tablaResumen.concesionario.nombre}"/>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.pstArrendatario']}" 
+				filterBy="#{tablaResumen.arrendatario.nombre}"
+				sortBy="#{tablaResumen.arrendatario.nombre}"
+				width="200" style="font-size:12px; text-overflow:ellipsis;">
+				<h:outputText value="#{tablaResumen.arrendatario.nombre}"/>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.idoPnn']}" 
+				filterBy="#{tablaResumen.idoPnn}"
+				sortBy="#{tablaResumen.idoPnn}"
+				width="75" style="font-size:12px; text-align:center; text-overflow:ellipsis;"
+				filterMaxLength="3">
+				<h:outputText value="#{tablaResumen.idoPnn}"/>
+			</p:column>
+			
+			<p:column 
+				headerText="#{msg['analisis.idaPnn']}" 
+				filterBy="#{tablaResumen.idaPnn}"
+				sortBy="#{tablaResumen.idaPnn}"
+				width="75" style="font-size:12px; text-align:center; text-overflow:ellipsis;"
+				filterMaxLength="3">
+				<h:outputText value="#{tablaResumen.idaPnn}"/>
+	   		</p:column>
+
+		</p:dataTable>
+
+		<!-- Panel de ingreso de datos, con los campos de Asignar, por asignar y solicitada -->
+		<p:fieldset id="PGD_ingresoDatos">
+			<div class="ui-grid ui-grid-responsive">
+	       		<div class="ui-grid-col-7" style="text-align: left;">
+       				<p:outputLabel value="Asignar"/>
+					<p:inputText 
+						id="IPT_asignar" 
+						label="#{msg['analisis.cantAsignar']}" 
+						value="#{cc.attrs.nameBean.cantidadAsignar}"
+						style="width: 100px; margin-left: 5px;"
+						maxlength="7">
+						<p:ajax 
+							event="change" 
+							listener="#{cc.attrs.nameBean.numeracionInicialKeyUp}" 
+							update="#{cc.attrs.update}" 
+							global="false">
+						</p:ajax>	
+					</p:inputText>
+								
+					<p:outputLabel value="Por Asignar" style="margin-left: 10px;"/>
+					<p:inputText 
+						id="IPT_porAsignar" 
+						label="#{msg['analisis.cantPorAsignar']}" 
+						value="#{cc.attrs.nameBean.cantidadPorAsignar}"
+						style="width: 100px; margin-left: 5px;" 
+						maxlength="10" 
+						required="false" 
+						disabled="true">
+					</p:inputText>
+					
+					<p:outputLabel value="Solicitada" style="margin-left: 10px;"/>
+					<p:inputText 
+						id="IPT_solicitada" 
+						label="#{msg['analisis.cantSolicitada']}" 
+						value="#{cc.attrs.nameBean.cantidadSolicitada}" 
+						style="width: 100px; margin-left: 5px;" 
+						maxlength="10" 
+						required="false" 
+						disabled="true">
+					</p:inputText>
+					
+					<p:commandButton
+						id="BTN_analizar"
+						value="#{msg['boton.analizar']}" 
+						actionListener="#{cc.attrs.nameBean.analizarAction}"
+						update="#{cc.attrs.update}" 				
+						style="height:30px; width:100px; margin-left: 10px;">
+					</p:commandButton>
+				</div>
+				
+				<div class="ui-grid-col-5" style="text-align: right;">
+					<p:commandButton 
+						id="BTN_generaAnalisis"
+						ajax="false"
+						value="#{msg['analisis.asignacion.generar']}" 
+						style="height:30px; width:50px;"
+						onclick="PrimeFaces.monitorDownload(showStatus, hideStatus)">
+						<p:fileDownload value="#{cc.attrs.nameBean.analisisNumeracion}" />
+					</p:commandButton>
+				</div>
+			</div>
+		</p:fieldset>
+	</ui:composition>
+</html>

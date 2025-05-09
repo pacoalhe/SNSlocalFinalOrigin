@@ -1,0 +1,262 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<p:messages id="MSG_ConsultarAsignacionesCPSN" showDetail="false" showSummary="true" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.CPSN']}/#{msg['mainMenu.Asignacion']}</legend>
+
+			<h:form id="FRM_ConsultarAsignacionesCPSN">
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['buscador.solicitud']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda" columns="8" style="float:left"
+						cellpadding="3" cellspacing="3">
+						<h:outputLabel value="#{msg['consultar.Consecutivo']}" />
+						<p:inputText id="TXT_Consecutivo" required="false" minValue="9"
+							maxlength="9" mask="9"
+							value="#{consultarAsignacionesCpsnBean.consecutivo}"
+							label="#{msg['consultar.Consecutivo']}" style="width: 141px;">
+						</p:inputText>
+
+						<h:outputLabel for="selproveedor"
+							value="#{msg['consultar.PST_Solicitante']}" />
+						<p:selectOneMenu id="selproveedor" autoWidth="false" style="width:150px;"
+							value="#{consultarAsignacionesCpsnBean.proveedor}"
+							converter="#{proveedorConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarAsignacionesCpsnBean.listaProveedores}"
+								var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['consultar.Numero_oficio']}" />
+						<p:inputText id="TXT_Oficio" required="false" maxlength="51"
+							value="#{consultarAsignacionesCpsnBean.numeroOficio}"
+							label="#{msg['consultar.Numero_oficio']}" style="width: 141px;">
+						</p:inputText>
+
+						<h:outputLabel for="selestado" value="#{msg['consultar.Estatus']}" />
+						<p:selectOneMenu id="selestado" style="width:150px;"
+							value="#{consultarAsignacionesCpsnBean.estadoSeleccionado}"
+							converter="#{estatusSolicitudConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarAsignacionesCpsnBean.listaEstados}"
+								var="estados1" itemLabel="#{estados1.descripcion}"
+								itemValue="#{estados1}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}" />
+						<p:calendar id="fSolicitudDesde" required="false" locale="mx_MX"
+							value="#{consultarAsignacionesCpsnBean.fechaDesdeSolicitud}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fSolicitudHasta"
+								global="false" />
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}" />
+						<p:calendar id="fSolicitudHasta" required="false" locale="mx_MX"
+							value="#{consultarAsignacionesCpsnBean.fechaHastaSolicitud}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}"
+							disabled="#{consultarAsignacionesCpsnBean.fechaDesdeSolicitud == null}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_asignacion']} #{msg.fechaDesde}" />
+						<p:calendar id="fAsignacionDesde" required="false" locale="mx_MX"
+							value="#{consultarAsignacionesCpsnBean.fechaDesdeAsignacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_asignacion']} #{msg.fechaDesde}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fAsignacionHasta"
+								global="false" />
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_asignacion']} #{msg.fechaHasta}" />
+						<p:calendar id="fAsignacionHasta" required="false" locale="mx_MX"
+							value="#{consultarAsignacionesCpsnBean.fechaHastaAsignacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_asignacion']} #{msg.fechaHasta}"
+							disabled="#{consultarAsignacionesCpsnBean.fechaDesdeAsignacion == null}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarAsignacionesCpsnBean.realizarBusqueda}"
+						update=":MSG_ConsultarAsignacionesCPSN TBL_SolicitudesAsignacion"
+						style="height:30px; width:82px;">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarAsignacionesCpsnBean.limpiarBusqueda}"
+						update="PNL_Busqueda :MSG_ConsultarAsignacionesCPSN TBL_SolicitudesAsignacion"
+						style="height:30px; width:82px; margin-right:20px;"
+						process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<p:fieldset legend="#{msg['manual.consultas']}">
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton 
+								value="#{msg['asignacion.nng.nueva']}"
+								title="Editar" icon="ui-icon-pencil" 
+								update=":MDL_Asignaciones"
+								action="#{solicitudAsignacionCpsnBean.nuevaSolicitud}"
+								oncomplete="PF('MDL_Asignaciones').show();">
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_SolicitudesAsignacion" widgetVar="tabla"
+						var="detalle"
+						value="#{consultarAsignacionesCpsnBean.solicitudesAsignacionModel}"
+						lazy="true" paginator="true" paginatorPosition="bottom"
+						rows="#{consultarAsignacionesCpsnBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column headerText="#{msg['consultar.Consecutivo']}">
+							<h:outputText value="#{detalle.consecutivo}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.PST_Solicitante']}">
+							<h:outputText value="#{detalle.proveedor}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_solicitud']}" style="text-align:center;">
+							<h:outputText value="#{detalle.fechaSolicitud}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_asignacion']}" style="text-align:center;">
+							<h:outputText value="#{detalle.fechaAsignacion}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Numero_oficio']}">
+							<h:outputText value="#{detalle.numOficio}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Estatus']}" style="text-align:center;">
+							<h:outputText value="#{detalle.estatus}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Operaciones']}" style="text-align:center;">
+							<p:commandButton title="#{msg['consultas.generales.detalle']}"
+								icon="ui-icon-pencil"
+								action="#{consultarAsignacionesCpsnBean.editarSolicitud}"
+								update=":MDL_Asignaciones TBL_SolicitudesAsignacion"
+								oncomplete="PF('MDL_Asignaciones').show();">
+								<f:setPropertyActionListener value="#{detalle}"
+									target="#{consultarAsignacionesCpsnBean.registroSeleccionado}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+
+							<p:commandButton title="#{msg['consultas.generales.cancelar']}"
+								icon="ui-icon-circle-close"
+								disabled="#{!detalle.cancelarDisponible}"
+								onclick="PF('DLG_Cancelar').show()" global="false">
+								<f:setPropertyActionListener value="#{detalle}"
+									target="#{consultarAsignacionesCpsnBean.registroSeleccionado}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:fieldset>
+			</h:form>
+
+			<p:dialog id="MDL_Asignaciones" widgetVar="MDL_Asignaciones"
+				header="#{msg['mainMenu.CPSN']}/#{msg['mainMenu.Asignacion']}"
+				modal="true" appendTo="@(body)" scrollable="true" resizable="true"
+				closable="false" width="80%" height="500">
+				<ui:include src="/cpsn/asignacion/solicitud-asignacion-cpsn.xhtml">
+				</ui:include>
+				<p:commandButton id="BTN_Salir_Solicitud_Asignacion"
+					styleClass="customCloseModal" value="X"
+					onclick="PF('DLG_Salir_Solicitud_Asignacion').show()"
+					global="false">
+					<p:resetInput
+						target=":#{p:component('FRM_ConsultarAsignacionesCPSN')}" />
+				</p:commandButton>
+			</p:dialog>
+			
+			<!-- Confirmación al salir solicitud asignacion-->
+			<p:dialog id="DLG_Salir_Solicitud_Asignacion"
+				widgetVar="DLG_Salir_Solicitud_Asignacion" modal="true"
+				resizable="false" closeOnEscape="true" closable="false"
+				header="Salir" appendTo="@(body)" width="250"
+				height="115">
+				<sns:exit-custom-dialog message="#{msg['cerrarDialogo.mensaje']}"
+					blockUIWidgetVar="salirSolicitudAsignacion_BUI"
+					confirmActionListener="#{solicitudAsignacionCpsnBean.resetTabs}"
+					onCompleteExit="PF('DLG_Salir_Solicitud_Asignacion').hide();PF('MDL_Asignaciones').hide();"
+					onCompleteCancel="PF('DLG_Salir_Solicitud_Asignacion').hide();"
+					updateComponentId=":FRM_ConsultarAsignacionesCPSN:TBL_SolicitudesAsignacion"
+					resetValues="true">
+				</sns:exit-custom-dialog>
+			</p:dialog>
+			
+			<!-- Confirmación cancelar solicitud asignacion-->
+			<p:dialog id="DLG_Cancelar" widgetVar="DLG_Cancelar" modal="true"
+				resizable="false" closeOnEscape="true" closable="false"
+				header="#{msg['cancelar.registro']}" appendTo="@(body)" width="250"
+				height="50">
+				<sns:confirm-custom-dialog message="#{msg['dialog.confirmacion']}"
+					blockUIWidgetVar="ConfirmarCancelarAsignacionCPSN_BUI"
+					confirmActionListener="#{consultarAsignacionesCpsnBean.eliminarSolicitud}"
+					dialogWidgetVar="DLG_Cancelar"
+					updateComponentId=":FRM_ConsultarAsignacionesCPSN:TBL_SolicitudesAsignacion :MSG_ConsultarAsignacionesCPSN">
+				</sns:confirm-custom-dialog>
+			</p:dialog>
+			
+			<p:ajaxStatus id="FRM_ConsultarAsignacionesCPSN_AS"
+				onstart="PF('statusAsignacionCpsnDialog').show()"
+				onsuccess="PF('statusAsignacionCpsnDialog').hide()">
+			</p:ajaxStatus>
+			
+			<p:dialog widgetVar="statusAsignacionCpsnDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+    			<ui:include src="/componentes/loader.xhtml"/>
+			</p:dialog>
+			
+			<!-- <p:blockUI block="FRM_ConsultarAsignacionesCPSN"
+				widgetVar="FRM_ConsultarAsignacionesCPSN_BUI">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:blockUI> -->
+
+		</fieldset>
+	</ui:define>
+</ui:composition>
+</html>

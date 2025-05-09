@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+
+	<ui:define name="centro">
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusEstadosDialog').show();
+			}
+			function hideStatus() {
+				PF('statusEstadosDialog').hide();
+			}
+		</script>
+
+		<p:messages id="MSG_ConsultarEstados" showDetail="true"
+			showSummary="false" autoUpdate="false" closable="true"
+			showIcon="false" />
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogos.title']}/#{msg['catalogo.estados']}</legend>
+			<h:form id="FRM_ConsultarEstados">
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.estados.busqueda']}</legend>
+
+					<h:panelGrid id="pe" columns="2" style="float:left" cellpadding="3"
+						cellspacing="3">
+
+						<h:outputLabel for="selestado"
+							value="#{msg['catalogo.estados.estado']}" />
+						<p:selectOneMenu id="selestado" style="width:150px;"
+							value="#{consultarEstadosBean.estadoSeleccionado}"
+							converter="#{estadoConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems value="#{consultarEstadosBean.listaEstados}"
+								var="estadosel" itemLabel="#{estadosel.nombre}"
+								itemValue="#{estadosel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarEstadosBean.realizarBusqueda}"
+						update=":MSG_ConsultarEstados TBL_Estados BTN_generaListado"
+						style="height:30px;  width:82px;">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarEstadosBean.limpiarBusqueda}"
+						update="selestado TBL_Estados BTN_generaListado"
+						style="height:30px; width:82px; margin-right:20px;">
+					</p:commandButton>
+				</p:panelGrid>
+
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.estados']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton id="BTN_generaListado"
+								disabled="#{consultarEstadosBean.emptySearch}"
+								value="#{msg.exportar}" ajax="false"
+								onclick="PrimeFaces.monitorDownload(showStatus,hideStatus);">
+								<p:fileDownload value="#{consultarEstadosBean.reportEstados}" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+
+					<p:dataTable id="TBL_Estados" widgetVar="TBL_Estados"
+						var="consultar" value="#{consultarEstadosBean.estadosModel}"
+						lazy="true" selectionMode="single"
+						selection="#{consultarEstadosBean.estadoSeleccionadoEdicion}"
+						rowKey="#{consultar.codEstado}" paginator="true"
+						paginatorPosition="bottom"
+						rows="#{consultarEstadosBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+
+						<p:column headerText="#{msg['catalogo.estados.codigo']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.codEstado}" />
+						</p:column>
+
+						<p:column headerText="#{msg['catalogo.estados.nombre']}">
+							<h:outputText value="#{consultar.nombre}" />
+						</p:column>
+
+						<p:column headerText="#{msg['catalogo.estados.abreviatura']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.abreviatura}" />
+						</p:column>
+
+						<p:column headerText="#{msg['catalogo.estados.capital']}">
+							<h:outputText value="#{consultar.capital}" />
+						</p:column>
+
+
+						<p:column headerText="#{msg['consultar.Operaciones']}"
+							style="text-align:center;" 
+							exportable="false">
+							<p:commandButton title="#{msg['detalleEditar']}"
+								icon="ui-icon-pencil" 
+								update=":FORM_Estado"
+								oncomplete="PF('MDL_Estado').show();">
+								<f:setPropertyActionListener value="#{consultar}"
+									target="#{consultarEstadosBean.estadoSeleccionadoEdicion}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+
+							<p:commandButton title="#{msg['catalogo.estados.detalle']}"
+								icon="ui-icon-zoomin" 
+								update=":TBL_Municipios"
+								action="#{consultarEstadosBean.buscarMunicipios}"
+								oncomplete="PF('MDL_Municipios').show()">
+								<f:setPropertyActionListener value="#{consultar}"
+									target="#{consultarEstadosBean.estadoSeleccionadoEdicion}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+
+					</p:dataTable>
+
+				</fieldset>
+			</h:form>
+			<p:dialog id="MDL_Estado" 
+			widgetVar="MDL_Estado" 
+			modal="true"
+				appendTo="@(body)" 
+				header="#{msg['catalogo.estados.estado']}"
+				scrollable="false" 
+				resizable="false" 
+				closable="false" 
+				width="400"
+				height="300">
+				<p:commandButton id="BTN_Salir_Estado" 
+					styleClass="customCloseModal"
+					value="X" 
+					onclick="PF('DLG_Salir_Nuevo_Estado').show()"
+					global="false">
+				</p:commandButton>
+				<ui:include src="/admin-catalogos/estado/estado.xhtml" />
+			</p:dialog>
+			<!-- Confirmación al salir estado-->
+			<p:dialog id="DLG_Salir_Nuevo_Estado"
+				widgetVar="DLG_Salir_Nuevo_Estado" 
+				closeOnEscape="true"
+				closable="false" 
+				header="Salir" 
+				width="250" 
+				height="115"
+				modal="true" 
+				resizable="false" 
+				appendTo="@(body)">
+				<sns:exit-custom-dialog-no-listener
+					message="#{msg['cerrarDialogo.mensaje']}"
+					blockUIWidgetVar="salirConsultarEstados_BUI"
+					onCompleteExit="PF('DLG_Salir_Nuevo_Estado').hide();PF('MDL_Estado').hide();"
+					onCompleteCancel="PF('DLG_Salir_Nuevo_Estado').hide();"
+					updateComponentId=":FRM_ConsultarEstados:TBL_Estados"
+					resetValues="true">
+				</sns:exit-custom-dialog-no-listener>
+			</p:dialog>
+			<p:dialog id="MDL_Municipios" 
+				widgetVar="MDL_Municipios" 
+				modal="true"
+				appendTo="@(body)" 
+				header="#{msg['catalogo.estados.municipios']}"
+				onHide="PF('TBL_Municipios').getPaginator().setPage(0)"
+				scrollable="true" 
+				resizable="false" 
+				width="650" 
+				height="250">
+				<p:ajax event="close" resetValues="true" />
+				<ui:include src="/admin-catalogos/estado/municipios-estado.xhtml" />
+			</p:dialog>
+		</fieldset>
+		<p:ajaxStatus id="triggerblockuiEstado"
+			onstart="PF('statusEstadosDialog').show()"
+			onsuccess="PF('statusEstadosDialog').hide()">
+		</p:ajaxStatus>
+		<p:dialog widgetVar="statusEstadosDialog" 
+			modal="true"
+			draggable="false" 
+			closable="false" 
+			resizable="false"
+			showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+		<!-- <p:blockUI block="FRM_ConsultarEstados" widgetVar="bui">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:blockUI>
+ -->
+	</ui:define>
+</ui:composition>
+</html>

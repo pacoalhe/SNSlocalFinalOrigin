@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<!-- <p:ajaxStatus id="FORM_detallePC_AS"
+	onstart="PF('FORM_detallePC_BUI').show()"
+	onsuccess="PF('FORM_detallePC_BUI').hide()">
+</p:ajaxStatus>
+<p:blockUI block="FORM_detallePC" widgetVar="FORM_detallePC_BUI">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI> -->
+
+<h:form id="FORM_detallePC">
+	<p:dataTable id="TBL_poblacionesAbnPC" var="poblacionabn"
+		value="#{detallePoblacionBean.poblacionesAbn}" paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{detallePoblacionBean.numeroRegistros}" 
+		styleClass="mycustomtable" paginatorPosition="bottom"
+		rendered="#{detallePoblacionBean.paginatedResultsPoblacionesActive}">
+
+		<f:facet name="header">
+           		CIUDADES Y POBLACIONES PARA EL NIR:			
+				<h:outputText
+					value="#{detallePoblacionBean.nirConsultado.codigo}" />
+		</f:facet>
+
+		<p:column sortBy="#{poblacionabn.nombre}">
+			<f:facet name="header">
+           		Ciudades y poblaciones con NIR:
+				<h:outputText 
+					value="#{detallePoblacionBean.nirConsultado.codigo}" />
+		</f:facet>
+			<p:commandLink
+				update=":FORM_myform:P_containernumeracion :FORM_myform:P_containerinfo :FORM_myform:P_containerLocal 
+				:FORM_myform:P_containerinfoMunicipio :FORM_myform:P_containerpoblaciones :FORM_myform:P_containerinfopobNoNir"
+				actionListener="#{consultaPublicaMarcacionBean.infoPoblacion(poblacionabn, detallePoblacionBean.nirConsultado, false)}"
+				oncomplete="PF('poblacionCiudad').hide(); PF('infopoblacion').hide();">
+				<h:outputText value="#{poblacionabn.nombre}" />
+			</p:commandLink>
+		</p:column>
+		<p:column headerText="EDO" sortBy="#{poblacionabn.municipio.estado.abreviatura}" style="text-align:center">
+			<p:commandLink
+				actionListener="#{areasGeoNumeracionMainBean.viewMaps(poblacionabn.municipio.estado)}"
+				update=":P_containerInclude :P_main"
+				oncomplete="PF('infopoblacion').hide(); PF('poblacionCiudad').hide();">
+				<h:outputText value="#{poblacionabn.municipio.estado.abreviatura}" />
+			</p:commandLink>
+
+		</p:column>
+		<p:column headerText="Clave inegi" sortBy="#{poblacionabn.inegi}" style="text-align:center">
+			<h:outputText value="#{poblacionabn.inegi}" />
+		</p:column>
+
+	</p:dataTable>
+
+	<p:dataTable id="TBL_municipiosAbnPC" var="municipioabn"
+		value="#{detallePoblacionBean.municipiosNir}" paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{detallePoblacionBean.numeroRegistros}" 
+		styleClass="mycustomtable" paginatorPosition="bottom"
+		rendered="#{detallePoblacionBean.paginatedResultsMunicipiosActive}">
+
+		<f:facet name="header">
+           		MUNICIPIOS PARA EL NIR:
+				<h:outputText 
+					value="#{detallePoblacionBean.nirConsultado.codigo}" />
+		</f:facet>
+		<p:column sortBy="#{municipioabn.nombre}" >
+		<f:facet name="header">
+           		Municipios que forman el área de servicio local con NIR:          	
+				<h:outputText
+					value="#{detallePoblacionBean.nirConsultado.codigo}" />
+		</f:facet>
+			<p:commandLink
+				update=":FORM_myform:P_containernumeracion :FORM_myform:P_containerinfo :FORM_myform:P_containerLocal :FORM_myform:P_containerinfoMunicipio :FORM_myform:P_containerDesplegable 
+				:FORM_myform:P_containerpoblaciones :FORM_myform:P_containerinfopobNoNir"
+				actionListener="#{consultaPublicaMarcacionBean.infoMunicipio(municipioabn, detallePoblacionBean.abnMunicipio, detallePoblacionBean.nirConsultado)}"
+				oncomplete="PF('infopoblacion').hide(); PF('poblacionCiudad').hide();">
+				<h:outputText value="#{municipioabn.nombre}" />
+			</p:commandLink>
+		</p:column>
+		<p:column headerText="Estado" sortBy="#{municipioabn.estado.abreviatura}" style="text-align:center">
+			<p:commandLink
+				actionListener="#{areasGeoNumeracionMainBean.viewMaps(municipioabn.estado)}"
+				update=":P_containerInclude :P_main"
+				oncomplete="PF('infopoblacion').hide(); PF('poblacionCiudad').hide();">
+				<h:outputText value="#{municipioabn.estado.abreviatura}" />
+			</p:commandLink>
+		</p:column>
+		<p:column headerText="Inegi" sortBy="#{detallePoblacionBean.createInegiMunicipio(municipioabn.id)}"  style="text-align:center">
+			<h:outputText
+				value="#{detallePoblacionBean.createInegiMunicipio(municipioabn.id)}" />
+		</p:column>
+
+	</p:dataTable>
+
+
+	<p:dataTable id="TBL_concesionariosAbnPC" var="concesionarioabn"
+		value="#{detallePoblacionBean.proveedoresNir}" paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{detallePoblacionBean.numeroRegistros}"
+		styleClass="mycustomtable" paginatorPosition="bottom"
+		rendered="#{detallePoblacionBean.paginatedResultsConcesionariosActive}">
+
+		<f:facet name="header">
+           		EMPRESAS DE TELEFONÍA LOCAL CON PRESENCIA EN EL ÁREA GEOGRÁFICA DE NUMERACIÓN CON NIR:
+           	
+				<h:outputText 
+					value="#{detallePoblacionBean.nirConsultado.codigo}" />
+		</f:facet>
+
+		<p:column headerText="Empresas de telefonía" sortBy="#{concesionarioabn.nombreCorto}" style="text-align:center">
+			<h:outputText value="#{concesionarioabn.nombreCorto}" />
+		</p:column>
+
+
+	</p:dataTable>
+
+	<p:dataTable id="DT_provPC" var="proveedor"
+		value="#{detallePoblacionBean.concesionariosPoblacion}"
+		rendered="#{detallePoblacionBean.paginatedResultsProveedoresActive}"
+		paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{detallePoblacionBean.numeroRegistros}"
+		styleClass="mycustomtable" paginatorPosition="bottom">
+
+		<f:facet name="header">
+           		EMPRESAS DE TELEFONÍA LOCAL CON PRESENCIA EN EL ÁREA GEOGRÁFICA DE NUMERACIÓN CON NIR: <ui:repeat
+				var="nir" value="#{consultaPublicaMarcacionBean.abn.nirs}">
+				<h:outputText
+					value="#{nir.codigo}" />
+			</ui:repeat>
+		</f:facet>
+
+		<p:column headerText="Concesionario" style="text-align:center" sortBy="#{proveedor.nombreCorto}">
+			<h:outputText value="#{proveedor.nombreCorto}" />
+		</p:column>
+
+
+	</p:dataTable>
+</h:form>
+</html>

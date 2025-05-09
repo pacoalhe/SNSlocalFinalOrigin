@@ -1,0 +1,306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+
+	<ui:define name="centro">
+
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusCentralDialog').show();
+			}
+
+			function hideStatus() {
+				PF('statusCentralDialog').hide();
+			}
+		</script>
+
+		<p:messages id="MSG_ConsultarCentrales" showDetail="false"
+			autoUpdate="false" closable="true" showIcon="false" />
+
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogos.title']}/#{msg['catalogo.centrales']}</legend>
+
+			<h:form id="FRM_ConsultarCentrales">
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.centrales.busqueda']}</legend>
+
+					<h:panelGrid id="pe" columns="6" style="float:left" cellpadding="3"
+						cellspacing="3">
+
+						<h:outputLabel value="#{msg['ubicacion.abn']}" />
+						<p:inputText id="TXT_AbnEntrega" required="false" maxlength="3"
+							value="#{consultarCentralesBean.abn}"
+							label="#{msg['ubicacion.abn']}" style="width: 150px;">
+						</p:inputText>
+
+						<p:outputLabel for="nombre_central" 
+							value="#{msg['representante.nombre']}"></p:outputLabel>
+						<p:autoComplete id="nombre_central" dropdown="true" global="false"
+							value="#{consultarCentralesBean.central}" var="central"
+							itemLabel="#{central.nombre}" itemValue="#{central}"
+							converter="#{centralConverter}" size="16" queryDelay="1000"
+							minQueryLength="3" scrollHeight="200" style="width:150px;"
+							completeMethod="#{consultarCentralesBean.completeCentral}">
+						</p:autoComplete>
+
+						<h:outputLabel for="selproveedor" value="#{msg.proveedor}" />
+						<p:selectOneMenu id="selproveedor" maxlength="15" autoWidth="false"
+							value="#{consultarCentralesBean.proveedorSeleccionado}" style="width:150px"
+							converter="#{proveedorConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems value="#{consultarCentralesBean.listaProveedores}"
+								var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selestado" value="#{msg['ubicacion.estado']}" />
+						<p:selectOneMenu id="selestado" autoWidth="false"
+							value="#{consultarCentralesBean.estadoMun}" style="width:150px"
+							label="#{msg['ubicacion.estado']}" converter="#{estadoConverter}">
+							<p:ajax event="change"
+								listener="#{consultarCentralesBean.habilitarMunicipio}"
+								update="selmunicipio selpoblacion"></p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{consultarCentralesBean.listaEstados}"
+								var="estados" itemLabel="#{estados.nombre}"
+								itemValue="#{estados}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selmunicipio"
+							value="#{msg['ubicacion.municipio']}" />
+						<p:selectOneMenu id="selmunicipio" autoWidth="false"
+							value="#{consultarCentralesBean.municipio}" style="width:150px"
+							label="#{msg['ubicacion.municipio']}"
+							converter="#{municipioConverter}">
+							<p:ajax event="change"
+								update=":MSG_ConsultarCentrales selpoblacion "
+								listener="#{consultarCentralesBean.habilitarPoblacion}" />
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{consultarCentralesBean.listaMunicipio}"
+								var="municipios" itemLabel="#{municipios.nombre}"
+								itemValue="#{municipios}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selpoblacion"
+							value="#{msg['ubicacion.poblacion']}" />
+						<p:selectOneMenu id="selpoblacion" autoWidth="false"
+							value="#{consultarCentralesBean.poblacion}" style="width:150px"
+							label="#{msg['ubicacion.poblacion']}"
+							converter="#{poblacionConverter}">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{consultarCentralesBean.listaPoblacion}"
+								var="poblaciones" itemLabel="#{poblaciones.nombre}"
+								itemValue="#{poblaciones}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarCentralesBean.realizarBusqueda}"
+						update=":MSG_ConsultarCentrales TBL_Centrales BTN_exportarCentrales"
+						style="height:30px;  width:82px;">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarCentralesBean.limpiarBusqueda}"
+						update="TXT_AbnEntrega nombre_central selproveedor selestado selmunicipio selpoblacion TBL_Centrales :MSG_ConsultarCentrales BTN_exportarCentrales"
+						style="height:30px; width:82px; margin-right:20px;">
+					</p:commandButton>
+				</p:panelGrid>
+
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.centrales']}</legend>
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton title="#{msg['catalogo.centrales.nueva']}"
+								id="BTN_nuevaCentral" value="#{msg['catalogo.centrales.nueva']}"
+								update=":MDL_Centrales" oncomplete="PF('MDL_Centrales').show();">
+							</p:commandButton>
+							<p:commandButton id="BTN_exportarCentrales"
+								disabled="#{consultarCentralesBean.emptySearch}"
+								value="#{msg.exportar}" title="#{msg.exportar}"
+								onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)"
+								ajax="false">
+								<p:fileDownload
+									value="#{consultarCentralesBean.exportarConsultaCentrales}" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_Centrales" widgetVar="TBL_Centrales"
+						var="consultar" value="#{consultarCentralesBean.centralModel}"
+						lazy="true" selectionMode="single"
+						selection="#{consultarCentralesBean.centralSeleccionadaEdicion}"
+						rowKey="#{consultar.id}" paginator="true"
+						paginatorPosition="bottom"
+						rows="#{consultarCentralesBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+
+						<p:column headerText="#{msg['consultar.PST']}">
+							<h:outputText value="#{consultar.nombrePst}" />
+						</p:column>
+
+						<p:column headerText="#{msg['representante.nombre']}">
+							<h:outputText value="#{consultar.nombre}" />
+						</p:column>
+
+						<p:column style="text-align:center;"
+							headerText="#{msg['manual.numeracion.field.centrales.latitud']}">
+							<h:outputText value="#{consultar.latitud}" />
+						</p:column>
+
+						<p:column style="text-align:center;"
+							headerText="#{msg['manual.numeracion.field.centrales.longitud']}">
+							<h:outputText value="#{consultar.longitud}" />
+						</p:column>
+
+						<p:column
+							headerText="#{msg['manual.numeracion.field.centrales.cap.inicial']}">
+							<h:outputText value="#{consultar.capacidadInicial}" />
+						</p:column>
+
+						<p:column
+							headerText="#{msg['manual.numeracion.field.centrales.cap.final']}">
+							<h:outputText value="#{consultar.capacidadFinal}" />
+						</p:column>
+
+						<p:column style="text-align:center;"
+							headerText="#{msg['catalogo.proveedores.edicion.estatus']}">
+							<h:outputText value="#{consultar.descEstatus}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Operaciones']}"
+							style="text-align:center;" exportable="false">
+							<p:commandButton title="#{msg['detalleEditar']}"
+								icon="ui-icon-pencil"
+								update=":FRM_nuevaCentral:PNL_nuevaCentralContainer"
+								action="#{consultarCentralesBean.editarCentral}"
+								oncomplete="PF('MDL_Centrales').show();">
+								<f:setPropertyActionListener value="#{consultar}"
+									target="#{consultarCentralesBean.centralSeleccionadaEdicion}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+
+							<p:commandButton title="#{msg['darBaja']}"
+								icon="ui-icon-circle-close" update="TBL_Centrales"
+								onclick="PF('DLG_Eliminar').show()" global="false">
+								<f:setPropertyActionListener value="#{consultar}"
+									target="#{consultarCentralesBean.centralSeleccionadaEdicion}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+
+					</p:dataTable>
+
+				</fieldset>
+			</h:form>
+
+			<p:dialog id="MDL_Centrales" widgetVar="MDL_Centrales"
+				header="#{msg['catalogo.centrales']}" modal="true" scrollable="true"
+				closable="false" resizable="true" appendTo="@(body)" width="80%"
+				height="400">
+
+				<p:commandButton id="BTN_Salir_Central"
+					styleClass="customCloseModal" value="X"
+					onclick="PF('DLG_Salir_Nueva_Central').show()" global="false">
+				</p:commandButton>
+
+				<ui:include src="/admin-catalogos/central/nueva-central.xhtml" />
+			</p:dialog>
+			<!-- Confirmación al salir nueva central-->
+			<p:dialog id="DLG_Salir_Nueva_Central"
+				widgetVar="DLG_Salir_Nueva_Central" 
+				modal="true"
+				closeOnEscape="true" 
+				closable="false" 
+				resizable="false"
+				header="Salir" 
+				appendTo="@(body)" 
+				width="250" 
+				height="115">
+				<sns:exit-custom-dialog message="#{msg['cerrarDialogo.mensaje']}"
+					blockUIWidgetVar="salirCentral_BUI"
+					confirmActionListener="#{consultarCentralesBean.reset}"
+					onCompleteExit="PF('DLG_Salir_Nueva_Central').hide();PF('MDL_Centrales').hide();"
+					onCompleteCancel="PF('DLG_Salir_Nueva_Central').hide();"
+					updateComponentId=":FRM_nuevaCentral:PNL_nuevaCentralContainer :FRM_ConsultarCentrales:TBL_Centrales :MSG_ConsultarCentrales"
+					resetValues="true">
+				</sns:exit-custom-dialog>
+			</p:dialog>
+			<!-- Confirmación eliminar central-->
+			<p:dialog id="DLG_Eliminar"
+				widgetVar="DLG_Eliminar" 
+				modal="true"
+				closeOnEscape="true" 
+				closable="false" 
+				resizable="false"
+				header="#{msg['catalogo.centrales.cancelar.confirmar']}"
+				appendTo="@(body)" 
+				width="250" 
+				height="50">
+				<sns:confirm-custom-dialog
+					blockUIWidgetVar="ConfirmarEliminarCentral_BUI"
+					confirmActionListener="#{consultarCentralesBean.eliminarCentral}"
+					dialogWidgetVar="DLG_Eliminar"
+					updateComponentId=":FRM_ConsultarCentrales:TBL_Centrales :MSG_ConsultarCentrales">
+				</sns:confirm-custom-dialog>
+
+			</p:dialog>
+			<!-- Diálogo de nueva o editar marca -->
+			<p:dialog id="MDL_Marca" 
+				widgetVar="MDL_Marca" 
+				modal="true"
+				appendTo="@(body)" 
+				header="#{msg['catalogo.marcaModelo.marca']}"
+				scrollable="true"
+				resizable="true" 
+				width="80%" 
+				height="500">
+				<p:ajax event="close"
+					update="FRM_nuevaCentral:selModelo FRM_nuevaCentral:selMarca"
+					resetValues="true"
+					listener="#{nuevaCentralBean.refrescaCentral()}"
+					oncomplete="#{nuevaCentralBean.habilitarSeleccionModelo()}" />
+				<ui:include src="/admin-catalogos/marcamodelo/marca.xhtml" />
+			</p:dialog>
+			 
+			<p:ajaxStatus id="triggerblockuiCentral"
+				onstart="PF('statusCentralDialog').show()"
+				onsuccess="PF('statusCentralDialog').hide()" >
+			</p:ajaxStatus>
+			<p:dialog widgetVar="statusCentralDialog"
+				modal="true"
+				draggable="false" 
+				closable="false" 
+				resizable="false"
+				showHeader="false">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:dialog>
+			<!-- 	<p:blockUI block="FRM_ConsultarCentrales" widgetVar="central_bui">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:blockUI> -->
+
+		</fieldset>
+
+	</ui:define>
+</ui:composition>
+</html>

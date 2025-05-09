@@ -1,0 +1,244 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<composite:interface>
+	<composite:attribute name="nameBean" required="true"></composite:attribute>
+</composite:interface>
+
+<composite:implementation>
+	<p:messages id="MSG_CesionCPSI" showDetail="false" showSummary="true"
+		autoUpdate="true" closable="true" escape="false" showIcon="false" />
+	<p:panel style="float:left; overflow-y: auto; width:100%;">
+		<p:dataTable id="TBL_CodigosCPSI" widgetVar="TBL_CodigosCPSI"
+			var="codigo" value="#{cc.attrs.nameBean.listadoCodigos}"
+			paginator="false"
+			selection="#{cc.attrs.nameBean.codigosSeleccionados}"
+			rowKey="#{codigo.id}" selectionMode="multiple"
+			resizableColumns="true" style="width:100%;" scrollable="true"
+			scrollHeight="150" emptyMessage="#{msg['buscador.noresultados']}">
+
+			<f:facet name="header">Códigos CPSI asignados</f:facet>
+
+			<p:column resizable="true" width="75"
+				headerText="#{msg['cpsi.codigos.CPSI.resultados.binario']}"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText value="#{codigo.binario}" title="#{codigo.binario}">
+				</h:outputText>
+			</p:column>
+
+			<p:column resizable="true" width="75"
+				headerText="#{msg['cpsi.codigos.CPSI.resultados.decimalTotal']}"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText value="#{codigo.id}" title="#{codigo.id}">
+				</h:outputText>
+			</p:column>
+
+			<p:column resizable="true" width="75"
+				headerText="#{msg['cpsi.codigos.CPSI.resultados.formatoDecimal']}"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText value="#{codigo.formatoDecimal}"
+					title="#{codigo.formatoDecimal}">
+				</h:outputText>
+			</p:column>
+
+			<p:column resizable="true" width="75"
+				headerText="#{msg['cpsi.codigos.CPSI.resultados.estatus']}"
+				style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				<h:outputText value="#{codigo.estatus.descripcion}"
+					title="#{codigo.estatus.descripcion}">
+				</h:outputText>
+			</p:column>
+
+		</p:dataTable>
+	</p:panel>
+
+	<p:fieldset id="PNL_Implementacion">
+		<h:panelGrid columns="7" cellspacing="3" cellpadding="3"
+			style="display:block;">
+			<p:outputLabel for="CHK_Implementacion"
+				value="#{msg['buscadorCesiones.fimplementacion']}" />
+			<p:selectBooleanButton id="CHK_Implementacion" onLabel="Inmediata"
+				onIcon="ui-icon-check" offLabel="Programada" offIcon="ui-icon-close"
+				value="#{cc.attrs.nameBean.implementacionInmediata}"
+				disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+				<p:ajax event="change" update="PNL_Implementacion"
+					listener="#{cc.attrs.nameBean.inicializarFechaImplementacion}">
+				</p:ajax>
+			</p:selectBooleanButton>
+
+			<p:outputLabel for="TXT_TiempoImplementacion"
+				value="#{msg['buscadorCesiones.pimplementacion']}" />
+			<p:inputText id="TXT_TiempoImplementacion" required="true"
+				maxlength="3" value="#{cc.attrs.nameBean.periodoImplementacion}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado 
+								and !cc.attrs.nameBean.implementacionInmediata 
+								and !cc.attrs.nameBean.fechaImplCalendario)}"
+				style="width:30px"
+				validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+				<p:ajax event="change" update="DTE_Implementacion MSG_CesionCPSI"
+					listener="#{cc.attrs.nameBean.actualizarFechaImplementacion}">
+				</p:ajax>
+			</p:inputText>
+
+			<p:selectOneRadio id="OPT_Implementacion"
+				value="#{cc.attrs.nameBean.tipoPeriodoImplementacion}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and !cc.attrs.nameBean.implementacionInmediata)}">
+				<f:selectItem itemLabel="Calendario" itemValue="2" />
+				<f:selectItem itemLabel="Días" itemValue="0" />
+				<f:selectItem itemLabel="Meses" itemValue="1" />
+				<p:ajax event="change"
+					update="MSG_CesionCPSI TXT_TiempoImplementacion DTE_Implementacion"
+					listener="#{cc.attrs.nameBean.actualizarFechaImplementacion}">
+				</p:ajax>
+			</p:selectOneRadio>
+
+			<p:calendar id="DTE_Implementacion"
+				value="#{cc.attrs.nameBean.fechaImplementacion}" locale="mx_MX"
+				pattern="dd/MM/yyyy" mask="true" required="true" navigator="true"
+				yearRange="1995:c+10"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado 
+								and !cc.attrs.nameBean.implementacionInmediata 
+								and cc.attrs.nameBean.fechaImplCalendario)}">
+				<p:ajax event="dateSelect"
+					update="TXT_TiempoImplementacion MSG_CesionCPSI"
+					listener="#{cc.attrs.nameBean.validarFechaImplementacion}">
+				</p:ajax>
+			</p:calendar>
+
+			<p:commandButton id="BTN_AgregarCesion"
+				value="#{msg['manual.numeracion.boton_agregar']}"
+				action="#{cc.attrs.nameBean.agregarCesion}"
+				disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+				update="TBL_CesionesCPSI btnSalvar PNL_Implementacion MSG_CesionCPSI"
+				style="height:30px; width:85px">
+			</p:commandButton>
+		</h:panelGrid>
+	</p:fieldset>
+
+	<p:dataTable id="TBL_CesionesCPSI" style="margin-top:20px;"
+		var="cesion" value="#{cc.attrs.nameBean.listaCesiones}"
+		paginator="true" paginatorPosition="bottom" rows="3"
+		resizableColumns="true" scrollable="true"
+		emptyMessage="#{msg['buscador.noresultados']}">
+
+		<f:facet name="header">Resumen de Cesiones</f:facet>
+
+		<p:column headerText="#{msg['consultar.Operaciones']}" width="75"
+			style="font-size:12px;">
+			<p:commandButton title="#{msg.eliminar}" icon="ui-icon-circle-close"
+				update="TBL_CesionesCPSI"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cesion.estatus.codigo == 'P')}"
+				onclick="PF('DLG_EliminarCPSI').show()">
+				<f:setPropertyActionListener value="#{cesion}"
+					target="#{cc.attrs.nameBean.cesSolSeleccionada}">
+				</f:setPropertyActionListener>
+			</p:commandButton>
+		</p:column>
+
+		<p:column resizable="true" width="90"
+			headerText="#{msg['cpsi.codigos.CPSI.resultados.binario']}"
+			style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			<h:outputText value="#{cesion.binario}" title="#{cesion.binario}">
+			</h:outputText>
+		</p:column>
+
+		<p:column resizable="true" width="75"
+			headerText="#{msg['cpsi.codigos.CPSI.resultados.decimalTotal']}"
+			style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			<h:outputText value="#{cesion.idCpsi}" title="#{cesion.idCpsi}">
+			</h:outputText>
+		</p:column>
+
+		<p:column resizable="true" width="75"
+			headerText="#{msg['cpsi.codigos.CPSI.resultados.formatoDecimal']}"
+			style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			<h:outputText value="#{cesion.formatoDecimal}"
+				title="#{cesion.formatoDecimal}">
+			</h:outputText>
+		</p:column>
+
+		<p:column resizable="true" width="75"
+			headerText="#{msg['cpsi.codigos.CPSI.resultados.estatus']}"
+			style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			<h:outputText value="#{cesion.estatus.descripcion}"
+				title="#{cesion.estatus.descripcion}">
+			</h:outputText>
+		</p:column>
+
+		<p:column resizable="true" width="100"
+			headerText="#{msg['cesion.implementacion.tiempo']}"
+			style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			<h:outputText value="#{cesion.periodoImplementacion}"
+				title="#{cesion.periodoImplementacion}">
+			</h:outputText>
+		</p:column>
+
+		<p:column resizable="true" width="100"
+			headerText="#{msg['buscadorCesiones.fimplementacion']}"
+			style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			<h:outputText value="#{cesion.fechaImplementacion}"
+				title="#{cesion.fechaImplementacion}">
+				<f:convertDateTime pattern="dd/MM/yyyy" />
+			</h:outputText>
+		</p:column>
+
+		<p:column resizable="true" width="150"
+			headerText="#{msg['cesion.pst.cedente']}"
+			style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			<h:outputText
+				value="#{cesion.solicitudCesion.proveedorSolicitante.nombre}"
+				title="#{cesion.solicitudCesion.proveedorSolicitante.nombre}">
+			</h:outputText>
+		</p:column>
+
+		<p:column resizable="true" width="150"
+			headerText="#{msg['cesion.pst.cesionario']}"
+			style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			<h:outputText
+				value="#{cesion.solicitudCesion.proveedorCesionario.nombre}"
+				title="#{cesion.solicitudCesion.proveedorCesionario.nombre}">
+			</h:outputText>
+		</p:column>
+	</p:dataTable>
+
+	<p:panel styleClass="botonera alaDcha">
+		<p:commandButton id="btnSalvar"
+			value="#{msg['manual.generales.btn.guardar']}" icon="ui-icon-disk"
+			actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+			disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.salvarHabilitado)}"
+			update="MSG_CesionCPSI" style="height:30px; width:95px">
+		</p:commandButton>
+	</p:panel>
+
+	<p:dialog id="DLG_Agregar_SolTerminada"
+		widgetVar="DLG_Agregar_SolTerminada" modal="true" closeOnEscape="true"
+		closable="false" message="#{msg['modificar.solicitud.terminada']}"
+		header="#{msg['dialog.header.confirmacion']}" resizable="false"
+		appendTo="@(body)" width="20%" height="20%">
+		<sns:confirm-custom-dialog blockUIWidgetVar="agregarSolTerminada_BUI"
+			confirmActionListener="#{cc.attrs.nameBean.agregarCesion}"
+			dialogWidgetVar="DLG_Agregar_SolTerminada"
+			updateComponentId=":#{p:component('TBL_CesionesCPSI')} :#{p:component('MSG_CesionCPSI')}  ">
+		</sns:confirm-custom-dialog>
+	</p:dialog>
+	<p:dialog id="DLG_EliminarCPSI" widgetVar="DLG_EliminarCPSI"
+		global="false" closeOnEscape="true" closable="false"
+		message="#{msg['eliminar.registro.confirmar']}"
+		header="#{msg['eliminar.registro']}" modal="true" resizable="false"
+		appendTo="@(body)" width="20%" height="20%">
+		<sns:confirm-custom-dialog blockUIWidgetVar="eliminarSolicitud_BUI"
+			confirmActionListener="#{cc.attrs.nameBean.eliminarCesion}"
+			dialogWidgetVar="DLG_EliminarCPSI"
+			updateComponentId=":#{p:component('TBL_CesionesCPSI')} :#{p:component('MSG_CesionCPSI')} :#{p:component('TBL_CodigosCPSI')}">
+		</sns:confirm-custom-dialog>
+	</p:dialog>
+
+</composite:implementation>
+</html>

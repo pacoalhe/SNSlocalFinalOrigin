@@ -1,0 +1,302 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<p:messages id="MSG_ConsultarRedistNNG" showDetail="false" showSummary="true" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionNoGeografica']}/#{msg['mainMenu.Redistribucion']}</legend>
+
+			<h:form id="FRM_ConsultarSolicitudesNNG">
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['buscador.solicitud']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda" columns="8" style="float:left"
+						cellpadding="3" cellspacing="3">
+						<h:outputLabel value="#{msg['consultar.Consecutivo']}" />
+						<p:inputText id="TXT_Consecutivo" required="false" maxlength="9"
+							mask="9" value="#{consultarRedistribucionesNngBean.consecutivo}"
+							label="#{msg['consultar.Consecutivo']}" style="width: 141px;">
+						</p:inputText>
+
+						<h:outputLabel for="selproveedor" value="#{msg.proveedor}" />
+						<p:selectOneMenu id="selproveedor" autoWidth="false" style="width:150px;"
+							value="#{consultarRedistribucionesNngBean.proveedorSeleccionado}"
+							converter="#{proveedorConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarRedistribucionesNngBean.listaProveedores}"
+								var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['consultar.Numero_oficio']}" />
+						<p:inputText id="TXT_Oficio" required="false" maxlength="51"
+							value="#{consultarRedistribucionesNngBean.oficioPstSolicitante}"
+							label="#{msg['consultar.Numero_oficio']}" style="width: 141px;">
+						</p:inputText>
+
+						<h:outputLabel for="selestado" value="#{msg['consultar.Estatus']}" />
+						<p:selectOneMenu id="selestado" style="width:150px;"
+							value="#{consultarRedistribucionesNngBean.estadoSeleccionado}"
+							converter="#{estatusSolicitudConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarRedistribucionesNngBean.listaEstados}"
+								var="estados1" itemLabel="#{estados1.descripcion}"
+								itemValue="#{estados1}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}" />
+						<p:calendar id="fSolicitudDesde" required="false" locale="mx_MX"
+							value="#{consultarRedistribucionesNngBean.fechaSolDesde}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" global="false"
+								update="fSolicitudHasta"
+								listener="#{consultarRedistribucionesNngBean.habilitarFechaSolicitudHasta}">
+							</p:ajax>
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}" />
+						<p:calendar id="fSolicitudHasta" required="false" locale="mx_MX"
+							value="#{consultarRedistribucionesNngBean.fechaSolHasta}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}"
+							disabled="#{!consultarRedistribucionesNngBean.fechaSolHastaHabilitado}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_redistribucion']} #{msg.fechaDesde}" />
+						<p:calendar id="fRedistDesde" required="false" locale="mx_MX"
+							value="#{consultarRedistribucionesNngBean.fechaRedistDesde}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_redistribucion']} #{msg.fechaDesde}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" global="false" update="fRedistHasta"
+								listener="#{consultarRedistribucionesNngBean.habilitarFechaRedistHasta}">
+							</p:ajax>
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_redistribucion']} #{msg.fechaHasta}" />
+						<p:calendar id="fRedistHasta" required="false" locale="mx_MX"
+							value="#{consultarRedistribucionesNngBean.fechaRedistHasta}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_redistribucion']} #{msg.fechaHasta}"
+							disabled="#{!consultarRedistribucionesNngBean.fechaRedistHastaHabilitada}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<p:outputLabel for="SOM_ClaveServicio"
+							value="#{msg['catalogo.clave.servicio']}" />
+						<p:selectOneMenu id="SOM_ClaveServicio"
+							value="#{consultarRedistribucionesNngBean.claveServicio}"
+							style="width: 140px;">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarRedistribucionesNngBean.listaClavesServicio}"
+								var="claveServicioSel" itemLabel="#{claveServicioSel.codigo}"
+								itemValue="#{claveServicioSel.codigo}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel for="TXT_Serie" value="#{msg['cesion.serie']}" />
+						<p:inputText id="TXT_Serie" required="false" maxlength="3"
+							value="#{consultarRedistribucionesNngBean.sna}"
+							label="#{msg['cesion.serie']}" style="width: 141px;"
+							validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+						</p:inputText>
+
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarRedistribucionesNngBean.realizarBusqueda}"
+						update=":MSG_ConsultarRedistNNG TBL_Solicitudes"
+						style="height:30px; width:82px;">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarRedistribucionesNngBean.limpiarBusqueda}"
+						update=":MSG_ConsultarRedistNNG PNL_Busqueda TBL_Solicitudes"
+						style="height:30px; width:82px; margin-right:20px;"
+						process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['redistribucion.Consulta']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton 
+								value="#{msg['redistribucion.nueva']}"
+								title="#{msg['redistribucion.nueva']}" 
+								icon="ui-icon-pencil"
+								update=":MDL_RedistribucionesNNG"
+								action="#{solicitudRedistribucionNngBean.nuevaSolicitud}"
+								oncomplete="PF('MDL_RedistribucionesNNG').show();">
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_Solicitudes" widgetVar="tabla" var="consultar"
+						value="#{consultarRedistribucionesNngBean.solicitudesRedistribucionModel}"
+						lazy="true" paginator="true" paginatorPosition="bottom"
+						rows="#{consultarRedistribucionesNngBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column headerText="#{msg['consultar.Consecutivo']}">
+							<h:outputText value="#{consultar.consecutivo}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.PST_Solicitante']}">
+							<h:outputText value="#{consultar.solicitante}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_solicitud']}" style="text-align:center;">
+							<h:outputText value="#{consultar.fechaSolicitud}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_redistribucion']}" style="text-align:center;">
+							<h:outputText value="#{consultar.fechaRedist}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Numero_oficio']}">
+							<h:outputText value="#{consultar.numOficio}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Estatus']}" style="text-align:center;">
+							<h:outputText value="#{consultar.estatus}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Operaciones']}" style="text-align:center;">
+							<p:commandButton 
+								title="#{msg['consultas.generales.detalle']}"
+								icon="ui-icon-pencil"
+								action="#{consultarRedistribucionesNngBean.editarSolicitud}"
+								update=":MDL_RedistribucionesNNG"
+								oncomplete="PF('MDL_RedistribucionesNNG').show();">
+								<f:setPropertyActionListener 
+									value="#{consultar}"
+									target="#{consultarRedistribucionesNngBean.registroSeleccionado}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+
+							<p:commandButton 
+								title="#{msg['consultas.generales.cancelar']}"
+								icon="ui-icon-circle-close"
+								disabled="#{!consultar.cancelarDisponible}"
+								onclick="PF('DLG_CancelarRedistNNG').show()" global="false">
+								<f:setPropertyActionListener 
+									value="#{consultar}"
+									target="#{consultarRedistribucionesNngBean.registroSeleccionado}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</fieldset>
+			</h:form>
+			
+			<!-- Diálogo de redistribuciones nng -->
+			<p:dialog id="MDL_RedistribucionesNNG"
+				widgetVar="MDL_RedistribucionesNNG" modal="true" appendTo="@(body)"
+				header="#{msg['mainMenu.NumeracionNoGeografica']}/#{msg['mainMenu.Redistribucion']}"
+				closable="false" scrollable="true" resizable="true" width="80%"
+				height="500">
+				<ui:include
+					src="/numeracion-no-geografica/redistribuciones/solicitud-redistribucion-nng.xhtml">
+				</ui:include>
+				<p:commandButton id="BTN_Salir_Solicitud_Redistribucion"
+					styleClass="customCloseModal" value="X"
+					onclick="PF('DLG_SalirRedistNNG').show()" global="false">
+					<p:resetInput
+						target=":#{p:component('FORM_SolicitudRedistribucionNNG')}" />
+				</p:commandButton>
+			</p:dialog>
+			
+			<!-- Confirmación al salir solicitud redistribucion-->
+			<p:dialog id="DLG_SalirRedistNNG" 
+				modal="true"
+				widgetVar="DLG_SalirRedistNNG" 
+				global="false" 
+				closeOnEscape="true"
+				closable="false" 
+				resizable="false" 
+				header="Salir" 
+				appendTo="@(body)"
+				width="250"
+				height="115">
+				<sns:exit-custom-dialog
+					confirmActionListener="#{solicitudRedistribucionNngBean.resetTabs}"
+					message="#{msg['cerrarDialogo.mensaje']}"
+					onCompleteExit="PF('DLG_SalirRedistNNG').hide();PF('MDL_RedistribucionesNNG').hide();"
+					onCompleteCancel="PF('DLG_SalirRedistNNG').hide();"
+					updateComponentId=":FRM_ConsultarSolicitudesNNG:TBL_Solicitudes"
+					blockUIWidgetVar="salirRedistribucion_BUI" resetValues="true" />
+			</p:dialog>
+			
+			<!-- Confirmación al cancelar redistribucion-->
+			<p:dialog id="DLG_CancelarRedistNNG"
+				widgetVar="DLG_CancelarRedistNNG" 
+				modal="true"
+				closeOnEscape="true" 
+				closable="false" 
+				resizable="false"
+				header="#{msg['eliminar.registro']}" 
+				appendTo="@(body)" 
+				width="250"
+				height="50">
+					<sns:confirm-custom-dialog
+					message="#{msg['eliminar.registro.confirmar']}"
+					blockUIWidgetVar="ConfirmarCancelarRedistribucionNNG_BUI"
+					confirmActionListener="#{consultarRedistribucionesNngBean.eliminarSolicitud}"
+					dialogWidgetVar="DLG_CancelarRedistNNG"
+					updateComponentId=":FRM_ConsultarSolicitudesNNG:TBL_Solicitudes :MSG_ConsultarRedistNNG">
+				</sns:confirm-custom-dialog>
+			</p:dialog>
+			
+			<p:ajaxStatus id="FRM_ConsultarSolicitudes_AS"
+				onstart="PF('statusRedistribucionNngDialog').show()"
+				onsuccess="PF('statusRedistribucionNngDialog').hide()">
+			</p:ajaxStatus>
+				<p:dialog widgetVar="statusRedistribucionNngDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+    <ui:include src="/componentes/loader.xhtml"/>
+</p:dialog>
+
+			<!-- <p:blockUI block="FRM_ConsultarSolicitudesNNG"
+				widgetVar="FRM_ConsultarSolicitudesNNG_BUI">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:blockUI> -->
+
+		</fieldset>
+	</ui:define>
+</ui:composition>
+</html>

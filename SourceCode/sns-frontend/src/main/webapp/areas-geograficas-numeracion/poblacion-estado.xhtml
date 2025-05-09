@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<!-- <p:ajaxStatus id="FORM_pobEstado_AS"
+	onstart="PF('FORM_pobEstado_BUI').show()"
+	onsuccess="PF('FORM_pobEstado_BUI').hide()">
+</p:ajaxStatus>
+
+<p:blockUI block="FORM_pobEstado" widgetVar="FORM_pobEstado_BUI">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI> -->
+
+<h:form id="FORM_pobEstado">
+
+	<!-- Tabla dialog poblaciones/Abn -->
+
+	<p:dataTable id="TBL_pobEst" var="poblacion"
+		value="#{poblacionEstadoBean.poblacionEstado}" paginator="true"
+		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="#{poblacionEstadoBean.numeroRegistros}"
+		paginatorPosition="bottom" styleClass="mycustomtable">
+		<f:facet name="header">CIUDADES Y POBLACIONES CON SERVICIO DE TELEFONÍA LOCAL EN EL ESTADO DE <h:outputText
+				value="#{areasGeoNumeracionMainBean.estado.nombre}" />
+		</f:facet>
+		<p:columnGroup type="header">
+			<p:row>
+				<p:column headerText="NOMBRE" sortBy="#{poblacion.nombre}"/>
+				<p:column headerText="NIR" />
+				<p:column headerText="CLAVE INEGI" sortBy="#{poblacion.inegi}"/>
+			</p:row>
+		</p:columnGroup>
+		<p:column > 
+			<p:commandLink
+				actionListener="#{infoPoblacionEstadoBean.localInfoByPoblacion(poblacion)}"
+				update=":MDL_infoPobEstado" oncomplete="PF('infoPobEstado').show();">
+				<h:outputText value="#{poblacion.nombre}" />
+			</p:commandLink>
+		</p:column>
+		<p:column style="text-align:center">
+			<ui:repeat var="nir"
+				value="#{poblacionEstadoBean.nirPoblacion(poblacion)}">
+				<p:commandLink render="#{nir != null}"
+					actionListener="#{infoPoblacionEstadoBean.areaInfoByNir(nir.codigo)}"
+					update=":MDL_infoPobEstado"
+					oncomplete="PF('infoPobEstado').show();">
+					<h:outputText value="#{nir.codigo}" />
+				</p:commandLink>
+				<h:outputText rendered="#{nir == null}" value="Población sin NIR asociado" />
+				<br></br>
+			</ui:repeat>
+		</p:column>
+		<p:column style="text-align:center" >
+			<h:outputText value="#{poblacion.inegi}" />
+		</p:column>
+		<p:effect type="clip" event="render" />
+	</p:dataTable>
+</h:form>
+
+
+
+</html>

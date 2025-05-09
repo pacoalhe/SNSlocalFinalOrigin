@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+
+			
+			<p:messages id="MSG_Estado" showDetail="true"  showSummary="false" autoUpdate="false" closable="true" showIcon="false"/>
+			
+			<p:dataTable widgetVar="TBL_Municipios"
+						id="TBL_Municipios" 
+						var="consultar" 
+						value="#{consultarEstadosBean.listaMunicipios}"
+						paginator="true" paginatorPosition="bottom" 
+						rows="5" resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+						
+		
+					    <p:column headerText="#{msg['catalogo.estados.municipios.codigo']} ">
+					        <h:outputText value="#{consultar.id.codMunicipio}"  style="align:center"/>
+					    </p:column>
+	 
+					    <p:column headerText="#{msg['catalogo.estados.municipios.nombre']}">
+					        <h:outputText value="#{consultar.nombre}" />
+					    </p:column>
+					    
+	    			
+			</p:dataTable>
+	
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+	<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+		<ui:define name="centro">
+			<p:messages id="MSG_Consulta_Proveedores" showDetail="true" autoUpdate="false" closable="true" showIcon="false"/>
+			<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogos.title']}/#{msg['catalogo.proveedores.titulo']}</legend>
+			
+				<h:form id="FRM_ConsultarProveedores">
+					<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+						<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.proveedores.buscardor']}</legend>
+						
+						<h:panelGrid columns="8" cellpadding="3" cellspacing="3" style="width:75%">
+							<h:outputLabel value="#{msg['catalogo.proveedores.consulta.nombre']}" style="width:50px;"/>
+							<p:selectOneMenu autoWidth="false"
+								id="selProveedor" 
+								style="width: 150px;"
+								value="#{consultarCatalogoProveedorBean.proveedorSeleccionado}" 
+								converter="#{proveedorConverter}"> 
+								<f:selectItem itemLabel="Seleccionar"/>
+								<f:selectItems 
+									value="#{consultarCatalogoProveedorBean.listadoProveedores}" 
+									var="proveedorSel" 
+									itemLabel="#{proveedorSel.nombre}" 
+									itemValue="#{proveedorSel}">
+								</f:selectItems>
+							</p:selectOneMenu>
+							<h:outputLabel value="#{msg['catalogo.proveedores.consulta.tipoServicio']}" style="width:50px;"/>
+							<p:selectOneMenu autoWidth="false"
+								id="selTipoServicio" 
+								style="width: 100px;"
+								value="#{consultarCatalogoProveedorBean.tipoServicioSeleccionado}" 
+								converter="#{tipoServicioConverter}"> 
+								<f:selectItem itemLabel="Seleccionar"/>
+								<f:selectItems 
+									value="#{consultarCatalogoProveedorBean.listadoTiposServicio}" 
+									var="tiposServicioSel" 
+									itemLabel="#{tiposServicioSel.descripcion}" 
+									itemValue="#{tiposServicioSel}">
+								</f:selectItems>
+							</p:selectOneMenu>
+							<h:outputLabel value="#{msg['catalogo.proveedores.consulta.tipoPst']}" style="width:50px;"/>
+							<p:selectOneMenu  autoWidth="false"
+								id="selTipoProveedor"
+								style="width: 100px;"
+								value="#{consultarCatalogoProveedorBean.tipoProveedorSeleccionado}"
+								converter="#{tipoProveedorConverter}">
+								<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+								<f:selectItems
+									value="#{consultarCatalogoProveedorBean.listadoTipoPst}"
+									var="tipoPst" 
+									itemLabel="#{tipoPst.descripcion}"
+									itemValue="#{tipoPst}">
+								</f:selectItems>
+							</p:selectOneMenu>
+							<h:outputLabel value="#{msg['catalogo.proveedores.consulta.tipoRed']}" style="width:50px;"/>
+							<p:selectOneMenu autoWidth="false"
+								id="selTipoRed"
+								style="width: 100px;"
+								value="#{consultarCatalogoProveedorBean.tipoRedSeleccionada}"
+								converter="#{tipoRedConverter}">
+								<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+								<f:selectItems
+									value="#{consultarCatalogoProveedorBean.listadoTiposRed}"
+									var="tipoRed"
+									itemLabel="#{tipoRed.descripcion}"
+									itemValue="#{tipoRed}">
+								</f:selectItems>
+							</p:selectOneMenu>
+						
+						
+							<h:outputLabel value="#{msg['catalogo.proveedores.consulta.estado']}" style="width:50px;"/>
+							<p:selectOneMenu autoWidth="false"
+								id="selEstado" 
+								style="width: 100px;" 
+								value="#{consultarCatalogoProveedorBean.estatusProveedorSeleccionado}" 
+				 				converter="#{estatusConverter}"> 
+								<f:selectItem itemLabel="Seleccionar"/>
+								<f:selectItems
+									value="#{consultarCatalogoProveedorBean.listadoEstatus}"
+									var="estadoSel"
+									itemLabel="#{estadoSel.descripcion}"
+									itemValue="#{estadoSel}">
+								</f:selectItems>
+							</p:selectOneMenu>
+						</h:panelGrid>
+					</fieldset>
+				
+					<p:panelGrid style="display:block;">
+						<p:commandButton
+							value="#{msg['consultar.Buscar']}"
+							action="#{consultarCatalogoProveedorBean.realizarBusqueda}"
+							update=":MSG_Consulta_Proveedores TBL_Proveedores BTN_exportarGenerales BTN_exportarContactos BTN_exportarConvenios">
+						</p:commandButton>
+						<p:commandButton value="#{msg['consultar.Limpiar']}"
+							actionListener="#{consultarCatalogoProveedorBean.limpiarBusqueda}"
+							style="margin-right:20px;"
+							update="selProveedor selTipoServicio selTipoProveedor selTipoRed selEstado 
+							TBL_Proveedores BTN_exportarGenerales BTN_exportarContactos BTN_exportarConvenios"> 
+						</p:commandButton>
+					</p:panelGrid>
+				
+					<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+						<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.proveedores.resultado.titulo']}</legend>
+						
+						<h:panelGrid columns="2" width="100%">
+							<h:panelGroup style="display:block; text-align:left">
+								<p:commandButton 
+									id="BTN_exportarGenerales" 
+									disabled="#{consultarCatalogoProveedorBean.emptySearch}"
+									style="margin-right:20px; margin-bottom: 5px;"
+									value="#{msg['catalogo.proveedores.consulta.exportarDatosGenerales']}" 
+									ajax="false" 
+									onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+									<p:fileDownload value="#{consultarCatalogoProveedorBean.exportarDatosGenerales}" />
+								</p:commandButton>
+								<p:commandButton 
+									id="BTN_exportarContactos"
+									disabled="#{consultarCatalogoProveedorBean.emptySearch}"
+									style="margin-right:20px; margin-bottom: 5px;"
+									value="#{msg['catalogo.proveedores.consulta.exportarContactos']}" 
+									ajax="false" 
+									onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+									<p:fileDownload value="#{consultarCatalogoProveedorBean.exportarDatosContactos}" />
+								</p:commandButton>
+								<p:commandButton 
+									id="BTN_exportarConvenios"
+									disabled="#{consultarCatalogoProveedorBean.emptySearch}"
+									style="margin-right:20px; margin-bottom: 5px;"
+									value="#{msg['catalogo.proveedores.consulta.exportarConvenios']}" 
+									ajax="false" 
+									onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+									<p:fileDownload value="#{consultarCatalogoProveedorBean.exportarDatosConvenios}" />
+								</p:commandButton>
+							</h:panelGroup>
+							<h:panelGroup style="display:block; text-align:right">
+								<p:commandButton styleClass="alaDcha" style="margin-right: 0px; margin-bottom: 5px;"
+									value="#{msg['catalogo.proveedores.consulta.nuevoPst']}"
+									title="Nuevo PST" icon="ui-icon-pencil"
+									update=":MDL_Proveedores"
+									oncomplete="PF('MDL_Proveedores').show();">
+								</p:commandButton>
+							</h:panelGroup>
+						</h:panelGrid>
+						
+						<p:dataTable 
+							id="TBL_Proveedores" widgetVar="TBL_Proveedores"
+							var="listaProveedores" 
+							value="#{consultarCatalogoProveedorBean.proveedoresLazyModel}"
+							lazy="true"
+							selectionMode="single" 
+							paginator="true" paginatorPosition="bottom" 
+							rows="#{consultarCatalogoProveedorBean.registroPorPagina}" 
+							resizableColumns="true"
+							emptyMessage="#{msg['buscador.noresultados']}">
+							
+							<p:column headerText="Nombre">
+						        <h:outputText value="#{listaProveedores.nombre}" />
+						    </p:column>
+						    <p:column headerText="Nombre Corto">
+						        <h:outputText value="#{listaProveedores.nombreCorto}" />
+						    </p:column>
+						    <p:column headerText="Tipo Servicio">
+						        <h:outputText value="#{listaProveedores.tipoServicio.descripcion}" />
+						    </p:column>
+						    <p:column headerText="Tipo PST">
+						       <h:outputText value="#{listaProveedores.tipoProveedor.descripcion}" />
+						    </p:column>
+						    <p:column headerText="Tipo Red">
+						       <h:outputText value="#{listaProveedores.tipoRed.descripcion}" />
+						    </p:column>
+						    <p:column headerText="Estatus" style="text-align:center;">
+						        <h:outputText value="#{listaProveedores.estatus.descripcion}" />
+						    </p:column>
+						    
+						    <p:column headerText="#{msg['consultar.Operaciones']}" style="text-align:center;">
+		       					<p:commandButton 
+		       						title="#{msg['detalleEditar']}"
+		       						icon="ui-icon-pencil"
+		       						action="#{consultarCatalogoProveedorBean.editarProveedor}"
+		       						update=":MDL_Proveedores TBL_Proveedores"
+		       						oncomplete="PF('MDL_Proveedores').show();">
+		       						<f:setPropertyActionListener 
+										value="#{listaProveedores}" 
+										target="#{consultarCatalogoProveedorBean.proveedorEdicionSeleccionado}">
+									</f:setPropertyActionListener>
+		       					</p:commandButton>
+		       					
+								<p:commandButton
+									title="#{msg['darBaja']}" 
+									icon="ui-icon-circle-close"
+									update=":MDL_Proveedores TBL_Proveedores"
+									onclick="PF('DLG_Cancelar').show()"
+									rendered="#{listaProveedores.estatus.cdg == 1}" 
+									global="false">
+		       						<f:setPropertyActionListener 
+										value="#{listaProveedores}" 
+										target="#{consultarCatalogoProveedorBean.proveedorEdicionSeleccionado}">
+									</f:setPropertyActionListener>
+								</p:commandButton>
+								
+								<p:commandButton
+									title="#{msg['activar']}" 
+									icon="ui-icon-circle-check"
+									update=":MDL_Proveedores TBL_Proveedores"
+									onclick="PF('DLG_Activar').show()"
+									rendered="#{listaProveedores.estatus.cdg == 2}" 
+									global="false">
+		       						<f:setPropertyActionListener 
+										value="#{listaProveedores}" 
+										target="#{consultarCatalogoProveedorBean.proveedorEdicionSeleccionado}">
+									</f:setPropertyActionListener>
+								</p:commandButton>
+		    				</p:column>
+						</p:dataTable>
+					</fieldset>
+				
+					<p:remoteCommand name="recargarListadoProveedores" update=":MSG_Consulta_Proveedores TBL_Proveedores :#{p:component('selProveedor')}" actionListener="#{consultarCatalogoProveedorBean.recargarListadoProveedores}" oncomplete="PF('DLG_Cancelar').hide();"/>
+					<p:remoteCommand name="bajaProveedor" update=":MSG_Consulta_Proveedores TBL_Proveedores :#{p:component('selProveedor')}" actionListener="#{consultarCatalogoProveedorBean.bajaProveedor}" />
+					<p:remoteCommand name="activarProveedor" update=":MSG_Consulta_Proveedores TBL_Proveedores :#{p:component('selProveedor')}" actionListener="#{consultarCatalogoProveedorBean.activarProveedor}" />
+				</h:form>
+			</fieldset>
+
+			<!-- Modal de Edición de proveedores. -->
+			<p:dialog
+				id="MDL_Proveedores" 
+				widgetVar="MDL_Proveedores"
+				modal="true" 
+				appendTo="@(body)" 
+				closable="false"
+				header="#{msg['catalogo.proveedores.edicion.cabecera']}" 
+				scrollable="true" 
+				resizable="true" 
+				width="1280" 
+				height="500">
+				<p:ajax 
+					event="close" global="false"
+					listener="#{gestionProveedorBean.limpiarDatos}"
+					update="FRM_ConsultarProveedores:TBL_Proveedores :#{p:component('selProveedor')}"
+					oncomplete="recargarListadoProveedores();">
+				</p:ajax>
+				<p:commandButton
+					id="BTN_Salir_Proveedor" 
+					styleClass="customCloseModal" 
+					value="X"
+					onclick="PF('DLG_Salir_Nuevo_Proveedor').show()" 
+					global="false">	
+					<p:resetInput target=":#{p:component('FORM_GestionProveedor')}" />			
+				</p:commandButton>
+				<ui:include src="/admin-catalogos/proveedor/edicion-proveedoresV2.xhtml"/>
+			</p:dialog>
+			
+			<!-- Confirmación al salir nuevo proveedor-->
+			<p:dialog 
+				id="DLG_Salir_Nuevo_Proveedor"
+				widgetVar="DLG_Salir_Nuevo_Proveedor" 
+				resizable="false"
+				closeOnEscape="true" 
+				closable="false"
+				header="Salir" 
+				modal="true" 
+				appendTo="@(body)" 
+				width="250"
+				height="115">
+						<sns:exit-custom-dialog-no-listener 
+								message="#{msg['cerrarDialogo.mensaje']}"
+								blockUIWidgetVar="salirEditarProveedor_BUI"
+								onCompleteExit="PF('DLG_Salir_Nuevo_Proveedor').hide();PF('MDL_Proveedores').hide();"
+								onCompleteCancel="PF('DLG_Salir_Nuevo_Proveedor').hide();"
+								resetValues="true"
+								global="false">
+						</sns:exit-custom-dialog-no-listener>
+
+			</p:dialog>
+
+			<!-- Baja de Proveedores -->
+			<p:dialog  
+				id="DLG_Cancelar" 
+				widgetVar="DLG_Cancelar" 
+				resizable="false"
+				closeOnEscape="true" 
+				closable="false"
+				header="#{msg['catalogo.proveedores.consulta.baja.pst']}" 
+				modal="true" 
+				appendTo="@(body)" 
+				width="250"
+				height="50"
+				>
+				<sns:confirm-custom-dialog-no-listener
+								blockUIWidgetVar="cancelarProveedor_BUI"
+								onCompleteExit="PF('DLG_Cancelar').hide(); bajaProveedor();"
+								onCompleteCancel="PF('DLG_Cancelar').hide();"
+								resetValues="true"
+								global="false"
+								>
+				</sns:confirm-custom-dialog-no-listener>
+			</p:dialog>
+			
+			<p:dialog  
+				id="DLG_Activar" 
+				widgetVar="DLG_Activar" 
+				resizable="false"
+				closeOnEscape="true" 
+				closable="false"
+				header="#{msg['catalogo.proveedores.consulta.activar.pst']}" 
+				modal="true" 
+				appendTo="@(body)" 
+				width="250"
+				height="50"
+				>
+				<sns:confirm-custom-dialog-no-listener
+								blockUIWidgetVar="activarProveedor_BUI"
+								onCompleteExit="PF('DLG_Activar').hide(); activarProveedor();"
+								onCompleteCancel="PF('DLG_Activar').hide();"
+								resetValues="true"
+								global="false"
+								>
+				</sns:confirm-custom-dialog-no-listener>
+			</p:dialog>
+			
+			<p:ajaxStatus 
+				id="FRM_ConsultarProveedores_AS" 
+				onstart="PF('statusProveedorDialog').show()" 
+				onsuccess="PF('statusProveedorDialog').hide()">
+			</p:ajaxStatus>
+			<p:dialog widgetVar="statusProveedorDialog" 
+				modal="true" 
+				draggable="false" 
+				closable="false" 
+				resizable="false" 
+				showHeader="false">
+    			<ui:include src="/componentes/loader.xhtml"/>
+			</p:dialog>
+			<!-- <p:blockUI block="FRM_ConsultarProveedores" widgetVar="FRM_ConsultarProveedores_BUI">
+				<ui:include src="/componentes/loader.xhtml"/>
+			</p:blockUI> -->
+			
+		</ui:define>
+	</ui:composition>
+</html>

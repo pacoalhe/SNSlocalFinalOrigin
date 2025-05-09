@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html" encoding="UTF-8">
+	<h:head>
+		<f:facet name="first">
+			<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+			<meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
+			<meta name="viewport"
+				content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+			<title>SNS</title>
+		</f:facet>
+		<link rel="icon" href="#{request.contextPath}/img/favicon.ico"
+			type="image/x-icon" />
+		<link rel="apple-touch-icon"
+			href="#{request.contextPath}/apple-touch-icon.png" />
+		<link rel="apple-touch-icon" sizes="57x57"
+			href="#{request.contextPath}/apple-touch-icon-57x57.png" />
+		<link rel="apple-touch-icon" sizes="72x72"
+			href="#{request.contextPath}/apple-touch-icon-72x72.png" />
+		<link rel="apple-touch-icon" sizes="114x114"
+			href="#{request.contextPath}/apple-touch-icon-114x114.png" />
+		<link rel="apple-touch-icon" sizes="144x144"
+			href="#{request.contextPath}/apple-touch-icon-144x144.png" />
+		<link rel="apple-touch-icon" sizes="60x60"
+			href="#{request.contextPath}/apple-touch-icon-60x60.png" />
+		<link rel="apple-touch-icon" sizes="120x120"
+			href="#{request.contextPath}/apple-touch-icon-120x120.png" />
+		<link rel="apple-touch-icon" sizes="76x76"
+			href="#{request.contextPath}/apple-touch-icon-76x76.png" />
+		<link rel="apple-touch-icon" sizes="152x152"
+			href="#{request.contextPath}/apple-touch-icon-152x152.png" />
+		<meta name="msapplication-square70x70logo"
+			content="#{request.contextPath}/smalltile.png" />
+		<meta name="msapplication-square150x150logo"
+			content="#{request.contextPath}/mediumtile.png" />
+		<meta name="msapplication-wide310x150logo"
+			content="#{request.contextPath}/widetile.png" />
+		<meta name="msapplication-square310x310logo"
+			content="#{request.contextPath}/largetile.png" />
+		<link type="text/css" rel="stylesheet"
+			href="#{request.contextPath}/css/interfazNew.css" />
+
+	</h:head>
+
+	<h:body id="fullbody"
+		style="
+			background-color:#FFF; 
+			height:100%; 
+			width:100%; 
+			padding:0px;
+			margin-left:0px; 
+			font-size:12px;
+			text-align:center">
+		<div id="header"
+			style="
+			box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.5);
+			background:white;
+			position: fixed; 
+			left: 0px; 
+			top: 0px; 
+			width: 100%; 
+			z-index: 1;">
+
+			<!-- Cabecera -->
+			<ui:include src="/componentes/cabecera.xhtml" />
+
+			<!-- Menú -->
+			<p:panel id="menuPpal"
+				style="
+				text-align:left;
+				border-bottom:3px solid #7ac142; 
+				width:99.9%">
+				<ui:include src="/componentes/menu.xhtml" />
+			</p:panel>
+		</div>
+		
+		<!-- Cuerpo -->
+		<p:panel
+			style="
+			min-height:90%; 
+			font-size: 1.3em; 
+			text-align: center;
+			padding-top:102px;
+			vertical-align: middle;
+			background-image: url(#{request.contextPath}/img/fondo_sns_1.png); 
+			background-size: 100% 100%; 
+			min-height:500px;
+			height:100%">
+			<ui:insert name="centro" />
+		</p:panel>
+
+		<p:panel
+			style="
+			text-align:center; 
+			border-top:2px solid #333;
+			background-color:#FFF; 
+			font-size:.9em; 
+			height:20px;
+			position:fixed;
+   			left:0px;
+   			bottom:0px;
+   			width:100%;">
+			<ui:include src="/componentes/pie.xhtml" />
+		</p:panel>
+	</h:body>
+
+</f:view>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:p="http://primefaces.org/ui"
+    xmlns:composite="http://java.sun.com/jsf/composite">
+    
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+		<composite:attribute name="update" required="false"></composite:attribute>
+	</composite:interface>
+	
+	<composite:implementation>
+		<p:messages id="MSG_GenerarOficio" showDetail="false" showSummary="true" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		
+		<p:fieldset id="FLS_OpcionesOficio" legend="#{msg['oficios.ImpresionDocumentos']}">
+			<h:panelGrid columns="6" cellspacing="3" cellpadding="3">
+				<p:outputLabel for="CMB_DirigidoA" value="#{msg['oficios.Destinatario']}"/>
+				<p:selectOneMenu
+					id="CMB_DirigidoA" label="#{msg['oficios.Destinatario']}"
+					value="#{cc.attrs.nameBean.destinatarioSeleccionado}"
+					converter="#{tipoDestinatarioConverter}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					style="width: 200px;">
+					<f:selectItem itemLabel="Seleccionar"/>
+					<f:selectItems
+						value="#{cc.attrs.nameBean.listaDestinatarios}"
+						var="destinatario"
+						itemLabel="#{destinatario.destinatario}"
+						itemValue="#{destinatario}">
+					</f:selectItems>
+					<p:ajax 
+						event="change"
+						listener="#{cc.attrs.nameBean.seleccionDestinatario}"
+						update="FLS_OpcionesOficio PNL_Acciones FLS_Actualizar">
+					</p:ajax>
+				</p:selectOneMenu>
+				
+				<p:outputLabel for="CMB_Rol" value="#{msg['oficios.TipoRol']}"/>
+				<p:selectOneMenu
+					id="CMB_Rol" label="#{msg['oficios.TipoRol']}"
+					value="#{cc.attrs.nameBean.tipoRolSeleccionado}"
+					converter="#{tipoRolConverter}"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.tipoRolHabilitado)}"
+					style="width: 150px;">
+					<f:selectItem itemLabel="Seleccionar"/>
+					<f:selectItems
+						value="#{cc.attrs.nameBean.listaTiposRol}"
+						var="tipoRol"
+						itemLabel="#{tipoRol.descripcion}"
+						itemValue="#{tipoRol}">
+					</f:selectItems>
+					<p:ajax 
+						event="change"
+						listener="#{cc.attrs.nameBean.seleccionRol}"
+						update="FLS_OpcionesOficio PNL_Acciones FLS_Actualizar">
+					</p:ajax>
+				</p:selectOneMenu>
+				
+				<p:outputLabel for="CMB_Generar" value="#{msg['oficios.OficioAGenerar']}"/>
+				<p:selectOneMenu
+					id="CMB_Generar" label="#{msg['oficios.OficioAGenerar']}"
+					value="#{cc.attrs.nameBean.oficioSeleccionado}"
+					converter="#{tipoDestinatarioConverter}"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and (cc.attrs.nameBean.destinatarioSeleccionado!=null))}"
+					style="width: 200px;">
+					<f:selectItem itemLabel="Seleccionar"/>
+					<f:selectItems
+						value="#{cc.attrs.nameBean.listaOficiosDisponibles}"
+						var="tipoDestinatario"
+						itemLabel="#{tipoDestinatario.descripcion}"
+						itemValue="#{tipoDestinatario}">
+					</f:selectItems>
+					<p:ajax 
+						event="change"
+						listener="#{cc.attrs.nameBean.seleccionOficio}"
+						update="FLS_OpcionesOficio PNL_Acciones FUP_ActualizarOficio MSG_GenerarOficio">
+					</p:ajax>
+				</p:selectOneMenu>
+			</h:panelGrid>
+			
+			<h:panelGrid id="PNL_DatosOficio" columns="7" cellspacing="3" cellpadding="3" style="margin-top:10px;">
+				<p:outputLabel for="DTE_FechaOficio" value="#{msg['oficios.FechaOficio']}"/>
+				<p:calendar 
+					id="DTE_FechaOficio" required="true" locale="mx_MX"
+					value="#{cc.attrs.nameBean.fechaOficio}"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado
+								and (cc.attrs.nameBean.oficioSeleccionado!=null)
+								and cc.attrs.nameBean.oficioParaPsts
+								and (!cc.attrs.nameBean.descargaDisponible))}"
+					pattern="dd/MM/yyyy" mask="true" navigator="true" yearRange="1995:c+10">
+					<p:ajax 
+						event="dateSelect" global="false"
+						update="DTE_InicioUtilizacion" 
+						listener="#{cc.attrs.nameBean.diasAplicacionChange}">
+					</p:ajax>
+					<p:ajax 
+						event="change" global="false"
+						update="DTE_InicioUtilizacion" 
+						listener="#{cc.attrs.nameBean.diasAplicacionChange}">
+					</p:ajax>
+				</p:calendar>
+				
+				<p:outputLabel for="INP_Prefijo" value="Prefijo" />
+				<p:inputText
+					id="INP_Prefijo"
+					required="true"
+					maxlength="40" 
+					value="#{cc.attrs.nameBean.prefijo}"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado
+								and (cc.attrs.nameBean.oficioSeleccionado!=null)
+								and cc.attrs.nameBean.oficioParaPsts
+								and (!cc.attrs.nameBean.descargaDisponible))}"
+					style="width:200px">
+				</p:inputText>
+				
+				<p:outputLabel for="INP_NumOficio" value="#{msg['oficios.NumOficio']}" />
+				<p:inputText
+					id="INP_NumOficio"
+					maxlength="5" 
+					value="#{cc.attrs.nameBean.numOficio}"
+					required="true"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado
+								and (cc.attrs.nameBean.oficioSeleccionado!=null)
+								and cc.attrs.nameBean.oficioParaPsts
+								and (!cc.attrs.nameBean.descargaDisponible))}"
+					validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}"
+					style="width:50px">
+				</p:inputText>
+				<p:inputText 
+					value="#{cc.attrs.nameBean.anno}"
+					disabled="true"
+					maxlength="4"
+					style="width:30px">
+				</p:inputText>
+			</h:panelGrid>
+			
+			<h:panelGrid columns="4" cellspacing="3" cellpadding="3" style="margin-top:10px;">
+				<p:outputLabel
+					for="IPT_DiasAplicacion" 
+					rendered="#{cc.attrs.nameBean.oficioAsignacion}"
+					value="#{msg['oficios.DiasAplicacion']}">
+				</p:outputLabel>
+				<p:inputText
+					id="IPT_DiasAplicacion"
+					required="#{cc.attrs.nameBean.oficioAsignacion}"
+					rendered="#{cc.attrs.nameBean.oficioAsignacion}"
+					maxlength="3"
+					value="#{cc.attrs.nameBean.diasAplicacion}"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado
+								and cc.attrs.nameBean.oficioAsignacion)}"
+					validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+					<p:ajax 
+						event="change" 
+						update="DTE_InicioUtilizacion MSG_GenerarOficio" 
+						listener="#{cc.attrs.nameBean.diasAplicacionChange}">
+					</p:ajax>
+				</p:inputText>
+				
+				<p:outputLabel 
+					for="DTE_InicioUtilizacion"
+					rendered="#{cc.attrs.nameBean.oficioAsignacion}"
+					value="#{msg['manual.generales.fecha.inicio.utilizacion']}">
+				</p:outputLabel>
+				<p:inputText 
+					id="DTE_InicioUtilizacion"
+					rendered="#{cc.attrs.nameBean.oficioAsignacion}"
+					requiredMessage="#{cc.attrs.nameBean.oficioAsignacion}"
+					value="#{cc.attrs.nameBean.solicitud.fechaIniUtilizacion}"
+					disabled="true">
+					<f:convertDateTime type="date" pattern="dd/MM/yyyy"/>
+				</p:inputText>
+			</h:panelGrid>
+			
+			<h:panelGrid columns="2" cellspacing="3" cellpadding="3" style="margin-top:10px;">
+				<p:outputLabel for="TXT_TextoAdicional" value="#{msg['oficios.TextoAdicional']}"/>
+				<p:inputTextarea 
+					id="TXT_TextoAdicional" 
+					maxlength="500"
+					value="#{cc.attrs.nameBean.comentarios}"							
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado
+								and (cc.attrs.nameBean.oficioSeleccionado!=null)
+								and cc.attrs.nameBean.oficioPstSolicitante
+								and cc.attrs.nameBean.oficioAsignacion)}"
+					rows="2" 
+					cols="70" 
+					autoResize="false"
+					style="resize: none">
+				</p:inputTextarea>
+			</h:panelGrid>
+		</p:fieldset>
+		
+		<h:panelGrid id="PNL_Acciones" columns="1" style="text-align:center" width="100%">
+			<h:panelGroup style="display:block; text-align:center">
+				<p:commandButton
+					id="BTN_GenerarOficio"
+					style="width:120px;" 
+					value="#{msg['oficios.GenerarOficio']}" 
+					action="#{cc.attrs.nameBean.generarOficio}"
+					update="PNL_Acciones PNL_DatosOficio MSG_GenerarOficio #{cc.attrs.update}"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.generarDisponible)}">
+					<p:confirm header="#{msg['header.confirmacion.generar.oficio']}" message="#{msg['msg.confirmacion.generar.oficio']}" icon="ui-icon-alert"/> 
+				</p:commandButton>
+				
+				 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+       				 <p:commandButton value="#{msg['btn.aceptar.confirmar.generar.oficio']}" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+        			<p:commandButton value="#{msg['btn.cancelar.confimar.generar.oficio']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+    			</p:confirmDialog>
+				
+				
+				<p:commandButton
+					id="BTN_DescargarOficio"
+					style="width:120px;" ajax="false"
+					icon="ui-icon-arrowthick-1-s"
+					value="#{msg['oficios.DescargarOficio']}" 
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.descargaDisponible)}"
+					update="MSG_GenerarOficio">
+					<p:fileDownload value="#{cc.attrs.nameBean.descargarOficio}" />
+				</p:commandButton>
+				<p:commandButton
+					id="BTN_ActualizarOficio"
+					style="width:120px;"
+					value="#{msg['oficios.ActualizarOficio']}"
+					action="#{cc.attrs.nameBean.habilitarActualizacion}"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.descargaDisponible)}"
+					update="FLS_Actualizar PNL_Acciones MSG_GenerarOficio">
+				</p:commandButton>
+			</h:panelGroup>
+		</h:panelGrid>
+
+		<p:fieldset id="FLS_Actualizar" legend="#{msg['oficios.ActualizarDocumentos']}">
+			<p:fileUpload
+				id="FUP_ActualizarOficio"
+				mode="advanced" auto="true" multiple="false" fileLimit="1"
+				label="#{msg['automatica.Elegir']}"
+				fileUploadListener="#{cc.attrs.nameBean.cargarFichero}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.cargaDisponible)}"
+				sizeLimit="#{cc.attrs.nameBean.plantillaMaxSize}"
+				allowTypes="/(\.|\/)(docx)$/"
+				update="MSG_GenerarOficio TXT_FilePath"
+				fileLimitMessage="Solo es posible cargar 1 fichero"
+				invalidFileMessage="Tipo de plantilla no soportado"
+				invalidSizeMessage="Tamaño excesivo. Máximo permitido: #{cc.attrs.nameBean.plantillaMaxSize}">
+			</p:fileUpload>
+
+			<h:panelGrid columns="3" cellspacing="3" cellpadding="3" style="display:block;">
+				<p:outputLabel for="TXT_FilePath" value="Fichero seleccionado:"/>
+				<p:inputText
+					id="TXT_FilePath"
+					value="#{cc.attrs.nameBean.pathFichero}"
+					disabled="true"
+					style="width: 500px;">
+				</p:inputText>
+				
+				<p:commandButton
+					id="BTN_Guardar"
+					icon="ui-icon-disk"
+					style="width:120px;" 
+					value="#{msg['manual.generales.btn.guardar']}" 
+					action="#{cc.attrs.nameBean.actualizarOficio}" 
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.cargaDisponible)}"
+					update="FLS_Actualizar PNL_Acciones MSG_GenerarOficio">
+				</p:commandButton>
+			</h:panelGrid>
+		</p:fieldset>
+
+	</composite:implementation>
+</html>

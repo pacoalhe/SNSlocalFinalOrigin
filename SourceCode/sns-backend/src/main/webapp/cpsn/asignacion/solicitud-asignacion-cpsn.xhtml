@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<h:form id="FORM_SolicitudAsignacionCPSN">
+		<p:wizard 
+			id="WIZ_SolicitudAsignacion" widgetVar="WIZ_SolicitudAsignacion"
+			flowListener="#{solicitudAsignacionCpsnBean.siguientePaso}"
+			showNavBar="true" nextLabel="#{msg['manual.tab.siguiente']}"
+			backLabel="#{msg['manual.tab.anterior']}"
+			style="min-width: 1050px">
+	
+			<p:tab id="tab_general_asignacion" title="#{msg['manual.tab.generales']}">
+				<sns:generalesAsignacionCpsn
+					id="TAB_Generales_AsigCPSN"
+					nameBean="#{solicitudAsignacionCpsnBean.tabGenerales}"
+					formAsignacion="FORM_SolicitudAsignacionCPSN">
+				</sns:generalesAsignacionCpsn>
+			</p:tab>
+	
+			<p:tab id="tab_numeracion_asignacion" title="#{msg['asignacion.cpsn.tab.numeracion.solicitada']}">
+				<sns:codigoAsignacionCpsn
+					nameBean="#{solicitudAsignacionCpsnBean.tabNumeracion}"
+					formAsignacion="FORM_SolicitudAsignacionCPSN">
+				</sns:codigoAsignacionCpsn>
+			</p:tab>
+	
+			<p:tab id="tab_analisis-asignacion" title="#{msg['manual.tab.analisis']}">
+				<sns:analisisAsignacionCpsn
+					nameBean="#{solicitudAsignacionCpsnBean.tabAnalisis}"
+					formAsignacion="FORM_SolicitudAsignacionCPSN">
+				</sns:analisisAsignacionCpsn>
+			</p:tab>
+	
+			<p:tab id="tab_asignacion_asignacion" title="#{msg['manual.tab.asignacion']}">
+				<sns:asignacionCPSN
+					nameBean="#{solicitudAsignacionCpsnBean.tabAsignacion}"
+					formAsignacion="FORM_SolicitudAsignacionCPSN">
+				</sns:asignacionCPSN>
+			</p:tab>
+	
+			<p:tab id="WIZ_SolicitudAsignacion_TAB_Oficios" title="#{msg.oficio}">
+				<sns:generarOficio nameBean="#{solicitudAsignacionCpsnBean.tabGenerarOficio}" />
+			</p:tab>
+		</p:wizard>
+	</h:form>
+	
+	<!-- Modal de Edición de Proveedores. -->
+	<p:dialog
+		id="MDL_Proveedores" widgetVar="MDL_Proveedores"
+		modal="true" appendTo="@(body)" closable="false"
+		header="#{msg['catalogo.proveedores.edicion.cabecera']}" 
+		scrollable="true" resizable="true" width="1280" height="500">
+		<p:ajax 
+			event="close"
+			listener="#{solicitudAsignacionCpsnBean.tabGenerales.actualizarEdicionProveedor}"
+			update="FORM_SolicitudAsignacionCPSN:TAB_Generales_AsigCPSN">
+		</p:ajax>
+		<p:commandButton
+			id="BTN_Salir" global="false"
+			styleClass="customCloseModal"
+			value="X" closable="false"
+			onclick="PF('MDL_Proveedores').hide()">
+			<p:resetInput target="FORM_GestionProveedor" />	
+		</p:commandButton>
+		<ui:include src="/admin-catalogos/proveedor/edicion-proveedoresV2.xhtml"/>
+	</p:dialog>
+
+	<p:dialog 
+		id="MDL_CatalogoCpsn" widgetVar="MDL_CatalogoCpsn"
+		modal="true" appendTo="@(body)" closable="false"
+		header="#{msg['cpsn.catalogo.CPSN']}" scrollable="true"
+		resizable="true" width="1280" height="500">
+		<p:ajax 
+			event="close" global="false"
+			listener="#{solicitudAsignacionCpsnBean.tabAnalisis.reset}"
+			update=":FORM_SolicitudAsignacionCPSN :FRM_Contenedor_Composite">
+		</p:ajax>
+		<p:commandButton 
+			id="BTN_Salir_Catalogo" styleClass="customCloseModal"
+			value="X" onclick="PF('DLG_Salir_Catalogo_CPSN').show()" global="false">
+			<p:resetInput target=":#{p:component('FRM_Contenedor_Composite')}" />
+		</p:commandButton>
+		<ui:include src="/resources/xhtml/contenedorComponente.xhtml" />
+	</p:dialog>
+
+	<!-- Confirmación al salir del catalogo cpsn-->
+	<p:dialog 
+		id="DLG_Salir_Catalogo_CPSN"
+		widgetVar="DLG_Salir_Catalogo_CPSN" closeOnEscape="true"
+		closable="false" modal="true" resizable="false" header="Salir"
+		appendTo="@(body)" width="250"
+				height="115">
+		<sns:exit-custom-dialog-no-listener 
+			message="#{msg['cerrarDialogo.mensaje']}"
+			blockUIWidgetVar="salirCatalogoCPSN_BUI"
+			onCompleteExit="PF('DLG_Salir_Catalogo_CPSN').hide();PF('MDL_CatalogoCpsn').hide();"
+			onCompleteCancel="PF('DLG_Salir_Catalogo_CPSN').hide();"
+			updateComponentId=":FORM_SolicitudAsignacionCPSN :FRM_Contenedor_Composite"
+			resetValues="true">
+		</sns:exit-custom-dialog-no-listener>
+	</p:dialog>
+
+<!-- 	<p:ajaxStatus 
+		id="FORM_SolicitudAsignacionCPSN_AS"
+		onstart="PF('FORM_SolicitudAsignacionCPSN_BUI').show()"
+		onsuccess="PF('FORM_SolicitudAsignacionCPSN_BUI').hide()">
+	</p:ajaxStatus>
+
+	<p:blockUI block="FORM_SolicitudAsignacionCPSN" widgetVar="FORM_SolicitudAsignacionCPSN_BUI">
+		<ui:include src="/componentes/loader.xhtml" />
+	</p:blockUI> -->
+
+</html>

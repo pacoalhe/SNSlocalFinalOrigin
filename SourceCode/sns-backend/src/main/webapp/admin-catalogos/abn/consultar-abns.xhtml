@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusAbnDialog').show();
+			}
+
+			function hideStatus() {
+				PF('statusAbnDialog').hide();
+			}
+		</script>
+
+		<p:messages id="MSG_CatalogoABN" showDetail="false" showSummary="true"
+			autoUpdate="false" closable="true" escape="false" showIcon="false" />
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogos.title']}/#{msg['catalogos.abn']}</legend>
+
+			<h:form id="FRM_CatalogoABN">
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.abn.buscador']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda_CodABN" columns="4"
+						style="float:left" cellpadding="3" cellspacing="3">
+						<p:outputLabel for="SEL_TipoBusqueda"
+							value="#{msg['catalogo.abn.tipobusqueda']}" />
+						<p:selectOneMenu id="SEL_TipoBusqueda" autoWidth="false"
+							value="#{consultarCatalogoAbnBean.tipoBusqueda}"
+							style="width:300px;">
+							<f:selectItem itemValue="Pob_ABN"
+								itemLabel="ABN's asociados al estado, municipio y/o población"
+								itemDisabled="Todas las ABN's que tengan relación con el estado, municipios y poblaciones seleccionada">
+							</f:selectItem>
+							<f:selectItem itemValue="Cod_ABN"
+								itemLabel="Poblaciones asociadas al ABN"
+								itemDescription="Todos los estados, municipios y poblaciones asociados a la ABN.">
+							</f:selectItem>
+							<p:ajax event="change"
+								update=":MSG_CatalogoABN PNL_Busqueda_PobABN TXT_Abn PNL_Tabla BTN_exportarAbn"
+								listener="#{consultarCatalogoAbnBean.seleccionTipoBusqueda}"
+								resetValues="PNL_Busqueda_CodABN">
+							</p:ajax>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="TXT_Abn" value="#{msg['ubicacion.abn']}" />
+						<p:inputText id="TXT_Abn"
+							value="#{consultarCatalogoAbnBean.codigoAbn}" maxlength="3"
+							style="width: 100px;"
+							disabled="#{!consultarCatalogoAbnBean.tipoBusquedaCodAbn}"
+							validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+						</p:inputText>
+					</h:panelGrid>
+
+					<h:panelGrid id="PNL_Busqueda_PobABN" columns="6"
+						style="float:left" cellpadding="3" cellspacing="3">
+						<p:outputLabel for="SEL_Estado" value="#{msg['ubicacion.estado']}" />
+						<p:selectOneMenu id="SEL_Estado" autoWidth="false"
+							value="#{consultarCatalogoAbnBean.estadoSeleccionado}"
+							converter="#{estadoConverter}" style="width:250px;"
+							disabled="#{consultarCatalogoAbnBean.tipoBusquedaCodAbn}">
+							<p:ajax event="change"
+								update=":MSG_CatalogoABN SEL_Municipio SEL_Poblacion"
+								listener="#{consultarCatalogoAbnBean.seleccionEstado}">
+							</p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{consultarCatalogoAbnBean.listaEstados}"
+								var="estado" itemLabel="#{estado.nombre}" itemValue="#{estado}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="SEL_Municipio"
+							value="#{msg['ubicacion.municipio']}" />
+						<p:selectOneMenu id="SEL_Municipio" autoWidth="false"
+							value="#{consultarCatalogoAbnBean.municipioSeleccionado}"
+							converter="#{municipioConverter}" style="width:250px;"
+							disabled="#{consultarCatalogoAbnBean.tipoBusquedaCodAbn}">
+							<p:ajax event="change" update=":MSG_CatalogoABN SEL_Poblacion"
+								listener="#{consultarCatalogoAbnBean.seleccionMunicipio}">
+							</p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{consultarCatalogoAbnBean.listaMunicipios}"
+								var="municipio" itemLabel="#{municipio.nombre}"
+								itemValue="#{municipio}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="SEL_Poblacion"
+							value="#{msg['ubicacion.poblacion']}" />
+						<p:selectOneMenu id="SEL_Poblacion" autoWidth="false"
+							value="#{consultarCatalogoAbnBean.poblacionSeleccionada}"
+							converter="#{poblacionConverter}" style="width:250px;"
+							disabled="#{consultarCatalogoAbnBean.tipoBusquedaCodAbn}">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{consultarCatalogoAbnBean.listaPoblaciones}"
+								var="poblacion" itemLabel="#{poblacion.nombre}"
+								itemValue="#{poblacion}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="SEL_Estatus"
+							value="#{msg['catalogo.abn.estatus']}" />
+						<p:selectOneMenu id="SEL_Estatus" autoWidth="false"
+							value="#{consultarCatalogoAbnBean.estatusAbnSeleccionado}"
+							converter="#{estatusAbnConverter}" style="width:250px;"
+							disabled="#{consultarCatalogoAbnBean.tipoBusquedaCodAbn}">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{consultarCatalogoAbnBean.listaEstatus}"
+								var="estatus" itemLabel="#{estatus.descripcion}"
+								itemValue="#{estatus}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="CHK_Presuscripcion"
+							value="#{msg['consolidacion.presuscripcion']}" />
+						<p:selectBooleanCheckbox id="CHK_Presuscripcion"
+							value="#{consultarCatalogoAbnBean.presuscripcionSeleccionada}"
+							disabled="#{consultarCatalogoAbnBean.tipoBusquedaCodAbn}">
+						</p:selectBooleanCheckbox>
+					</h:panelGrid>
+
+					<h:panelGrid columns="1"
+						style="text-align:center; margin-top:20px;" width="100%">
+						<h:panelGroup style="display:block; text-align:center">
+							<p:commandButton value="#{msg['consultar.Buscar']}"
+								action="#{consultarCatalogoAbnBean.realizarBusqueda}"
+								update=":MSG_CatalogoABN PNL_Tabla BTN_exportarAbn"
+								style="height:30px; width:85px">
+							</p:commandButton>
+							<p:commandButton value="#{msg['consultar.Limpiar']}"
+								action="#{consultarCatalogoAbnBean.limpiarBusqueda}"
+								update=":MSG_CatalogoABN PNL_Busqueda_CodABN PNL_Busqueda_PobABN PNL_Tabla BTN_exportarAbn"
+								style="height:30px; width:85px" process="@this">
+								<p:resetInput target="PNL_Busqueda_CodABN PNL_Busqueda_PobABN" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+				</fieldset>
+
+				<p:fieldset legend="#{msg['catalogo.abn.consulta']}">
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton value="#{msg['catalogo.abn.nueva']}"
+								title="#{msg['catalogo.abn.nueva']}" icon="ui-icon-pencil"
+								update=":MDL_EdicionABN"
+								oncomplete="PF('MDL_EdicionABN').show();">
+							</p:commandButton>
+
+							<p:commandButton id="BTN_exportarAbn"
+								disabled="#{consultarCatalogoAbnBean.emptySearch}"
+								value="#{msg.exportar}" title="#{msg.exportar}"
+								onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)"
+								ajax="false">
+								<p:fileDownload
+									value="#{consultarCatalogoAbnBean.exportarConsultaAbns}" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<h:panelGrid id="PNL_Tabla" columns="1">
+						<p:dataTable id="TBL_ConsultaABNs" widgetVar="TBL_ConsultaABNs"
+							var="abn" value="#{consultarCatalogoAbnBean.catAbnModel}"
+							lazy="true" paginator="true" paginatorPosition="bottom"
+							rows="#{consultarCatalogoAbnBean.registroPorPagina}"
+							resizableColumns="true"
+							rendered="#{!consultarCatalogoAbnBean.tipoBusquedaCodAbn}"
+							emptyMessage="#{msg['buscador.noresultados']}">
+
+							<p:column headerText="#{msg['ubicacion.abn']}"
+								style="text-align:center;">
+								<h:outputText value="#{abn.codigoAbn}" />
+							</p:column>
+
+							<p:column headerText="#{msg['catalogo.abn.estatus']}"
+								style="text-align:center;">
+								<h:outputText value="#{abn.estadoAbn.descripcion}" />
+							</p:column>
+
+							<p:column
+								headerText="#{msg['catalogo.poblaciones.presuscripcion']}"
+								style="text-align:center;">
+								<h:outputText value="#{abn.presuscripcion}" />
+							</p:column>
+
+							<p:column headerText="#{msg['catalogo.abn.poblacion.ancla']}">
+								<h:outputText value="#{abn.poblacionAncla.nombre}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.inegi']}"
+								style="text-align:center;">
+								<h:outputText value="#{abn.poblacionAncla.inegi}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.estado']} Pob.Ancla">
+								<h:outputText
+									value="#{abn.poblacionAncla.municipio.estado.nombre}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.municipio']} Pob.Ancla">
+								<h:outputText value="#{abn.poblacionAncla.municipio.nombre}" />
+							</p:column>
+
+							<p:column headerText="#{msg['consultar.Operaciones']}"
+								style="text-align:center;">
+								<p:commandButton title="#{msg['detalleEditar']}"
+									icon="ui-icon-pencil"
+									action="#{consultarCatalogoAbnBean.editarAbn}"
+									update=":MSG_CatalogoABN :MDL_EdicionABN TBL_ConsultaABNs"
+									oncomplete="PF('MDL_EdicionABN').show();">
+									<f:setPropertyActionListener value="#{abn}"
+										target="#{consultarCatalogoAbnBean.abnSeleccionado}">
+									</f:setPropertyActionListener>
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<p:dataTable id="TBL_ConsultaPobAbn"
+							widgetVar="TBL_ConsultaPobAbn" var="pobAbn"
+							value="#{consultarCatalogoAbnBean.poblacionAbnModel}" lazy="true"
+							paginator="true" paginatorPosition="bottom" rows="10"
+							resizableColumns="true"
+							rendered="#{consultarCatalogoAbnBean.tipoBusquedaCodAbn}"
+							emptyMessage="#{msg['buscador.noresultados']}">
+
+							<p:column headerText="#{msg['ubicacion.abn']}"
+								style="text-align:center;">
+								<h:outputText value="#{pobAbn.abn.codigoAbn}" />
+							</p:column>
+
+							<p:column headerText="#{msg['catalogo.abn.estatus']}"
+								style="text-align:center;">
+								<h:outputText value="#{pobAbn.abn.estadoAbn.descripcion}" />
+							</p:column>
+
+							<p:column
+								headerText="#{msg['catalogo.poblaciones.presuscripcion']}"
+								style="text-align:center;">
+								<h:outputText value="#{pobAbn.abn.presuscripcion}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.estado']}">
+								<h:outputText value="#{pobAbn.inegi.municipio.estado.nombre}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.municipio']}">
+								<h:outputText value="#{pobAbn.inegi.municipio.nombre}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.poblacion']}">
+								<h:outputText value="#{pobAbn.inegi.nombre}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.inegi']}"
+								style="text-align:center;">
+								<h:outputText value="#{pobAbn.inegi.inegi}" />
+							</p:column>
+
+							<p:column headerText="#{msg['consultar.Operaciones']}"
+								style="text-align:center;">
+								<p:commandButton title="#{msg['detalleEditar']}"
+									icon="ui-icon-pencil"
+									action="#{consultarCatalogoAbnBean.editarAbn}"
+									update=":MSG_CatalogoABN :MDL_EdicionABN TBL_ConsultaPobAbn"
+									oncomplete="PF('MDL_EdicionABN').show();">
+									<f:setPropertyActionListener value="#{pobAbn.abn}"
+										target="#{consultarCatalogoAbnBean.abnSeleccionado}">
+									</f:setPropertyActionListener>
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:panelGrid>
+				</p:fieldset>
+
+
+
+			</h:form>
+			<!-- Diálogo edición abn -->
+			<p:dialog id="MDL_EdicionABN" 
+				widgetVar="MDL_EdicionABN" 
+				modal="true"
+				appendTo="@(body)"
+				header="#{edicionAbnBean.abnEdicion == null ? msg['catalogo.abn.nueva'] : msg['catalogo.edicion.abn']}"
+				closable="false" 
+				scrollable="true" 
+				resizable="true" 
+				width="80%"
+				height="500">
+				<ui:include src="/admin-catalogos/abn/editar-abns.xhtml">
+				</ui:include>
+				<p:commandButton id="BTN_ExitModal" 
+					value="X"
+					styleClass="customCloseModal" 
+					closable="false"
+					onclick="PF('DLG_ExitModal').show()" 
+					global="false">
+					<p:resetInput target=":#{p:component('FRM_CatalogoABN')}" />
+				</p:commandButton>
+			</p:dialog>
+			<!-- Diálogo confirmar salir edición abn -->
+			<p:dialog id="DLG_ExitModal" 
+				widgetVar="DLG_ExitModal" 
+				modal="true"
+				resizable="false" 
+				closeOnEscape="true" 
+				closable="false"
+				header="#{msg.salir}" 
+				appendTo="@(body)" 
+				width="250" 
+				height="115">
+				<sns:exit-custom-dialog message="#{msg['cerrarDialogo.mensaje']}"
+					blockUIWidgetVar="salirEditarAbn_BUI"
+					confirmActionListener="#{edicionAbnBean.resetValues}"
+					onCompleteExit="PF('DLG_ExitModal').hide(); PF('MDL_EdicionABN').hide();"
+					onCompleteCancel="PF('DLG_ExitModal').hide();"
+					updateComponentId=":FRM_CatalogoABN:PNL_Tabla"
+					onCompleteAjax="PF('TBL_Poblaciones').clearFilters(); PF('TBL_Municipio').clearFilters();"
+					resetValues="true" global="false">
+				</sns:exit-custom-dialog>
+			</p:dialog>
+			<p:ajaxStatus id="FRM_CatalogoABN_AS"
+				onstart="PF('statusAbnDialog').show()"
+				onsuccess="PF('statusAbnDialog').hide()">
+			</p:ajaxStatus>
+			<p:dialog widgetVar="statusAbnDialog" 
+				modal="true" 
+				draggable="false"
+				closable="false" 
+				resizable="false" 
+				showHeader="false">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:dialog>
+			<!-- 		<p:blockUI block="FRM_CatalogoABN" widgetVar="FRM_CatalogoABN_BUI">
+					<ui:include src="/componentes/loader.xhtml"/>
+				</p:blockUI> -->
+
+		</fieldset>
+
+	</ui:define>
+</ui:composition>
+
+</html>

@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<h:form id="FRM_BuscarConsolidaciones">
+			<p:messages id="MSG_ConsultarConsolidaciones" showDetail="false"
+				autoUpdate="false" closable="true" showIcon="false" />
+
+			<fieldset
+				class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionGeografica']}/#{msg['mainMenu.Consolidacion']}</legend>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['buscador.solicitud']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda" columns="6" style="float:left">
+						<h:outputLabel value="#{msg['consultar.Consecutivo']}" />
+						<p:inputText id="TXT_Consecutivo" required="false" minValue="9"
+							maxlength="9" mask="9"
+							value="#{consultarConsolidacionesBean.consecutivo}"
+							label="#{msg['consultar.Consecutivo']}" style="width: 150px;">
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['consolidacion.AbnEntrega']}" />
+						<p:inputText id="TXT_AbnEntrega" required="false" maxlength="3"
+							value="#{consultarConsolidacionesBean.abnEntrega}"
+							label="#{msg['consolidacion.AbnEntrega']}" style="width: 150px;">
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['consolidacion.AbnRecibe']}" />
+						<p:inputText id="TXT_AbnRecibe" required="false" maxlength="3"
+							value="#{consultarConsolidacionesBean.abnRecibe}"
+							label="#{msg['consolidacion.AbnRecibe']}" style="width: 150px;">
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['consultar.Inicio_consolidacion']}" />
+						<p:calendar id="fconsolidacion_inicio" required="false"
+							locale="mx_MX"
+							value="#{consultarConsolidacionesBean.fechaIniConsolidacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px;"
+							label="#{msg['consultar.Inicio_consolidacion']}" navigator="true"
+							yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fconsolidacion_final"
+								listener="#{consultarConsolidacionesBean.habilitarFechaFin}"
+								global="false" />
+							<p:ajax event="change" global="false"
+								listener="#{consultarConsolidacionesBean.habilitarFechaFin}"
+								update="fconsolidacion_final">
+							</p:ajax>
+						</p:calendar>
+
+						<h:outputLabel value="#{msg['consultar.Final_consolidacion']}" />
+						<p:calendar id="fconsolidacion_final" required="false"
+							locale="mx_MX"
+							value="#{consultarConsolidacionesBean.fechaFinConsolidacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px;"
+							label="#{msg['consultar.Final_consolidacion']}"
+							disabled="#{!consultarConsolidacionesBean.fechaHabilitada}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<h:outputLabel for="selstatus" value="#{msg['consultar.Estatus']}" />
+						<p:selectOneMenu id="selstatus"
+							value="#{consultarConsolidacionesBean.estatusSeleccionado}"
+							style="width:150px" required="false"
+							label="#{msg['consultar.Estatus']}"
+							converter="#{estatusSolicitudConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarConsolidacionesBean.listaEstadosSolicidud}"
+								var="status" itemLabel="#{status.descripcion}"
+								itemValue="#{status}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selestado" value="#{msg['ubicacion.estado']}" />
+						<p:selectOneMenu id="selestado"
+							value="#{consultarConsolidacionesBean.estadoMun}"
+							style="width:150px" label="#{msg['consolidacion.Estado']}"
+							converter="#{estadoConverter}">
+							<p:ajax event="change"
+								listener="#{consultarConsolidacionesBean.habilitarMunicipio}"
+								update="selmunicipio"></p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{consultarConsolidacionesBean.listaEstados}"
+								var="estados" itemLabel="#{estados.nombre}"
+								itemValue="#{estados}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selmunicipio"
+							value="#{msg['ubicacion.municipio']}" />
+						<p:selectOneMenu id="selmunicipio"
+							value="#{consultarConsolidacionesBean.municipio}"
+							style="width:150px" label="#{msg['consolidacion.Municipio']}"
+							converter="#{municipioConverter}">
+							<p:ajax event="change"
+								update="selpoblacion MSG_ConsultarConsolidaciones"
+								listener="#{consultarConsolidacionesBean.habilitarPoblacion}" />
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{consultarConsolidacionesBean.listaMunicipio}"
+								var="municipios" itemLabel="#{municipios.nombre}"
+								itemValue="#{municipios}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selpoblacion"
+							value="#{msg['ubicacion.poblacion']}" />
+						<p:selectOneMenu id="selpoblacion"
+							value="#{consultarConsolidacionesBean.poblacion}"
+							style="width:150px" label="#{msg['consolidacion.Poblacion']}"
+							converter="#{poblacionConverter}">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{consultarConsolidacionesBean.listaPoblacion}"
+								var="poblaciones" itemLabel="#{poblaciones.nombre}"
+								itemValue="#{poblaciones}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarConsolidacionesBean.realizarBusqueda}"
+						update="TBL_Consolidaciones MSG_ConsultarConsolidaciones"
+						style="height:30px; width:82px">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarConsolidacionesBean.limpiarBusqueda}"
+						update="PNL_Busqueda TBL_Consolidaciones MSG_ConsultarConsolidaciones"
+						style="margin-right:20px; height:30px; width:82px" process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['consolidacion.consultar']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton 
+								title="#{msg.nuevaConsolidacion}"
+								actionListener="#{consultarConsolidacionesBean.nuevaSolicitud}"
+								value="#{msg.nuevaConsolidacion}" 
+								update=":MDL_Consolidaciones"
+								oncomplete="PF('MDL_Consolidaciones').show();">
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_Consolidaciones" widgetVar="tabla"
+						var="consolidacion" lazy="true"
+						value="#{consultarConsolidacionesBean.solicitudesConsolidacionModel}"
+						paginator="true" paginatorPosition="bottom"
+						rows="#{consultarConsolidacionesBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column headerText="#{msg['consultar.Consecutivo']}" width="15%">
+							<h:outputText value="#{consolidacion.consecutivo}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consolidacion.AbnRecibe']}"
+							width="20%" style="text-align:center;">
+							<h:outputText value="#{consolidacion.abnRecibe}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consolidacion.AbnEntrega']}"
+							width="20%" style="text-align:center;">
+							<h:outputText value="#{consolidacion.abnEntrega}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_consolidacion']}"
+							width="10%" style="text-align:center;">
+							<h:outputText value="#{consolidacion.fechaConsolidacion}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['consolidacion.Estado']}" width="10%"
+							style="text-align:center;">
+							<h:outputText value="#{consolidacion.estatus}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Operaciones']}" width="10%"
+							style="text-align:center;">
+							<p:commandButton title="#{msg.detalle}" icon="ui-icon-pencil"
+								action="#{consultarConsolidacionesBean.editarSolicitud}"
+								update=":MDL_Consolidaciones TBL_Consolidaciones"
+								oncomplete="PF('MDL_Consolidaciones').show();">
+								<f:setPropertyActionListener value="#{consolidacion}"
+									target="#{consultarConsolidacionesBean.registroSeleccionado}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+
+							<p:commandButton title="#{msg.cancelar}"
+								icon="ui-icon-circle-close" update="TBL_Consolidaciones"
+								onclick="PF('DLG_Eliminar').show()"
+								disabled="#{!consolidacion.cancelarDisponible}" global="false">
+								<f:setPropertyActionListener value="#{consolidacion}"
+									target="#{consultarConsolidacionesBean.registroSeleccionado}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</fieldset>
+			</fieldset>
+		</h:form>
+
+		<!-- Modal consolidaciones -->
+		<p:dialog id="MDL_Consolidaciones" widgetVar="MDL_Consolidaciones"
+			header="#{msg['mainMenu.NumeracionGeografica']}/#{msg['mainMenu.Consolidacion']}"
+			modal="true" appendTo="@(body)" scrollable="true" resizable="true"
+			closable="false" width="95%" height="500">
+			<ui:include
+				src="/numeracion-geografica/consolidacion/nueva-consolidacion.xhtml">
+			</ui:include>
+			<p:commandButton 
+				id="BTN_Salir_Solicitud_Consolidacion"
+				styleClass="customCloseModal" value="X"
+				oncomplete="PF('DLG_Salir_Solicitud_Consolidacion').show();">
+				<p:resetInput target=":#{p:component('FORM_nuevaConsolidacion')}" />
+			</p:commandButton>
+		</p:dialog>
+		
+		<!-- Modal para aceptar la consolidacion -->
+		<p:dialog id="DLG_AceptacionConsolidacion"
+			widgetVar="DLG_AceptacionConsolidacion" modal="true"
+			closeOnEscape="true" closable="false" resizable="false"
+			header="#{msg['consolidacion.generales.cancelar.confirmar']}" severity="alert"
+			appendTo="@(body)" width="250" height="50">
+
+			<sns:confirm-custom-dialog
+				confirmActionListener="#{solicitudConsolidacionBean.consolidacion.consolidarAbn}"
+				dialogWidgetVar="DLG_AceptacionConsolidacion"
+				blockUIWidgetVar="aceptarConsolidacion_BUI"
+				updateComponentId=":FORM_nuevaConsolidacion:MSG_DatosGenerales :FORM_nuevaConsolidacion :FRM_BuscarConsolidaciones:TBL_Consolidaciones">
+			</sns:confirm-custom-dialog>
+		</p:dialog>
+
+		<!-- Modal para cancelar la solicitud -->
+		<p:dialog id="DLG_Eliminar" widgetVar="DLG_Eliminar" modal="true"
+			closeOnEscape="true" closable="false" resizable="false"
+			header="#{msg['cancelar.registro']}" appendTo="@(body)" width="250"
+			height="50">
+
+			<sns:confirm-custom-dialog
+				message="#{msg['eliminar.registro.confirmar']}"
+				confirmActionListener="#{consultarConsolidacionesBean.eliminarSolicitud}"
+				dialogWidgetVar="DLG_Eliminar"
+				updateComponentId=":FRM_BuscarConsolidaciones:TBL_Consolidaciones :FRM_BuscarConsolidaciones:MSG_ConsultarConsolidaciones"
+				blockUIWidgetVar="cancelarConsolidacion_BUI">
+			</sns:confirm-custom-dialog>
+		</p:dialog>
+
+		<p:ajaxStatus id="triggerblockuiConsolidacion"
+			onstart="PF('statusConsolidacionDialog').show()"
+			onsuccess="PF('statusConsolidacionDialog').hide()">
+
+		</p:ajaxStatus>
+		<p:dialog widgetVar="statusConsolidacionDialog" modal="true"
+			draggable="false" closable="false" resizable="false"
+			showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+
+		<!-- Confirmación al salir solicitud sesion-->
+		<p:dialog id="DLG_Salir_Solicitud_Consolidacion" modal="true"
+			resizable="false" widgetVar="DLG_Salir_Solicitud_Consolidacion"
+			closeOnEscape="true" closable="false" header="Salir"
+			appendTo="@(body)" width="250" height="115">
+			<sns:exit-custom-dialog
+				confirmActionListener="#{solicitudConsolidacionBean.doNothing}"
+				message="#{msg['cerrarDialogo.mensaje']}"
+				onCompleteExit="PF('DLG_Salir_Solicitud_Consolidacion').hide();PF('MDL_Consolidaciones').hide();"
+				onCompleteCancel="PF('DLG_Salir_Solicitud_Consolidacion').hide();"
+				updateComponentId=":FRM_BuscarConsolidaciones:TBL_Consolidaciones"
+				blockUIWidgetVar="salirConsolidacion_BUI" resetValues="true">
+			</sns:exit-custom-dialog>
+		</p:dialog>
+
+	<!--
+		<p:blockUI block="FRM_BuscarConsolidaciones"
+			widgetVar="consolidacion_bui">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:blockUI> -->
+
+	</ui:define>
+</ui:composition>
+</html>

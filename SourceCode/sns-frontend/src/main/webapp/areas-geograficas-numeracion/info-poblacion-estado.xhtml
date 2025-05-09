@@ -1,0 +1,383 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<!-- Vista 1 municipios -->
+
+<!-- <p:ajaxStatus id="FORM_infoPobEstado_AS"
+	onstart="PF('FORM_infoPobEstado_BUI').show()"
+	onsuccess="PF('FORM_infoPobEstado_BUI').hide()">
+</p:ajaxStatus>
+
+<p:blockUI block="FORM_infoPobEstado" widgetVar="FORM_infoPobEstado_BUI">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI> -->
+<h:form id="FORM_infoPobEstado">
+
+	<p:panel id="P_containerInfoPobEstado" styleClass="mycustompanel">
+
+		<p:panelGrid id="TLB_pobEstadoInfo" styleClass="mycustomtablesa"
+			rendered="#{infoPoblacionEstadoBean.tablaPoblacionEstadoActivada}"
+			columns="2" layout="grid">
+			<f:facet name="header">
+				<p:row>
+					<p:column colspan="7">
+		            INFORMACIÓN DE <h:outputText
+							value="#{infoPoblacionEstadoBean.poblacionSeleccionada.nombre}"></h:outputText>
+					</p:column>
+				</p:row>
+			</f:facet>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="Número(s) Identificador(es) de región (Claves de larga distancia)" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<ui:repeat var="nir"
+						value="#{infoPoblacionEstadoBean.nirPoblacion}">
+						<h:outputText rendered="#{nir != null}" value="#{nir.codigo}"></h:outputText>
+						<h:outputText rendered="#{nir == null}"
+							value="Población sin NIR asociado" /><br></br>
+					</ui:repeat>
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="Concesionarios que prestan servicio de telefonía local" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+
+					<h:outputText
+						value="#{infoPoblacionEstadoBean.proveedorPoblacion.size()}" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="Numeración asignada (No representa líneas en servicio)" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="#{infoPoblacionEstadoBean.numeracionPoblacion}" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText value="Clave INEGI" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="#{infoPoblacionEstadoBean.poblacionSeleccionada.inegi}" />
+				</p:column>
+			</p:row>
+		</p:panelGrid>
+		<p:panel id="P_containerList" styleClass="mycustompanel"
+			rendered="#{infoPoblacionEstadoBean.listaDesplegableNirActivada}">
+			<br></br>
+
+			<br></br>
+		</p:panel>
+		<!-- Vista 2 área de servicio local -->
+		<p:panelGrid id="TBL_NirPobInfo" columns="2" layout="grid"
+			rendered="#{infoPoblacionEstadoBean.tablaAreaActivada}"
+			styleClass="mycustomtablesa">
+
+			<f:facet name="header">
+           			INFORMACIÓN DEL ÁREA GEOGRÁFICA DE NUMERACIÓN
+       			</f:facet>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="NÚMERO IDENTIFICADOR DE REGIÓN (CLAVE DE LARGA DISTANCIA)" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="#{infoPoblacionEstadoBean.nirSeleccionado.codigo}" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="Cuidad con mayor cantidad de numeración asignada" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="#{infoPoblacionEstadoBean.poblacionMaxNumeracion.nombre}" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText value="Longitud del número nacional" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText value="#{infoPoblacionEstadoBean.numeroDigitos} dígitos" />
+				</p:column>
+			</p:row>
+
+
+			<p:row>
+				<h:outputText value="Marcación nacional desde un número fijo o móvil" />
+			</p:row>
+			<p:row>
+				<h:panelGroup style="display:block;">
+					<h:outputText styleClass="greenText" value="" />
+					<h:outputText value="Número local (#{infoPoblacionEstadoBean.numeroDigitos} dígitos)" />
+				</h:panelGroup>
+
+			</p:row>
+
+			<p:row>
+				<h:outputText value="Marcación desde los Estados Unidos y Canadá" />
+			</p:row>
+			<p:row>
+				<h:outputText value="011 52 " />
+				<h:outputText value="+ Número nacional (#{infoPoblacionEstadoBean.numeroDigitos} dígitos)" />
+			</p:row>
+
+			<p:row>
+				<h:outputText value="Marcación desde el resto del Mundo" />
+			</p:row>
+
+			<p:row>
+				<h:outputText value="+52 " />
+				<h:outputText value="+ Número nacional (#{infoPoblacionEstadoBean.numeroDigitos} dígitos)" />
+			</p:row>
+
+			<p:row>
+				<p:column>
+					<h:outputText value="Poblaciones con servicio de telefonía local" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+
+					<h:outputText
+						value="#{infoPoblacionEstadoBean.poblacionesNumeracionNir.size()}" />
+
+
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText value="Municipios que forman el área" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+
+
+					<h:outputText
+						value="#{infoPoblacionEstadoBean.municipiosAbn.size()}" />
+
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="Concesionarios que prestan servicios de telfonía local" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+
+					<h:outputText
+						value="#{infoPoblacionEstadoBean.proveedorNumeracionNir.size()}" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="Numeración asignada (no representa líneas en servicio)" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="#{infoPoblacionEstadoBean.numeracionNirFormat}" />
+				</p:column>
+			</p:row>
+
+
+		</p:panelGrid>
+		<!-- ///////////////////////////////////////////////// tabla dos, seleccionando en población ////////////////////////////////-->
+		<!-- Vista 2 área de servicio local -->
+		<p:panelGrid id="TBL_NirPobInfo2" columns="2" layout="grid"
+			rendered="#{infoPoblacionEstadoBean.tablaDosAreaActivada}"
+			styleClass="mycustomtablesa">
+
+			<f:facet name="header">
+           			INFORMACIÓN DEL ÁREA GEOGRÁFICA DE NUMERACIÓN
+       			</f:facet>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="NÚMERO IDENTIFICADOR DE REGIÓN (CLAVE DE LARGA DISTANCIA)" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<ui:repeat var="nir"
+						value="#{infoPoblacionEstadoBean.nirPoblacion}">
+						<h:outputText rendered="#{nir !=null}" value="#{nir.codigo}" />
+						<h:outputText rendered="#{nir ==null}"
+							value="Población sin NIR asociado" /><br></br>
+					</ui:repeat>
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="Cuidad con mayor cantidad de numeración asignada" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="#{infoPoblacionEstadoBean.poblacionMaxNumeracion.nombre}" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText value="Longitud del número nacional" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+				<ui:repeat var="nir"
+						value="#{infoPoblacionEstadoBean.nirPoblacion}">
+						<h:outputText  rendered="#{nir != null}" value="NIR #{nir.codigo}: #{infoPoblacionEstadoBean.getDigitos(nir)} dígitos" />
+						<h:outputText rendered="#{nir == null}"
+							value="Población sin NIR asociado" /><br></br>
+					</ui:repeat>
+					
+				</p:column>
+			</p:row>
+
+
+			<p:row>
+				<h:outputText value="Marcación nacional desde un número fijo o móvil" />
+			</p:row>
+			<p:row>
+				<h:panelGroup style="display:block;">
+					<h:outputText styleClass="greenText" value="" />
+					<h:outputText value="Número nacional (10 dígitos)" />
+				</h:panelGroup>
+
+
+			</p:row>
+
+			<p:row>
+				<h:outputText value="Marcación desde los Estados Unidos y Canadá" />
+			</p:row>
+			<p:row>
+				<h:outputText value="011 52 " />
+				<h:outputText value="+ Número local (10 dígitos)" />
+			</p:row>
+
+			<p:row>
+				<h:outputText value="Marcación desde el resto del Mundo" />
+			</p:row>
+
+			<p:row>
+				<h:outputText value="+52 " />
+				<h:outputText value="+ Número local (10 dígitos)" />
+			</p:row>
+
+			<p:row>
+				<p:column>
+					<h:outputText value="Poblaciones con servicio de telefonía local" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<ui:repeat var="nir"
+						value="#{infoPoblacionEstadoBean.nirPoblacion}">
+						<h:outputText rendered="#{nir != null}"
+							value="NIR #{nir.codigo}: #{infoPoblacionEstadoBean.getPoblacionesNumeracionAsignadaNir(nir).size()}" />
+								<h:outputText rendered="#{nir == null}"
+							value="Población sin NIR asociado" /><br></br>
+
+					</ui:repeat>
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText value="Municipios que forman el área" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<ui:repeat var="nir"
+						value="#{infoPoblacionEstadoBean.nirPoblacion}">
+
+						<h:outputText rendered="#{nir !=null}"
+							value="NIR #{nir.codigo}: #{infoPoblacionEstadoBean.getMunicipioNir(nir).size()}" />
+									<h:outputText rendered="#{nir ==null}"
+							value="Población sin NIR asociado" /><br></br>
+					</ui:repeat>
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="Concesionarios que prestan servicios de telfonía local" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<ui:repeat var="nir"
+						value="#{infoPoblacionEstadoBean.nirPoblacion}">
+						<h:outputText rendered="#{nir !=null}"
+							value="NIR #{nir.codigo}: #{infoPoblacionEstadoBean.getProveedoresServicioNir(nir).size()}" />
+								<h:outputText rendered="#{nir ==null}"
+							value="Población sin NIR asociado" />
+						<br></br>
+					</ui:repeat>
+				</p:column>
+
+			</p:row>
+			<p:row>
+				<p:column>
+					<h:outputText
+						value="Numeración asignada (no representa líneas en servicio)" />
+				</p:column>
+			</p:row>
+			<p:row>
+				<p:column>
+					<ui:repeat var="nir"
+						value="#{infoPoblacionEstadoBean.nirPoblacion}">
+						<h:outputText rendered="#{nir !=null}"
+							value="NIR #{nir.codigo}: #{infoPoblacionEstadoBean.getNumeracionAsignadaNir(nir)}" />
+							<h:outputText rendered="#{nir ==null}"
+							value="Población sin NIR asociado" />
+						<br></br>
+					</ui:repeat>
+				</p:column>
+			</p:row>
+
+
+		</p:panelGrid>
+
+	</p:panel>
+</h:form>
+
+</html>

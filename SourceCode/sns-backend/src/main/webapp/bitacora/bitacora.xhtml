@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<p:messages id="MSG_ConsultarBitacoraLog" showDetail="false" showSummary="true" autoUpdate="false" closable="true" showIcon="false"/>
+			
+		
+		  <fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all" >
+		  	<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.Bitacora']}/#{msg['mainMenu.Bitacora']}</legend>
+						
+							
+				<h:form id="FRM_buscarBitacoraLog">
+				<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">Buscador</legend>
+						
+				
+								
+									
+			   <h:panelGrid id="temporizador_lineas" columns="6" cellpadding="3" cellspacing="3" style="float:left">
+		   
+		  			 	
+							
+															
+						<h:outputLabel value="#{msg['lineasActivas.fechaInicio']}" />
+						<p:calendar  locale="mx_MX"
+							id="fecha_inicial" required="false" size="9"
+							value="#{bitacoraBean.fechaInicio}" 
+							pattern="dd/MM/yyyy" mask="true" 
+							label="#{msg['lineasActivas.fechaInicio']}"
+							navigator="true" yearRange="1995:c+10">
+						</p:calendar>
+						
+						<h:outputLabel value="#{msg['lineasActivas.fechaFinal']}" />
+						<p:calendar  locale="mx_MX"
+							id="fecha_final" required="false" size="9"
+							value="#{bitacoraBean.fechaFin}" 
+							pattern="dd/MM/yyyy" mask="true" 
+							label="#{msg['lineasActivas.fechaFinal']}"
+							navigator="true" yearRange="1995:c+10"
+							>
+						</p:calendar>
+						
+						<h:outputLabel for="selusuario" value="Usuario" />
+						<p:selectOneMenu autoWidth="false"
+							id="selusuario" 
+							value="#{bitacoraBean.usuarioSeleccionado}" 
+				 			converter="#{usuarioConverter}"> 
+							<f:selectItem itemLabel="Seleccionar"/>
+							<f:selectItems 
+								value="#{bitacoraBean.listaUsuarios}"
+								var="usu" 
+								itemLabel="#{usu.userid} #{usu.nombre} "
+								itemValue="#{usu}">
+							</f:selectItems>
+						</p:selectOneMenu>
+						
+					</h:panelGrid>			
+								
+					
+		
+			</fieldset>
+			
+				
+			
+			<p:panelGrid style="display:block;">
+				<p:commandButton
+					value="#{msg['consultar.Buscar']}"
+					action="#{bitacoraBean.buscar}"
+					update=":FRM_buscarBitacoraLog,:MSG_ConsultarBitacoraLog"
+					
+					style="height:30px;  width:82px"					>
+				</p:commandButton>
+				<p:commandButton value="#{msg['consultar.Limpiar']}"
+					actionListener="#{bitacoraBean.limpiar}"
+					style="margin-right:20px; height:30px;  width:82px"
+					process="@this" update=":FRM_buscarBitacoraLog,:MSG_ConsultarBitacoraLog" > 
+					  <p:resetInput target=":FRM_buscarBitacoraLog" />
+				</p:commandButton>
+			</p:panelGrid>
+			
+				
+			
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">Acciones</legend>
+
+					
+
+					<h:panelGrid id="Panel_resumen" columns="1"	style="margin-bottom:20px" cellpadding="3">
+						<p:dataTable id="TBLGN_bitacora" var="consultar"
+							value="#{bitacoraBean.model}"
+							lazy="true" paginator="true" paginatorPosition="bottom" rows="10"
+							resizableColumns="true"
+							emptyMessage="#{msg['buscador.noresultados']}">
+
+							<p:column headerText="Fecha y Hora"	width="15%" style="text-align:center;">
+								<h:outputText value="#{consultar.fecha}" >
+								  	<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+					         </h:outputText>
+							</p:column>
+
+							<p:column headerText="Usuario" width="15%" >
+								<h:outputText value="#{consultar.usuario.userid}" />
+							</p:column>
+
+							<p:column headerText="Descripcion" 	width="70%">
+								<h:outputText value="#{consultar.descripcion}" />
+							</p:column>
+						</p:dataTable>
+					</h:panelGrid>
+
+				</fieldset>
+
+			
+				<p:ajaxStatus id="temporizador_bitacora_BUI" 
+				onstart="PF('statusBitacoraDialog').show()" 
+				onsuccess="PF('statusBitacoraDialog').hide()"/>
+				<p:dialog widgetVar="statusBitacoraDialog" 
+						  modal="true" draggable="false" 
+						  closable="false" resizable="false" 
+						  showHeader="false">
+    <ui:include src="/componentes/loader.xhtml"/>
+</p:dialog>
+			<!-- <p:blockUI block=":FRM_buscarBitacoraLog" widgetVar="bui">
+			 	<ui:include src="/componentes/loader.xhtml"/>
+ 			</p:blockUI> -->
+						
+			</h:form>
+
+
+
+
+		</fieldset>
+	</ui:define>
+</ui:composition>
+</html>

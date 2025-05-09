@@ -1,0 +1,285 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<p:messages id="MSG_ConsultarLiberacionesCPSI" showDetail="false"
+			showSummary="true" autoUpdate="false" closable="true" escape="false"
+			showIcon="false" />
+		<p:fieldset
+			legend="#{msg['mainMenu.CPSI']}/#{msg['mainMenu.Liberacion']}">
+
+			<h:form id="FRM_ConsultarLiberacionesCPSI">
+				<p:fieldset legend="#{msg['buscador.solicitud']}">
+
+					<h:panelGrid id="PNL_Busqueda" columns="8" style="float:left"
+						cellpadding="3" cellspacing="3">
+						<h:outputLabel value="#{msg['consultar.Consecutivo']}" />
+						<p:inputText id="TXT_Consecutivo" required="false" minValue="9"
+							maxlength="9" mask="9"
+							value="#{consultarLiberacionesCpsiBean.consecutivo}"
+							label="#{msg['consultar.Consecutivo']}" style="width:150px;">
+						</p:inputText>
+
+						<h:outputLabel for="selproveedor" value="#{msg.proveedor}" />
+						<p:selectOneMenu id="selproveedor" autoWidth="false"
+							value="#{consultarLiberacionesCpsiBean.proveedorSeleccionado}"
+							converter="#{proveedorConverter}" style="width:150px;">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarLiberacionesCpsiBean.listaProveedores}"
+								var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['consultar.Numero_oficio']}" />
+						<p:inputText id="TXT_Oficio" required="false" maxlength="51"
+							value="#{consultarLiberacionesCpsiBean.oficioPstSolicitante}"
+							label="#{msg['consultar.Numero_oficio']}" style="width:150px;">
+						</p:inputText>
+
+						<h:outputLabel for="selestado" value="#{msg['consultar.Estatus']}" />
+						<p:selectOneMenu id="selestado" autoWidth="false"
+							value="#{consultarLiberacionesCpsiBean.estadoSeleccionado}"
+							converter="#{estatusSolicitudConverter}" style="width:150px;">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarLiberacionesCpsiBean.listaEstados}"
+								var="estados1" itemLabel="#{estados1.descripcion}"
+								itemValue="#{estados1}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}" />
+						<p:calendar id="fSolicitudDesde" required="false" locale="mx_MX"
+							value="#{consultarLiberacionesCpsiBean.fechaSolDesde}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" global="false"
+								update="fSolicitudHasta"
+								listener="#{consultarLiberacionesCpsiBean.habilitarFechaSolicitudHasta}">
+							</p:ajax>
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}" />
+						<p:calendar id="fSolicitudHasta" required="false" locale="mx_MX"
+							value="#{consultarLiberacionesCpsiBean.fechaSolHasta}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}"
+							disabled="#{!consultarLiberacionesCpsiBean.fechaSolHastaHabilitado}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_liberacion']} #{msg.fechaDesde}" />
+						<p:calendar id="fLiberacionDesde" required="false" locale="mx_MX"
+							value="#{consultarLiberacionesCpsiBean.fechaLibDesde}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_liberacion']} #{msg.fechaDesde}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" global="false"
+								update="fLiberacionHasta"
+								listener="#{consultarLiberacionesCpsiBean.habilitarFechaLiberacionHasta}">
+							</p:ajax>
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_liberacion']} #{msg.fechaHasta}" />
+						<p:calendar id="fLiberacionHasta" required="false" locale="mx_MX"
+							value="#{consultarLiberacionesCpsiBean.fechaLibHasta}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_liberacion']} #{msg.fechaHasta}"
+							disabled="#{!consultarLiberacionesCpsiBean.fechaLibHastaHabilitado}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+					</h:panelGrid>
+				</p:fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarLiberacionesCpsiBean.realizarBusqueda}"
+						update=":MSG_ConsultarLiberacionesCPSI TBL_SolicitudesLiberacionCPSI"
+						style="height:30px; width:82px">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarLiberacionesCpsiBean.limpiarBusqueda}"
+						update="PNL_Busqueda TBL_SolicitudesLiberacionCPSI :MSG_ConsultarLiberacionesCPSI"
+						style="margin-right:20px; height:30px; width:82px" process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<p:fieldset legend="#{msg['liberacion.consulta']}">
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton value="#{msg['liberacion.nueva']}"
+								title="Editar" icon="ui-icon-pencil"
+								update=":MDL_LiberacionesCPSI"
+								action="#{solicitudLiberacionCpsiBean.nuevaSolicitud}"
+								oncomplete="PF('MDL_LiberacionesCPSI').show();">
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable 
+						id="TBL_SolicitudesLiberacionCPSI" widgetVar="tabla"
+						var="consultar"
+						value="#{consultarLiberacionesCpsiBean.solicitudesLiberacionModel}"
+						lazy="true" paginator="true" paginatorPosition="bottom"
+						rows="#{consultarLiberacionesCpsiBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column headerText="#{msg['consultar.Consecutivo']}">
+							<h:outputText value="#{consultar.consecutivo}" />
+						</p:column>
+
+						<p:column headerText="#{msg['liberacion.proveedor']}">
+							<h:outputText value="#{consultar.solicitante}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_solicitud']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.fechaSolicitud}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Numero_oficio']}">
+							<h:outputText value="#{consultar.numOficio}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_liberacion']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.fechaLiberacion}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Estatus']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.estatus}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Operaciones']}"
+							style="text-align:center;">
+							<p:commandButton title="#{msg['consultas.generales.detalle']}"
+								icon="ui-icon-pencil"
+								action="#{consultarLiberacionesCpsiBean.editarSolicitud}"
+								update=":MDL_LiberacionesCPSI"
+								oncomplete="PF('MDL_LiberacionesCPSI').show();">
+								<f:setPropertyActionListener value="#{consultar}"
+									target="#{consultarLiberacionesCpsiBean.solicitudSeleccionada}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+
+							<p:commandButton title="#{msg['consultas.generales.cancelar']}"
+								icon="ui-icon-circle-close"
+								disabled="#{!consultar.cancelarDisponible}"
+								onclick="PF('DLG_CancelarLibCPSI').show()" global="false">
+								<f:setPropertyActionListener value="#{consultar}"
+									target="#{consultarLiberacionesCpsiBean.solicitudSeleccionada}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:fieldset>
+			</h:form>
+
+			<p:dialog id="MDL_LiberacionesCPSI" 
+				widgetVar="MDL_LiberacionesCPSI"
+				modal="true" 
+				appendTo="@(body)"
+				header="#{msg['mainMenu.CPSI']}/#{msg['mainMenu.Liberacion']}"
+				closable="false" 
+				scrollable="true" 
+				resizable="true" 
+				width="80%"
+				height="500">
+				<ui:include src="/cpsi/liberacion/solicitud-liberacion-cpsi.xhtml">
+				</ui:include>
+				<p:commandButton id="BTN_Salir_Solicitud_Liberacion"
+					styleClass="customCloseModal" 
+					value="X" 
+					closable="false"
+					onclick="PF('DLG_SalirLibCPSI').show()" 
+					global="false">
+					<p:resetInput target="FORM_SolicitudLiberacionCPSI" />
+				</p:commandButton>
+			</p:dialog>
+			
+			<!-- Diálogo de confirmar salir liberaciones cpsi -->
+			<p:dialog id="DLG_SalirLibCPSI" 
+				widgetVar="DLG_SalirLibCPSI"
+				closeOnEscape="true" 
+				closable="false" 
+				modal="true" 
+				resizable="false"
+				header="Salir" 
+				appendTo="@(body)" 
+				width="250"
+				height="115">
+				<sns:exit-custom-dialog message="#{msg['cerrarDialogo.mensaje']}"
+					blockUIWidgetVar="salirLiberacionCPSI_BUI"
+					confirmActionListener="#{solicitudLiberacionCpsiBean.resetTabs}"
+					onCompleteExit="PF('DLG_SalirLibCPSI').hide(); PF('MDL_LiberacionesCPSI').hide();"
+					onCompleteCancel="PF('DLG_SalirLibCPSI').hide();"
+					updateComponentId=":FRM_ConsultarLiberacionesCPSI:TBL_SolicitudesLiberacionCPSI"
+					resetValues="true">
+				</sns:exit-custom-dialog>
+			</p:dialog>
+			
+			<!-- Diálogo de confirmar cancelar liberación cpsi -->
+			<p:dialog id="DLG_CancelarLibCPSI" 
+				widgetVar="DLG_CancelarLibCPSI"
+				global="false" 
+				closeOnEscape="true" 
+				closable="false"
+				header="#{msg['cancelar.registro']}" 
+				modal="true" 
+				resizable="false"
+				appendTo="@(body)" 
+				width="250"
+				height="50">
+				<sns:confirm-custom-dialog
+					message="#{msg['eliminar.registro.confirmar']}"
+					blockUIWidgetVar="ConfirmarCancelarLiberacionCPSI_BUI"
+					confirmActionListener="#{consultarLiberacionesCpsiBean.eliminarSolicitud}"
+					dialogWidgetVar="DLG_CancelarLibCPSI"
+					updateComponentId=":FRM_ConsultarLiberacionesCPSI:TBL_SolicitudesLiberacionCPSI :MSG_ConsultarLiberacionesCPSI">
+				</sns:confirm-custom-dialog>
+			</p:dialog>
+			
+			<p:ajaxStatus id="FRM_LiberacionesCPSI_AS"
+				onstart="PF('statusLiberacionCpsiDialog').show()"
+				onsuccess="PF('statusLiberacionCpsiDialog').hide()">
+			</p:ajaxStatus>
+			<p:dialog widgetVar="statusLiberacionCpsiDialog" 
+				modal="true"
+				draggable="false" 
+				closable="false" 
+				resizable="false"
+				showHeader="false">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:dialog>
+			<!-- <p:blockUI block="FRM_ConsultarLiberacionesCPSI"
+				widgetVar="FRM_ConsultarLiberacionesCPSI_BUI">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:blockUI> -->
+
+		</p:fieldset>
+	</ui:define>
+</ui:composition>
+</html>

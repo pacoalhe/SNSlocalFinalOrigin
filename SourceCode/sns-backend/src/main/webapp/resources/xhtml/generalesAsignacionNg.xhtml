@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<composite:interface>
+	<composite:attribute name="nameBean" required="true"></composite:attribute>
+</composite:interface>
+
+<composite:implementation>
+	<div id="#{cc.clientId}">
+
+			<p:messages id="MSG_Generales" showDetail="false" showSummary="true"
+				closable="true" showIcon="false" />
+			<h:panelGrid id="PNL_Solicitud" columns="8"
+				style="margin-bottom:20px" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="selproveedor"
+					value="#{msg['manual.generales.pst']}" />
+				<p:selectOneMenu id="selproveedor" autoWidth="false"
+					value="#{cc.attrs.nameBean.solicitud.proveedorSolicitante}"
+					converter="#{proveedorConverter}" required="true"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and (!cc.attrs.nameBean.solicitudIniciada))}"
+					style="width:190px">
+					<p:ajax event="change"
+						listener="#{cc.attrs.nameBean.seleccionProveedor}"
+						update="MSG_Generales PNL_Representantes informacionProveedor informacionRepresentante informacionSuplente panel_boton">
+					</p:ajax>
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+					<f:selectItems value="#{cc.attrs.nameBean.listaProveedores}"
+						var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+						itemValue="#{proveedorsel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+
+				<p:commandButton id="BTN_aniadir" icon="ui-icon-plus"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and (!cc.attrs.nameBean.solicitudIniciada))}">
+					<p:ajax event="click"
+						listener="#{gestionProveedorBean.limpiarDatos}"
+						oncomplete="PF('MDL_Proveedores').show();"
+						update=":FORM_GestionProveedor:PNL_GestionProveedor">
+					</p:ajax>
+				</p:commandButton>
+				<p:tooltip for="BTN_aniadir"
+					value="#{msg['manual.generales.pst.add']}" />
+
+				<p:outputLabel for="INP_Referencia"
+					value="#{msg['manual.generales.referencia']}" />
+				<p:inputText id="INP_Referencia" style="width:150px;"
+					value="#{cc.attrs.nameBean.solicitud.referencia}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}" required="true"
+					maxlength="60">
+					<p:ajax event="change" update="btnSalvar"
+						listener="#{cc.attrs.nameBean.habilitarSalvarBoton}"
+						global="false" />
+				</p:inputText>
+
+				<p:outputLabel value="#{msg['manual.generales.consecutivo']}" />
+				<p:inputText value="#{cc.attrs.nameBean.solicitud.id}"
+					disabled="true" />
+			</h:panelGrid>
+
+			<h:panelGrid id="PNL_Representantes" columns="4"
+				style="margin-bottom:20px" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="SEL_Representante"
+					value="#{msg['representante']}" />
+				<p:selectOneMenu id="SEL_Representante"
+					value="#{cc.attrs.nameBean.solicitud.representanteLegal}"
+					converter="#{representanteconverter}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}" style="width:144px;"
+					required="true">
+					<p:ajax event="change"
+						listener="#{cc.attrs.nameBean.seleccionRepresentante}"
+						global="false"
+						update="MSG_Generales informacionProveedor informacionRepresentante informacionSuplente">
+					</p:ajax>
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+					<f:selectItems value="#{cc.attrs.nameBean.listaRepresentantes}"
+						var="representantesel" itemLabel="#{representantesel.nombre}"
+						itemValue="#{representantesel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+
+				<p:outputLabel for="SEL_Suplente"
+					value="#{msg['manual.generales.representante.suplente']}" />
+				<p:selectOneMenu id="SEL_Suplente"
+					value="#{cc.attrs.nameBean.solicitud.representanteSuplente}"
+					converter="#{representanteconverter}" style="width:149px;"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<p:ajax event="change"
+						listener="#{cc.attrs.nameBean.seleccionSuplente}" global="false"
+						update="MSG_Generales informacionProveedor informacionRepresentante informacionSuplente">
+					</p:ajax>
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+					<f:selectItems value="#{cc.attrs.nameBean.listaSuplentes}"
+						var="representantesup" itemLabel="#{representantesup.nombre}"
+						itemValue="#{representantesup}">
+					</f:selectItems>
+				</p:selectOneMenu>
+			</h:panelGrid>
+
+			<h:panelGrid id="PNL_Fechas" columns="6" style="margin-bottom:20px"
+				cellpadding="3" cellspacing="3">
+				<p:outputLabel for="fsolicitud"
+					value="#{msg['manual.generales.fecha.solicitud']}" />
+				<p:calendar id="fsolicitud"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}" locale="mx_MX"
+					value="#{cc.attrs.nameBean.solicitud.fechaSolicitud}"
+					pattern="dd/MM/yyyy" mask="true" navigator="true"
+					yearRange="1995:c+10" required="true" style="width:140px;">
+					<p:ajax event="change" update="btnSalvar"
+						listener="#{cc.attrs.nameBean.habilitarSalvarBoton}"
+						global="false" />
+					<p:ajax event="dateSelect" update="btnSalvar"
+						listener="#{cc.attrs.nameBean.habilitarSalvarBoton}"
+						global="false" />
+				</p:calendar>
+
+				<p:outputLabel for="finiciopruebas"
+					value="#{msg['manual.generales.fecha.inicio.pruebas']}" />
+				<p:calendar id="finiciopruebas"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}" locale="mx_MX"
+					value="#{cc.attrs.nameBean.solicitud.fechaIniPruebas}"
+					pattern="dd/MM/yyyy" mask="true" navigator="true"
+					yearRange="1995:c+10" style="width:150px">
+					<p:ajax event="dateSelect" global="false" />
+				</p:calendar>
+
+				<p:outputLabel for="finicioutil"
+					value="#{msg['manual.generales.fecha.inicio.utilizacion']}" />
+				<p:calendar id="finicioutil"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}" locale="mx_MX"
+					value="#{cc.attrs.nameBean.solicitud.fechaIniUtilizacion}"
+					pattern="dd/MM/yyyy" mask="true" navigator="true"
+					yearRange="1995:c+10" style="width:150px">
+					<p:ajax event="dateSelect" global="false" />
+				</p:calendar>
+
+			</h:panelGrid>
+
+			<h:panelGrid id="PNL_Comentarios" columns="3"
+				style="margin-bottom:20px" cellpadding="5">
+				<p:outputLabel value="#{msg['manual.generales.comentarios']}" />
+				<p:inputTextarea id="observaciones"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					value="#{cc.attrs.nameBean.solicitud.comentarios}" rows="5"
+					cols="50" counter="mod_display1" maxlength="700"
+					counterTemplate="#{msg['manual.generales.comentarios.counter']}"
+					autoResize="false" style="resize: none">
+
+				</p:inputTextarea>
+				<p:outputLabel id="mod_display1" />
+			</h:panelGrid>
+
+			<sns:informacionProveedor id="informacionProveedor"
+				provider="#{cc.attrs.nameBean.solicitud.proveedorSolicitante}"
+				beanRef="#{cc.attrs.nameBean}"
+				collapseAs="#{cc.attrs.nameBean.expandirPST}"
+				formProvider=":FORM_GestionProveedor:PNL_GestionProveedor">
+			</sns:informacionProveedor>
+
+			<sns:informacionRepresentante id="informacionRepresentante"
+				representative="#{cc.attrs.nameBean.solicitud.representanteLegal}"
+				title="#{msg['manual.generales.representante.datos']}"
+				collapseAs="#{cc.attrs.nameBean.expandirRepresentante}"
+				beanRef="#{cc.attrs.nameBean}"
+				provider="#{cc.attrs.nameBean.solicitud.proveedorSolicitante}"
+				formProvider=":FORM_GestionProveedor:PNL_GestionProveedor">
+			</sns:informacionRepresentante>
+
+			<sns:informacionRepresentante id="informacionSuplente"
+				representative="#{cc.attrs.nameBean.solicitud.representanteSuplente}"
+				title="#{msg['manual.generales.suplente.datos']}"
+				collapseAs="#{cc.attrs.nameBean.expandirSuplente}"
+				beanRef="#{cc.attrs.nameBean}"
+				provider="#{cc.attrs.nameBean.solicitud.proveedorSolicitante}"
+				formProvider=":FORM_GestionProveedor:PNL_GestionProveedor">
+			</sns:informacionRepresentante>
+
+			<p:panel id="panel_boton" styleClass="botonera alaDcha">
+				<p:commandButton id="btnSalvar"
+					value="#{msg['manual.generales.btn.guardar']}" icon="ui-icon-disk"
+					actionListener="#{cc.attrs.nameBean.guardarCambios}"
+					disabled="#{!(cc.attrs.nameBean.salvarHabilitado and cc.attrs.nameBean.tabHabilitado)}"
+					update="PNL_Solicitud PNL_Representantes PNL_Fechas observaciones MSG_Generales"
+					style="height:30px;  width:96px ;margin-right:20px;">
+				</p:commandButton>
+			</p:panel>
+	</div>
+
+</composite:implementation>
+</html>

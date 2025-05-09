@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusMarcaModeloDialog').show();
+			}
+			function hideStatus() {
+				PF('statusMarcaModeloDialog').hide();
+			}
+		</script>
+
+		<p:messages id="MSG_MarcaModelo" showDetail="true" showSummary="false"
+			autoUpdate="false" closable="true" showIcon="false" />
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogos.title']}/#{msg['catalogos.marcas']}</legend>
+
+			<h:form id="FORM_MarcaModelo">
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.marcaModelo.busqueda']}</legend>
+
+					<h:panelGrid id="PNL_MarcaModelo" columns="8"
+						style="margin-bottom:20px;float:left" cellpadding="3"
+						cellspacing="3">
+						<p:outputLabel for="selMarca"
+							value="#{msg['catalogo.marcaModelo.marca']}" />
+						<p:selectOneMenu id="selMarca"
+							value="#{consultaMarcaModeloBean.marcaSeleccionada}"
+							style="width:190px">
+							<p:ajax event="change"
+								listener="#{consultaMarcaModeloBean.seleccionMarca()}"
+								update=":MSG_MarcaModelo selModelo">
+							</p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{consultaMarcaModeloBean.listaMarcas}"
+								var="marcasel" itemLabel="#{marcasel.nombre}"
+								itemValue="#{marcasel.id}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selModelo"
+							value="#{msg['catalogo.marcaModelo.modelo']}" />
+						<p:selectOneMenu id="selModelo"
+							value="#{consultaMarcaModeloBean.modeloSeleccionado}"
+							style="width:144px;">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{consultaMarcaModeloBean.listaModelos}"
+								var="modelosel" itemLabel="#{modelosel.tipoModelo}"
+								itemValue="#{modelosel.id}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultaMarcaModeloBean.realizarBusqueda}"
+						update=":MSG_MarcaModelo TBL_Modelos BTN_exportarMarcaModelo"
+						style="height:30px;  width:82px;">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultaMarcaModeloBean.resetPantalla}"
+						update="selMarca selModelo TBL_Modelos BTN_exportarMarcaModelo"
+						style="height:30px; width:82px; margin-right:20px;">
+						<p:resetInput target="PNL_MarcaModelo" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.marcas']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton value="Nueva Marca" id="marca"
+								update=":MDL_Marca" oncomplete="PF('MDL_Marca').show()">
+								<p:resetInput target=":MDL_Marca" />
+							</p:commandButton>
+
+							<p:commandButton id="BTN_exportarMarcaModelo"
+								value="#{msg.exportar}" ajax="false"
+								disabled="#{consultaMarcaModeloBean.emptySearch}"
+								onclick="PrimeFaces.monitorDownload(showStatus, hideStatus)">
+								<p:fileDownload value="#{consultaMarcaModeloBean.exportarDatos}" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_Modelos" widgetVar="TBL_Modelos"
+						var="marcaExp" value="#{consultaMarcaModeloBean.marcasModel}"
+						lazy="true" paginator="true" paginatorPosition="bottom"
+						rows="#{consultaMarcaModeloBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column style="width:16px">
+							<p:rowToggler />
+						</p:column>
+						<p:column headerText="#{msg['catalogo.marcamodelo.marca.codigo']}"
+							exportable="false" style="text-align:center;">
+							<h:outputText value="#{marcaExp.id}" />
+						</p:column>
+
+						<p:column
+							headerText="#{msg['catalogo.marcamodelo.marca.nombre']} ">
+							<h:outputText value="#{marcaExp.nombre}" />
+						</p:column>
+
+						<p:column
+							headerText="#{msg['catalogo.marcaModelo.modelo.estado']}"
+							style="text-align:center;">
+							<h:outputText value="#{marcaExp.estatus.descripcion}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Operaciones']}"
+							exportable="false" style="text-align:center;">
+							<p:commandButton title="#{msg['detalleEditar']}"
+								icon="ui-icon-pencil" update=":FORM_Marca :MSG_Marca"
+								action="#{consultaMarcaModeloBean.cargarMarca(marcaExp.id)}"
+								oncomplete="PF('MDL_Marca').show()">
+							</p:commandButton>
+						</p:column>
+
+						<p:rowExpansion style="margin-left:50%" id="TBL_Modelos_Exp"
+							widgetVar="TBL_Modelos_Exp">
+							<p:dataTable value="#{marcaExp.modelos}" var="modeloExp"
+								emptyMessage="#{msg['buscador.noresultados']}" style="width:77%">
+								<p:column headerText="" style="width:1%">
+									<h:outputText value="" />
+								</p:column>
+
+								<p:column
+									headerText="#{msg['catalogo.marcamodelo.modelo.nombre']}">
+									<h:outputText value="#{modeloExp.tipoModelo}" />
+								</p:column>
+
+								<p:column
+									headerText="#{msg['catalogo.marcamodelo.modelo.descripcion']}">
+									<h:outputText value="#{modeloExp.descripcion}" />
+								</p:column>
+
+								<p:column
+									headerText="#{msg['catalogo.marcaModelo.modelo.estado']}"
+									style="text-align:center;">
+									<h:outputText value="#{modeloExp.estatus.descripcion}" />
+								</p:column>
+							</p:dataTable>
+						</p:rowExpansion>
+
+					</p:dataTable>
+
+				</fieldset>
+			</h:form>
+
+			<p:dialog id="MDL_Marca" 
+				widgetVar="MDL_Marca" 
+				modal="true"
+				appendTo="@(body)" 
+				header="#{msg['catalogo.marcaModelo.marca']}"
+				scrollable="true" 
+				resizable="true" 
+				closable="false" 
+				width="80%"
+				height="500">
+				<p:commandButton id="BTN_Salir_Marca" styleClass="customCloseModal"
+					value="X" onclick="PF('DLG_Salir_Nueva_Marca').show()"
+					global="false">
+				</p:commandButton>
+
+				<ui:include src="/admin-catalogos/marcamodelo/marca.xhtml" />
+			</p:dialog>
+			<!-- Confirmación al salir nueva central-->
+			<p:dialog id="DLG_Salir_Nueva_Marca"
+				widgetVar="DLG_Salir_Nueva_Marca" 
+				modal="true" 
+				resizable="false"
+				closeOnEscape="true" 
+				closable="false" 
+				header="Salir"
+				appendTo="@(body)" 
+				width="250" 
+				height="115">
+				<sns:exit-custom-dialog message="#{msg['cerrarDialogo.mensaje']}"
+					blockUIWidgetVar="salirSerie_BUI"
+					confirmActionListener="#{consultaMarcaModeloBean.actualizaCampos}"
+					onCompleteExit="PF('DLG_Salir_Nueva_Marca').hide();PF('MDL_Marca').hide();"
+					onCompleteCancel="PF('DLG_Salir_Nueva_Marca').hide();"
+					updateComponentId=":FORM_MarcaModelo:TBL_Modelos :MDL_Marca"
+					resetValues="true">
+				</sns:exit-custom-dialog>
+
+			</p:dialog>
+		</fieldset>
+		<p:ajaxStatus id="triggerblockuiCentral"
+			onstart="PF('statusMarcaModeloDialog').show()"
+			onsuccess="PF('statusMarcaModeloDialog').hide()"></p:ajaxStatus>
+		<p:dialog widgetVar="statusMarcaModeloDialog" 
+			modal="true"
+			draggable="false" 
+			closable="false" 
+			resizable="false"
+			showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+		<!--  <p:blockUI block="FORM_MarcaModelo" widgetVar="bui" >
+	        <ui:include src="/componentes/loader.xhtml"/>
+	     </p:blockUI> -->
+
+	</ui:define>
+</ui:composition>
+</html>

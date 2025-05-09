@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+	</composite:interface>
+
+	<composite:implementation>			
+				<p:panel>
+					<p:dataTable 
+						id="TBL_EstudioCPSN" 
+						widgetVar="TBL_EstudioCPSN"		
+						var="estudio" 
+						value="#{cc.attrs.nameBean.listadoEstudio}"
+						paginator="false"
+						resizableColumns="false"
+						style="width:100%; margin-bottom:5px;"
+						scrollable="false"
+						emptyMessage="#{msg['buscador.noresultados']}"
+						rowStyleClass="#{estudio.id == '-1' ? 'negrita' : null}">
+							
+					    <p:column headerText="#{msg['cpsn.codigos.CPSN.estudio.tipoBloque']}" width="100" style="text-align:left;">
+					        <h:outputText value="#{estudio.descripcion}"/>
+					    </p:column>  
+					    
+					    <p:column width="50" headerText="#{msg['cpsn.codigos.CPSN.estudio.total']}" style="text-align:center;">
+					        <h:outputText value="#{estudio.total}"/>
+					    </p:column>
+					    
+					    <p:column width="50" headerText="#{msg['cpsn.codigos.CPSN.estudio.libres']}" style="text-align:center;">
+					        <h:outputText value="#{estudio.libres}"/>
+					    </p:column>
+					    
+						<p:column width="75" headerText="#{msg['cpsn.codigos.CPSN.estudio.reservados']}" style="text-align:center;">
+					        <h:outputText value="#{estudio.reservados}"/>
+					    </p:column>
+					    
+					    <p:column width="50" headerText="#{msg['cpsn.codigos.CPSN.estudio.asignados']}" style="text-align:center;">
+					        <h:outputText value="#{estudio.asignados}"/>
+					    </p:column>
+					    
+					    <p:column width="75" headerText="#{msg['cpsn.codigos.CPSN.estudio.planificados']}" style="text-align:center;">
+					        <h:outputText value="#{estudio.planificados}"/>
+					    </p:column>
+			
+					    <p:column width="50" headerText="#{msg['cpsn.codigos.CPSN.estudio.cuarentena']}" style="text-align:center;">
+					        <h:outputText value="#{estudio.cuarentena}"/>
+					    </p:column>
+					    
+					    <p:column width="75" headerText="#{msg['cpsn.codigos.CPSN.estudio.porcentaje']}" style="text-align:center;">
+					        <h:outputText value="#{estudio.porcentaje}"/>
+					    </p:column>  
+					    <f:facet name="footer">
+					    	<h:commandLink>
+						    	<p:commandButton style="text-align:center;" value="#{msg.exportar}"/>
+						    	<p:dataExporter type="xls" target="TBL_EstudioCPSN" fileName="estudioCPSN" pageOnly="false" />
+							</h:commandLink>
+						</f:facet>					    
+					</p:dataTable>
+				</p:panel>
+	</composite:implementation>
+</html>

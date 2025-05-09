@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<h:form id="FORM_cargaLineasActivas" enctype="multipart/form-data">
+	<p:wizard widgetVar="wiz_cargaLineasActivas" 
+	id="wizard_cargaLineasActivas" 
+	showNavBar="false" 
+	style="min-width: 600px">
+		<p:tab id="tab_cargaLineasActivas"
+			title="#{msg['lineasActivas.cargaLineas.tab']}">	
+				<p:messages id="MSG_CargaArchivo" showDetail="true" showSummary="true" closable="false" showIcon="false"/>
+				<h:panelGrid columns="1">
+					<h:panelGrid columns="2" style="float:left" cellpadding="3" cellspacing="3">
+						<h:outputLabel for="seltipo" value="#{msg['lineasActivas.tipoReporte']}" />
+						<p:selectOneMenu 
+							id="seltipo" 
+							value="#{cargaLineasActivasBean.tabCargaArchivo.tipoReporte}" 
+			 				converter="#{tipoReporteConverter}"> 
+							<f:selectItem itemLabel="Seleccionar"/>
+							<f:selectItems
+								value="#{cargaLineasActivasBean.tabCargaArchivo.listaTiposReporte}"
+								var="tipoReporte"
+								itemLabel="#{tipoReporte.descripcion}"
+								itemValue="#{tipoReporte}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					</h:panelGrid>
+					<h:panelGrid columns="3" style="float:left" cellpadding="3" cellspacing="3">
+						<h:outputLabel for="uploadedFile" value="#{msg['lineasActivas.ficheroCarga']}" />
+						<p:fileUpload id="uploadedFile" sizeLimit="#{cargaLineasActivasBean.maxTamFichero}" fileLimit="1" 
+							mode="advanced" allowTypes="/(\.|\/)(xlsx)$/"
+							value="#{cargaLineasActivasBean.tabCargaArchivo.uploadedFile}"
+							fileUploadListener="#{cargaLineasActivasBean.tabCargaArchivo.uploadAttachment}"
+							uploadLabel="#{msg['automatica.Subir']}"
+							cancelLabel="#{msg['automatica.Cancelar']}"
+							label="Examinar"
+							fileLimitMessage="#{msg['automatica.Limite']}"
+							invalidFileMessage="#{msg['automatica.Archivo.Invalido']}"
+							invalidSizeMessage="#{msg['automatica.Archivo.Tamaño']}"
+							update="MSG_CargaArchivo uploadedFile"
+							oncomplete="reset(xhr, status, args)">
+						</p:fileUpload>
+						<p:commandButton id="BTN_Procesar"
+							value="#{msg['automatica.Ejecutar']}"
+							actionListener="#{cargaLineasActivasBean.tabCargaArchivo.ejecutarProceso}"
+							update="MSG_ArchivoProcesado PNG_errores PNG_detalleReporte">
+						</p:commandButton>
+					 </h:panelGrid>
+					 
+					 <p:messages id="MSG_ArchivoProcesado" showDetail="true" showSummary="true" closable="false" showIcon="false"/>
+					 
+					 <h:panelGrid id="PNG_errores">
+						 <p:dataTable id="TBLGN_errores" rows="5"
+							styleClass="ui-datatable ui-widget"
+							value="#{cargaLineasActivasBean.tabCargaArchivo.procesaFichero.lErrores}"
+							var="error" paginator="true"
+							rendered="#{cargaLineasActivasBean.tabCargaArchivo.renderTablaErrores}">
+							<f:facet name="header">
+								<p:outputLabel value="#{msg['automatica.Errores']}"
+									style="background: none;"
+									styleClass="text-title-table ui-datatable-header ui-widget-header ui-corner-top" />
+								<h:commandLink onclick="PrimeFaces.monitorDownload(showStatusExt,hideStatusExt)">
+									<p:graphicImage style="background:#7ac142;"
+										value="/img/ico-excel.png" />
+									<p:dataExporter type="xls" target="TBLGN_errores"
+										fileName="lista_errores" pageOnly="false" />
+								</h:commandLink>
+							</f:facet>
+							<p:column headerText="#{msg['automatica.Tabla.Clasificacion']}"
+								style="text-align: left; text-align:center; width:20%">
+								<h:outputText value="#{error.codigo}" />
+							</p:column>
+							<p:column headerText="#{msg['automatica.Tabla.Descripcion']}"
+								style="text-align: left; width:80%">
+								<h:outputText value="#{error.descripcion}" />
+							</p:column>
+						</p:dataTable>
+					</h:panelGrid>
+						
+					<h:panelGrid id="PNG_detalleReporte" >
+						<p:fieldset legend="Avisos" rendered="#{cargaLineasActivasBean.tabCargaArchivo.renderAvisos}">
+							 <p:dataTable id="TBLGN_avisos" rows="5"
+								styleClass="ui-datatable ui-widget"
+								value="#{cargaLineasActivasBean.tabCargaArchivo.listaAvisos}"
+								var="aviso" paginator="true"
+								rendered="#{cargaLineasActivasBean.tabCargaArchivo.renderAvisos}">
+								<p:column headerText="Registro" style="text-align: left; width:20%">
+									<h:outputText value="#{aviso}"/>
+								</p:column>
+								<p:column headerText="Descripcion" style="text-align: left; width:80%">
+									<h:outputText value="El dato de total de números asignados del registro #{aviso} no corresponde."/>
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+						<p:fieldset legend="#{msg['lineasActivas.tabla.lineasActivas']}" rendered="#{cargaLineasActivasBean.tabCargaArchivo.renderLineasActivas}">
+							<p:dataTable id="TBL_lineasActivas" 
+								scrollable="true" scrollWidth="945" resizableColumns="true"
+								value="#{cargaLineasActivasBean.tabCargaArchivo.listaResumenLineasActivas}"
+								var="resumen" paginator="true" paginatorPosition="bottom" rows="10"
+								lazy="true">
+								<p:column headerText="#{msg['lineasActivas.tabla.nombrePst']}" width="250">
+									<h:outputText value="#{cargaLineasActivasBean.tabCargaArchivo.procesaFichero.reporte.solicitudLineasActivas.proveedorSolicitante.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.inegi']}" width="115" style="text-align:center;">
+									<h:outputText value="#{resumen.detLineaActiva.poblacion.inegi}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.estado']}" width="115">
+									<h:outputText value="#{resumen.detLineaActiva.poblacion.municipio.estado.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.municipio']}" width="115">
+									<h:outputText value="#{resumen.detLineaActiva.poblacion.municipio.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.poblacion']}" width="115">
+									<h:outputText value="#{resumen.detLineaActiva.poblacion.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadoFijo']}" width="115">
+									<h:outputText value="#{resumen.totalAsignadoFijo}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaFija']}" width="115">
+									<h:outputText value="#{resumen.detLineaActiva.totalLineasActivasFijas}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.utilizacionFija']}" width="115">
+									<h:outputText value="#{resumen.porcentajeUtilizacionFijo}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadosCpp']}" width="115">
+									<h:outputText value="#{resumen.totalAsignadoCpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaCpp']}" width="115">
+									<h:outputText value="#{resumen.detLineaActiva.totalLineasActivasCpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.utilizacionCpp']}" width="115">
+									<h:outputText value="#{resumen.porcentajeUtilizacionCpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadosMpp']}" width="115">
+									<h:outputText value="#{resumen.totalAsignadoMpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaMpp']}" width="115">
+									<h:outputText value="#{resumen.detLineaActiva.totalLineasActivasMpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.utilizacionMpp']}" width="115">
+									<h:outputText value="#{resumen.porcentajeUtilizacionMpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadosMovil']}" width="115">
+									<h:outputText value="#{resumen.totalAsignadoMovil}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaMovil']}" width="115">
+									<h:outputText value="#{resumen.detLineaActiva.totalLineasActivasCpp + resumen.detLineaActiva.totalLineasActivasMpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.utilizacionMovil']}" width="115">
+									<h:outputText value="#{resumen.porcentajeUtilizacionMovil}"/>
+								</p:column>
+								<f:facet name="footer">
+									<p:commandButton value="#{msg['lineasActivas.descarga']}" id="BTN_descargaLineaActiva" 
+										onclick="PrimeFaces.monitorDownload(showStatusExt,hideStatusExt)"
+										style="margin: 12px;" ajax="false">
+											<p:dataExporter type="xls" target="TBL_lineasActivas"
+												fileName="reporte_lineas_activas" pageOnly="false" />
+									</p:commandButton>
+								</f:facet>
+							</p:dataTable>
+
+						</p:fieldset>
+						
+						<p:fieldset legend="#{msg['lineasActivas.tabla.lineasActivasDet']}" rendered="#{cargaLineasActivasBean.tabCargaArchivo.renderLineasActivasDet}">
+							<p:dataTable id="TBL_lineasActivasDet"
+								scrollable="true" scrollWidth="945" resizableColumns="true"
+								value="#{cargaLineasActivasBean.tabCargaArchivo.listaResumenLineasActivas}"
+								var="resumen" paginator="true" paginatorPosition="bottom" rows="10"
+								lazy="true">
+								<p:column headerText="#{msg['lineasActivas.tabla.nombrePst']}" width="250">
+									<h:outputText value="#{resumen.detLineaActivaDet.lineasActivasDet.solicitudLineasActivas.proveedorSolicitante.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.inegi']}" width="115" style="text-align:center;">
+									<h:outputText value="#{resumen.detLineaActivaDet.poblacion.inegi}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.estado']}" width="115">
+									<h:outputText value="#{resumen.detLineaActivaDet.poblacion.municipio.estado.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.municipio']}" width="115">
+									<h:outputText value="#{resumen.detLineaActivaDet.poblacion.municipio.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.poblacion']}" width="115">
+									<h:outputText value="#{resumen.detLineaActivaDet.poblacion.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.abn']}" width="50" style="text-align:center;">
+									<h:outputText value="#{resumen.detLineaActivaDet.abn.codigoAbn}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadoFijo']}" width="115">
+									<h:outputText value="#{resumen.totalAsignadoFijo}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaFija']}" width="115">
+									<h:outputText value="#{resumen.detLineaActivaDet.totalNumServicioFijo 
+									+ resumen.detLineaActivaDet.totalNumCuarentenaFijo
+									+ resumen.detLineaActivaDet.totalNumPortadosFijo
+									+ resumen.detLineaActivaDet.totalNumUsoInternoFijo
+									+ resumen.detLineaActivaDet.totalNumTelPubFijo}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.utilizacionFija']}" width="115">
+									<h:outputText value="#{resumen.porcentajeUtilizacionFijo}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadosCpp']}" width="115">
+									<h:outputText value="#{resumen.totalAsignadoCpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaCpp']}" width="115">
+									<h:outputText value="#{resumen.detLineaActivaDet.totalNumServicioCpp 
+									+ resumen.detLineaActivaDet.totalNumCuarentenaCpp
+									+ resumen.detLineaActivaDet.totalNumPortadosCpp
+									+ resumen.detLineaActivaDet.totalNumUsoInternoCpp
+									+ resumen.detLineaActivaDet.totalNumTelPubCpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.utilizacionCpp']}" width="115">
+									<h:outputText value="#{resumen.porcentajeUtilizacionCpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadosMpp']}" width="115">
+									<h:outputText value="#{resumen.totalAsignadoMpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaMpp']}" width="115">
+									<h:outputText value="#{resumen.detLineaActivaDet.totalNumServicioMpp 
+									+ resumen.detLineaActivaDet.totalNumCuarentenaMpp
+									+ resumen.detLineaActivaDet.totalNumPortadosMpp
+									+ resumen.detLineaActivaDet.totalNumUsoInternoMpp
+									+ resumen.detLineaActivaDet.totalNumTelPubMpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.utilizacionMpp']}" width="115">
+									<h:outputText value="#{resumen.porcentajeUtilizacionMpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignadosMovil']}" width="115">
+									<h:outputText value="#{resumen.totalAsignadoMovil}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activaMovil']}" width="115">
+									<h:outputText value="#{resumen.detLineaActivaDet.totalNumServicioCpp 
+									+ resumen.detLineaActivaDet.totalNumCuarentenaCpp
+									+ resumen.detLineaActivaDet.totalNumPortadosCpp
+									+ resumen.detLineaActivaDet.totalNumUsoInternoCpp
+									+ resumen.detLineaActivaDet.totalNumTelPubCpp
+									+ resumen.detLineaActivaDet.totalNumServicioMpp 
+									+ resumen.detLineaActivaDet.totalNumCuarentenaMpp
+									+ resumen.detLineaActivaDet.totalNumPortadosMpp
+									+ resumen.detLineaActivaDet.totalNumUsoInternoMpp
+									+ resumen.detLineaActivaDet.totalNumTelPubMpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.utilizacionMovil']}" width="115">
+									<h:outputText value="#{resumen.porcentajeUtilizacionMovil}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.asignados']}" width="115">
+									<h:outputText value="#{resumen.totalAsignadoMovil + resumen.totalAsignadoFijo}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.activos']}" width="115">
+									<h:outputText value="#{resumen.detLineaActivaDet.totalNumServicioFijo 
+									+ resumen.detLineaActivaDet.totalNumCuarentenaFijo
+									+ resumen.detLineaActivaDet.totalNumPortadosFijo
+									+ resumen.detLineaActivaDet.totalNumUsoInternoFijo
+									+ resumen.detLineaActivaDet.totalNumTelPubFijo
+									+ resumen.detLineaActivaDet.totalNumServicioCpp 
+									+ resumen.detLineaActivaDet.totalNumCuarentenaCpp
+									+ resumen.detLineaActivaDet.totalNumPortadosCpp
+									+ resumen.detLineaActivaDet.totalNumUsoInternoCpp
+									+ resumen.detLineaActivaDet.totalNumTelPubCpp
+									+ resumen.detLineaActivaDet.totalNumServicioMpp 
+									+ resumen.detLineaActivaDet.totalNumCuarentenaMpp
+									+ resumen.detLineaActivaDet.totalNumPortadosMpp
+									+ resumen.detLineaActivaDet.totalNumUsoInternoMpp
+									+ resumen.detLineaActivaDet.totalNumTelPubMpp}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.utilizacionTotal']}" width="115">
+									<h:outputText value="#{resumen.porcentajeTotal}"/>
+								</p:column>
+								<f:facet name="footer">
+									<p:commandButton value="#{msg['lineasActivas.descarga']}" id="BTN_descargaLineaActivaDet" 
+										onclick="PrimeFaces.monitorDownload(showStatusExt,hideStatusExt)"
+										style="margin: 12px;" ajax="false">
+											<p:dataExporter type="xls" target="TBL_lineasActivasDet"
+												fileName="reporte_lineas_activas" pageOnly="false" />
+									</p:commandButton>
+								</f:facet>
+							</p:dataTable>
+
+						</p:fieldset>
+						<p:fieldset legend="#{msg['lineasActivas.tabla.lineasArrendatario']}" rendered="#{cargaLineasActivasBean.tabCargaArchivo.renderLineasArrendatario}">
+							<p:dataTable id="TBL_lineasArrendador"
+								scrollable="true" scrollWidth="945" resizableColumns="true"
+								value="#{cargaLineasActivasBean.tabCargaArchivo.listaResumenLineasActivas}"
+								var="resumen" paginator="true" paginatorPosition="bottom" rows="10"
+								lazy="true">
+								<p:column headerText="#{msg['ubicacion.inegi']}" width="115" style="text-align:center;">
+									<h:outputText value="#{resumen.detLineaArrendatario.poblacion.inegi}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.estado']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendatario.poblacion.municipio.estado.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.municipio']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendatario.poblacion.municipio.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.poblacion']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendatario.poblacion.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.abn']}" width="50" style="text-align:center;">
+									<h:outputText value="#{resumen.detLineaArrendatario.abn.codigoAbn}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.tipoRed']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendatario.tipoRed.descripcion}" rendered="#{resumen.detLineaArrendatario.tipoRed.cdg != 'M'}"/>
+									<h:outputText value="#{resumen.detLineaArrendatario.tipoRed.descripcion}-#{resumen.detLineaArrendatario.tipoModalidad.descripcion}" rendered="#{resumen.detLineaArrendatario.tipoRed.cdg == 'M'}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.totalRentada']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendatario.numFinal - resumen.detLineaArrendatario.numInicial + 1}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.totalActiva']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendatario.totalLineasActivas}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.utilizacion']}" width="115">
+									<h:outputText value="#{resumen.porcentajeTotal}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.arrendador']}" width="250">
+									<h:outputText value="#{resumen.detLineaArrendatario.arrendador.nombre}"/>
+								</p:column>
+								<f:facet name="footer">
+									<p:commandButton value="#{msg['lineasActivas.descarga']}" id="BTN_descargaLineaArrendatario"
+										onclick="PrimeFaces.monitorDownload(showStatusExt,hideStatusExt)" 
+										style="margin: 12px;" ajax="false">
+											<p:dataExporter type="xls" target="TBL_lineasArrendador	"
+												fileName="reporte_lineas_arrendatario" pageOnly="false" />
+									</p:commandButton>
+								</f:facet>
+							</p:dataTable>
+						</p:fieldset>
+						<p:fieldset legend="#{msg['lineasActivas.tabla.lineasArrendada']}" rendered="#{cargaLineasActivasBean.tabCargaArchivo.renderLineasArrendada}">
+							<p:dataTable id="TBL_lineasArrendada"
+								scrollable="true" scrollWidth="945" resizableColumns="true"
+								value="#{cargaLineasActivasBean.tabCargaArchivo.listaResumenLineasActivas}"
+								var="resumen" paginator="true" paginatorPosition="bottom" rows="10"
+								lazy="true">
+								<p:column headerText="#{msg['ubicacion.inegi']}" width="115" style="text-align:center;">
+									<h:outputText value="#{resumen.detLineaArrendada.poblacion.inegi}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.estado']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendada.poblacion.municipio.estado.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.municipio']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendada.poblacion.municipio.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.poblacion']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendada.poblacion.nombre}"/>
+								</p:column>
+								<p:column headerText="#{msg['ubicacion.abn']}" width="50" style="text-align:center;">
+									<h:outputText value="#{resumen.detLineaArrendada.abn.codigoAbn}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.tipoRed']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendada.tipoRed.descripcion}" rendered="#{resumen.detLineaArrendada.tipoRed.cdg != 'M'}"/>
+									<h:outputText value="#{resumen.detLineaArrendada.tipoRed.descripcion}-#{resumen.detLineaArrendada.tipoModalidad.descripcion}" rendered="#{resumen.detLineaArrendada.tipoRed.cdg == 'M'}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.totalRentada']}" width="115">
+									<h:outputText value="#{resumen.detLineaArrendada.numFinal - resumen.detLineaArrendada.numInicial + 1}"/>
+								</p:column>
+								<p:column headerText="#{msg['lineasActivas.tabla.arrendatario']}" width="250">
+									<h:outputText value="#{resumen.detLineaArrendada.arrendatario.nombre}"/>
+								</p:column>
+								<f:facet name="footer">
+									<p:commandButton value="#{msg['lineasActivas.descarga']}" id="BTN_descargaLineaArrendada" 
+										onclick="PrimeFaces.monitorDownload(showStatusExt,hideStatusExt)"
+										style="margin: 12px;" ajax="false">
+											<p:dataExporter type="xls" target="TBL_lineasArrendada"
+												fileName="reporte_lineas_arrendada" pageOnly="false" />
+									</p:commandButton>
+								</f:facet>
+							</p:dataTable>
+						</p:fieldset>
+						
+					</h:panelGrid>
+				</h:panelGrid>
+		</p:tab>
+	</p:wizard>
+	
+
+</h:form>
+
+		<!-- <p:ajaxStatus id="triggerblockuiliniasact" onstart="PF('bui_lineas_activas').show()" onsuccess="PF('bui_lineas_activas').hide()">
+    
+  		</p:ajaxStatus> -->
+		
+		<!-- <p:blockUI block="FORM_cargaLineasActivas" widgetVar="bui_lineas_activas" >
+			 	<ui:include src="/componentes/loader.xhtml"/>
+ 		</p:blockUI>
+ -->
+
+	<script type="text/javascript">
+		function reset(xhr, status, args){
+	        this.clearMessages();
+   			return this.init(this.cfg);	
+	    } 				
+	    function showStatusExt() {
+			PF('statusLineasActivasDialog').show();
+		}
+		function hideStatusExt() {
+			 PF('statusLineasActivasDialog').hide();
+		}
+   
+	</script>
+</html>

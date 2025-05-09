@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+<composite:interface>
+	<composite:attribute name="nameBean" required="true"></composite:attribute>
+</composite:interface>
+
+<composite:implementation>
+<div id="top"></div>
+	<div id="#{cc.clientId}">
+		<p:messages id="MSG_CesionDerechos" showDetail="false"
+			showSummary="true" autoUpdate="false" closable="true" escape="false"
+			showIcon="false" />
+		<h:panelGrid id="PNL_Cedente" columns="2" cellpadding="3"
+			cellspacing="3">
+			<h:panelGrid columns="3" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="SOM_Cedente"
+					value="#{msg['cesion.pst.cedente']}" />
+				<p:selectOneMenu id="SOM_Cedente" required="true" autoWidth="false"
+					value="#{cc.attrs.nameBean.solicitud.proveedorSolicitante}"
+					converter="#{proveedorConverter}" style="width:250px;"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<f:selectItem itemLabel="Seleccionar" />
+					<f:selectItems
+						value="#{cc.attrs.nameBean.listaProveedoresCedentes}"
+						var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+						itemValue="#{proveedorsel}" />
+					<p:ajax event="change"
+						listener="#{cc.attrs.nameBean.seleccionPstCedente}"
+						update="MSG_CesionDerechos PNL_InfoCedente PNL_InfoCedenteRepresentante PNL_InfoCedenteSuplente 
+								BTN_Salvar SOM_CedenteRepresentante SOM_CedenteOtros
+								PNL_InfoCesionario SOM_Cesionario SOM_CesionarioRepresentante SOM_CesionarioOtros" />
+				</p:selectOneMenu>
+
+				<p:commandButton id="BTN_AgregarCedente" icon="ui-icon-plus"
+					process="@this" disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<p:ajax event="click"
+						listener="#{gestionProveedorBean.limpiarDatos}"
+						oncomplete="PF('MDL_Proveedores').show();"
+						update=":FORM_GestionProveedor:PNL_GestionProveedor">
+					</p:ajax>
+				</p:commandButton>
+			</h:panelGrid>
+
+			<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="SOM_CedenteRepresentante"
+					value="#{msg['cesion.representante.legal']}" />
+				<p:selectOneMenu id="SOM_CedenteRepresentante" required="true" autoWidth="false"
+					value="#{cc.attrs.nameBean.solicitud.representanteLegal}"
+					converter="#{representanteconverter}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<f:selectItem itemLabel="Seleccionar" />
+					<f:selectItems
+						value="#{cc.attrs.nameBean.listaRepresentantesLegalesPstCedente}"
+						var="representantesel" itemLabel="#{representantesel.nombre}"
+						itemValue="#{representantesel}">
+					</f:selectItems>
+					<p:ajax event="change"
+						listener="#{cc.attrs.nameBean.seleccionRepLegalPstCedente}"
+						update="BTN_Salvar MSG_CesionDerechos PNL_InfoCedenteRepresentante">
+					</p:ajax>
+				</p:selectOneMenu>
+
+				<p:outputLabel for="SOM_CedenteOtros"
+					value="#{msg['cesion.otros.representantes']}" />
+				<p:selectOneMenu id="SOM_CedenteOtros" autoWidth="false"
+					value="#{cc.attrs.nameBean.solicitud.representanteSuplente}"
+					converter="#{representanteconverter}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<f:selectItem itemLabel="Seleccionar" />
+					<f:selectItems
+						value="#{cc.attrs.nameBean.listaRepresentantesSuplentesPstCedente}"
+						var="representantesel" itemLabel="#{representantesel.nombre}"
+						itemValue="#{representantesel}">
+					</f:selectItems>
+					<p:ajax event="change"
+						listener="#{cc.attrs.nameBean.seleccionRepSuplPstCedente}"
+						update="MSG_CesionDerechos PNL_InfoCedenteSuplente" />
+				</p:selectOneMenu>
+			</h:panelGrid>
+		</h:panelGrid>
+
+		<sns:informacionProveedor id="PNL_InfoCedente"
+			provider="#{cc.attrs.nameBean.solicitud.proveedorSolicitante}"
+			beanRef="#{cc.attrs.nameBean}"
+			collapseAs="#{cc.attrs.nameBean.expandirPstCedente}"
+			formProvider=":FORM_GestionProveedor:PNL_GestionProveedor">
+		</sns:informacionProveedor>
+
+		<sns:informacionRepresentante id="PNL_InfoCedenteRepresentante"
+			representative="#{cc.attrs.nameBean.solicitud.representanteLegal}"
+			title="#{msg['cesion.representante.legal']}"
+			collapseAs="#{cc.attrs.nameBean.expandirRepLegalPstCedente}"
+			beanRef="#{cc.attrs.nameBean}"
+			provider="#{cc.attrs.nameBean.solicitud.proveedorSolicitante}"
+			formProvider=":FORM_GestionProveedor:PNL_GestionProveedor">
+		</sns:informacionRepresentante>
+
+		<sns:informacionRepresentante id="PNL_InfoCedenteSuplente"
+			representative="#{cc.attrs.nameBean.solicitud.representanteSuplente}"
+			title="#{msg['cesion.otros.representantes']}"
+			collapseAs="#{cc.attrs.nameBean.expandirRepSuplPstCedente}"
+			beanRef="#{cc.attrs.nameBean}"
+			provider="#{cc.attrs.nameBean.solicitud.proveedorSolicitante}"
+			formProvider=":FORM_GestionProveedor:PNL_GestionProveedor">
+		</sns:informacionRepresentante>
+
+		<h:panelGrid id="PNL_Cesionario" columns="2" cellpadding="3"
+			cellspacing="3">
+			<h:panelGrid columns="3" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="SOM_Cesionario"
+					value="#{msg['cesion.pst.cesionario']}" />
+				<p:selectOneMenu id="SOM_Cesionario" required="true" autoWidth="false"
+					value="#{cc.attrs.nameBean.solicitud.proveedorCesionario}"
+					converter="#{proveedorConverter}" style="width:250px;"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<f:selectItem itemLabel="Seleccionar" />
+					<f:selectItems
+						value="#{cc.attrs.nameBean.listaProveedoresCesionarios}"
+						var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+						itemValue="#{proveedorsel}" />
+					<p:ajax event="change"
+						listener="#{cc.attrs.nameBean.seleccionPstCesionario}"
+						update="MSG_CesionDerechos PNL_InfoCesionario PNL_InfoCesionarioRepresentante PNL_InfoCesionarioSuplente 
+								BTN_Salvar SOM_CesionarioRepresentante SOM_CesionarioOtros" />
+				</p:selectOneMenu>
+
+				<p:commandButton id="BTN_AgregarCesionario" icon="ui-icon-plus"
+					process="@this" disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<p:ajax event="click"
+						listener="#{gestionProveedorBean.limpiarDatos}"
+						oncomplete="PF('MDL_Proveedores').show();"
+						update=":FORM_GestionProveedor:PNL_GestionProveedor">
+					</p:ajax>
+				</p:commandButton>
+			</h:panelGrid>
+
+			<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="SOM_CesionarioRepresentante"
+					value="#{msg['cesion.representante.legal']}" />
+				<p:selectOneMenu id="SOM_CesionarioRepresentante" required="true" autoWidth="false"
+					value="#{cc.attrs.nameBean.solicitud.representanteLegalCesionario}"
+					converter="#{representanteconverter}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<f:selectItem itemLabel="Seleccionar" />
+					<f:selectItems
+						value="#{cc.attrs.nameBean.listaRepresentantesLegalesPstCesionario}"
+						var="representantesel" itemLabel="#{representantesel.nombre}"
+						itemValue="#{representantesel}">
+					</f:selectItems>
+					<p:ajax event="change"
+						listener="#{cc.attrs.nameBean.seleccionRepLegalPstCesionario}"
+						update="BTN_Salvar MSG_CesionDerechos PNL_InfoCesionarioRepresentante">
+					</p:ajax>
+				</p:selectOneMenu>
+
+				<p:outputLabel for="SOM_CesionarioOtros"
+					value="#{msg['cesion.otros.representantes']}" />
+				<p:selectOneMenu id="SOM_CesionarioOtros" autoWidth="false"
+					value="#{cc.attrs.nameBean.solicitud.representanteSuplenteCesionario}"
+					converter="#{representanteconverter}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<f:selectItem itemLabel="Seleccionar" />
+					<f:selectItems
+						value="#{cc.attrs.nameBean.listaRepresentantesSuplentesPstCesionario}"
+						var="representantesel" itemLabel="#{representantesel.nombre}"
+						itemValue="#{representantesel}">
+					</f:selectItems>
+					<p:ajax event="change"
+						listener="#{cc.attrs.nameBean.seleccionRepSuplPstCesionario}"
+						update="MSG_CesionDerechos PNL_InfoCesionarioSuplente" />
+				</p:selectOneMenu>
+			</h:panelGrid>
+		</h:panelGrid>
+
+		<sns:informacionProveedor id="PNL_InfoCesionario"
+			provider="#{cc.attrs.nameBean.solicitud.proveedorCesionario}"
+			beanRef="#{cc.attrs.nameBean}"
+			collapseAs="#{cc.attrs.nameBean.expandirPstCesionario}"
+			formProvider=":FORM_GestionProveedor:PNL_GestionProveedor">
+		</sns:informacionProveedor>
+
+		<sns:informacionRepresentante id="PNL_InfoCesionarioRepresentante"
+			representative="#{cc.attrs.nameBean.solicitud.representanteLegalCesionario}"
+			title="#{msg['cesion.representante.legal']}"
+			collapseAs="#{cc.attrs.nameBean.expandirRepLegalPstCesionario}"
+			beanRef="#{cc.attrs.nameBean}"
+			provider="#{cc.attrs.nameBean.solicitud.proveedorCesionario}"
+			formProvider=":FORM_GestionProveedor:PNL_GestionProveedor">
+		</sns:informacionRepresentante>
+
+		<sns:informacionRepresentante id="PNL_InfoCesionarioSuplente"
+			representative="#{cc.attrs.nameBean.solicitud.representanteSuplenteCesionario}"
+			title="#{msg['cesion.otros.representantes']}"
+			collapseAs="#{cc.attrs.nameBean.expandirRepSuplPstCesionario}"
+			beanRef="#{cc.attrs.nameBean}"
+			provider="#{cc.attrs.nameBean.solicitud.proveedorCesionario}"
+			formProvider=":FORM_GestionProveedor:PNL_GestionProveedor">
+		</sns:informacionRepresentante>
+
+		<p:panel styleClass="botonera alaDcha">
+			<p:commandButton id="BTN_Salvar"
+				value="#{msg['manual.generales.btn.guardar']}" icon="ui-icon-disk"
+				actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+				disabled="#{!(cc.attrs.nameBean.salvarHabilitado and cc.attrs.nameBean.tabHabilitado)}"
+				update="MSG_CesionDerechos" style="height:30px;  width:96px">
+			</p:commandButton>
+		</p:panel>
+	</div>
+</composite:implementation>
+</html>

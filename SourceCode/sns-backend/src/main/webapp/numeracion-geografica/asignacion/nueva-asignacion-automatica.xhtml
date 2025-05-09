@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<script type="text/javascript">
+	function showStatus() {
+		PF('statusAsignacionNGDialog').show();
+	}
+	function hideStatus() {
+		PF('statusAsignacionNGDialog').hide();
+	}
+</script>
+
+<h:form id="FORM_asignacionAutomatica">
+	<p:wizard widgetVar="wiz_automatica" id="wizard_automatica"
+		flowListener="#{asignacionAutomaticaBean.siguientePaso}"
+		showNavBar="true" nextLabel="#{msg['manual.tab.siguiente']}"
+		backLabel="#{msg['manual.tab.anterior']}" style="min-width:1150px">
+
+		<p:tab id="tab_automatica_carga" title="Cargar Fichero">
+			<sns:cargaFichero
+				beanTabRef="#{asignacionAutomaticaBean.cargarFicheroTab}" />
+		</p:tab>
+
+		<p:tab id="tab_manual_general" title="#{msg['manual.tab.generales']}">
+			<sns:generalesAsignacionNg id="TAB_Generales_Asig_Auto"
+				nameBean="#{asignacionAutomaticaBean.tabGenerales}">
+			</sns:generalesAsignacionNg>
+		</p:tab>
+
+		<p:tab id="tab_manual_numeracion"
+			title="#{msg['manual.tab.numeracion.solicitada']}">
+			<sns:numeracion
+				nameBean="#{asignacionAutomaticaBean.numeracionAsignada}"
+				formAsignacion="FORM_asignacionAutomatica">
+			</sns:numeracion>
+		</p:tab>
+
+		<p:tab id="tab_manual_analisis" title="#{msg['manual.tab.analisis']}">
+			<sns:analisis id="cmp_analisis_auto"
+				nameBean="#{asignacionAutomaticaBean.analisis}"
+				update=":FORM_asignacionAutomatica:cmp_analisis_auto:pn_analisis"
+				idSugerencia="cmp_sugerencia_auto">
+			</sns:analisis>
+		</p:tab>
+
+		<p:tab id="tab_manual_asignacion"
+			title="#{msg['manual.tab.asignacion']}">
+			<sns:asignacion id="cmp_asignacion_auto"
+				nameBean="#{asignacionAutomaticaBean.asignacion}"
+				formAsignacion="FORM_asignacionAutomatica:cmp_asignacion_auto">
+			</sns:asignacion>
+		</p:tab>
+
+		<p:tab id="tab_oficios_automatica" title="#{msg.oficio}">
+			<sns:generarOficio id="TAB_AsignacionAuto" nameBean="#{asignacionAutomaticaBean.oficios}" />
+		</p:tab>
+
+	</p:wizard>
+</h:form>
+
+<!-- Dialog 'Sugerir Numeraciones' -->
+<p:dialog id="sugerirNumeracionesAuto" widgetVar="sugerirNumeraciones"
+	header="SUGERENCIAS" appendTo="@(body)" modal="true" resizable="false"
+	width="250">
+	<sns:sugerencia id="cmp_sugerencia_auto"
+		nameBean="#{asignacionAutomaticaBean.analisis}"
+		update=":FORM_asignacionAutomatica:cmp_analisis_auto:pn_analisis">
+	</sns:sugerencia>
+</p:dialog>
+
+
+</html>

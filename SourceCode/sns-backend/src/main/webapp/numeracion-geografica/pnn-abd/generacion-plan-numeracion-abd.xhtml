@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+	<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+		<ui:define name="centro">
+			<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionGeografica']}/#{msg['pnnABD.titulo']}</legend>
+				
+				<h:form id="FRM_PnnAbd">
+					<p:messages id="MSG_PnnABD" escape="false" showDetail="false" showSummary="true" autoUpdate="true" closable="true" showIcon="false" />
+					
+					<h:panelGrid id="PNL_Busqueda" columns="1" style="float:left; width:1200px" cellpadding="3" cellspacing="3">
+						<p:wizard 
+							id="WIZ_PnnAbd"
+							widgetVar="WIZ_PnnAbd"
+							flowListener="#{pnnABDBean.siguientePaso}"
+							showNavBar="true"
+							nextLabel="#{msg['manual.tab.siguiente']}"
+							backLabel="#{msg['manual.tab.anterior']}"
+							showStepStatus="true">
+							
+							<p:tab id="tab_cargar_ficheros" title="Cargar Ficheros">
+								<ui:include src="/numeracion-geografica/pnn-abd/cargar-ficheros.xhtml" />
+							</p:tab>
+
+							<p:tab id="tab_errores_formato" title="Errores de Formato">
+								<ui:include src="/numeracion-geografica/pnn-abd/errores-formato.xhtml" />
+							</p:tab>
+
+							<p:tab id="tab_errores_comparacion" title="Errores Comparación">
+								<ui:include src="/numeracion-geografica/pnn-abd/errores-comparacion.xhtml" />
+							</p:tab>
+	
+							<p:tab id="tab_errores_pnn" title="Errores PNN">
+								<ui:include src="/numeracion-geografica/pnn-abd/errores-pnn.xhtml" />
+							</p:tab>
+	
+							<p:tab id="tab_resumen" title="Resumen">
+								<ui:include src="/numeracion-geografica/pnn-abd/resumen.xhtml" />
+							</p:tab>
+					</p:wizard>
+				</h:panelGrid>
+			</h:form>
+		</fieldset>
+		
+		<p:ajaxStatus 
+			id="FRM_PnnAbd_AS" 
+			onstart="PF('statusPlanAbdDialog').show()"
+			onsuccess="PF('statusPlanAbdDialog').hide()" />
+				
+		<p:dialog 
+			widgetVar="statusPlanAbdDialog" 
+			modal="true" 
+			draggable="false" 
+			closable="false" 
+			resizable="false" 
+			showHeader="false">
+    		<ui:include src="/componentes/loader.xhtml"/>
+		</p:dialog>
+
+	</ui:define>
+</ui:composition>
+</html>

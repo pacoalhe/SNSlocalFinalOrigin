@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faces-config xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd"
+	version="2.2">
+	<application>
+
+
+		<!-- <message-bundle>mx.ift.sns.web.frontend.applicationMessages</message-bundle> 
+			<resource-bundle> <base-name>mx.ift.sns.web.frontend.applicationMessages</base-name> 
+			<var>msg</var> </resource-bundle> -->
+
+
+		<locale-config>
+			<default-locale>es</default-locale>
+			<supported-locale>es</supported-locale>
+		</locale-config>
+
+	</application>
+	<factory>
+		<exception-handler-factory>
+			mx.ift.sns.web.common.error.CustomExceptionHandlerFactory</exception-handler-factory>
+	</factory>
+
+	<!-- protected-views>
+		<url-pattern>/areas-geograficas-numeracion/areas-numeracion.xhtml</url-pattern>
+		<url-pattern>/errores/not-found.xhtml</url-pattern>
+		<url-pattern>/login.xhtml</url-pattern>
+		<url-pattern>/errores/login-error.xhtml</url-pattern>
+	</protected-views -->
+
+</faces-config>

@@ -1,0 +1,245 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+	<ui:composition>
+		<!-- Tabla de numeración solicitada seleccionable -->
+
+		<h:panelGrid 
+			id="PGD_detalleTablas" 
+			columns="6"
+			rendered="#{cc.attrs.nameBean.analizado eq true}"
+			style="vertical-align:top;">
+
+			<!-- Tabla Numeración disponibles en el PST  -->
+			<p:dataTable 
+				id="TBLGN_detallePST" 
+				var="numeracionDisp"
+				widgetVar="wid_detallePST"
+				value="#{cc.attrs.nameBean.lineasDisponiblesPSTList}"
+				selectionMode="single"
+				selection="#{cc.attrs.nameBean.selectNumDispoPST}"
+				emptyMessage="#{msg['buscador.noresultados']}"
+				rows="#{cc.attrs.nameBean.registroPorPagina}"
+            	paginator="true" 
+            	lazy="true"
+            	paginatorPosition="bottom">
+				
+				<f:facet name="header">#{msg['analisis.tabla.pst']}</f:facet>
+			
+				<p:ajax 
+					event="rowSelect"
+					listener="#{cc.attrs.nameBean.seriePstOnRowSelect}"
+					async="true" 
+					update="#{cc.attrs.update}">
+				</p:ajax>
+				
+				<p:column filterBy="#{numeracionDisp.idAbn}" headerText="#{msg['analisis.abn']}" style="text-align:center;" 
+					filterMaxLength="3">
+					<h:outputText value="#{numeracionDisp.serie.nir.abn.codigoAbn}" />
+				</p:column> 
+				<p:column filterBy="#{numeracionDisp.cdgNir}" sortBy="#{numeracionDisp.serie.nir.codigo}" headerText="NIR" style="text-align:center;"
+				    filterMaxLength="3">
+					<h:outputText value="#{numeracionDisp.serie.nir.codigo}" />
+				</p:column>
+				<p:column filterBy="#{numeracionDisp.idSna}" headerText="SNA" style="text-align:center;"
+				    filterMaxLength="5">
+					<h:outputText value="#{numeracionDisp.serie.snaAsString}" />
+				</p:column>
+				<p:column filterBy="#{numeracionDisp.ocupacion}" headerText="Ocupación" 
+				    filterMaxLength="5">
+					<h:outputText value="#{numeracionDisp.ocupacion}" />
+				</p:column>
+				<p:column filterBy="#{numeracionDisp.disponible}" headerText="Disponible"
+				    filterMaxLength="5">
+					<h:outputText value="#{numeracionDisp.disponible}" />
+				</p:column>
+			</p:dataTable>
+
+			<!-- Tabla Numeración disponibles en otros PST’s  -->
+			<p:dataTable 
+				id="TBLGN_detalleNoPST" 
+				var="numeracionDispNoPST"
+				widgetVar="wid_detalleNoPST"
+				value="#{cc.attrs.nameBean.lineasDisponiblesNoPSTList}"
+				selectionMode="single"
+				selection="#{cc.attrs.nameBean.selectNumDispoNoPST}"
+				emptyMessage="#{msg['buscador.noresultados']}"	
+				rows="#{cc.attrs.nameBean.registroPorPagina}" 
+				lazy="true"
+            	paginator="true"
+            	paginatorPosition="bottom">
+			
+				<f:facet name="header">#{msg['analisis.tabla.otrospst']}</f:facet>
+			
+				<p:ajax 
+					event="rowSelect"
+					listener="#{cc.attrs.nameBean.serieOtroPstOnRowSelect}"
+					async="true" 
+					update="#{cc.attrs.update}">
+				</p:ajax>
+				<p:column filterBy="#{numeracionDispNoPST.idAbn}" headerText="#{msg['analisis.abn']}" style="text-align:center;"
+				    filterMaxLength="3">
+					<h:outputText value="#{numeracionDispNoPST.serie.nir.abn.codigoAbn}" />
+				</p:column>
+				<p:column filterBy="#{numeracionDispNoPST.cdgNir}" sortBy="#{numeracionDispNoPST.serie.nir.codigo}" 
+						headerText="NIR" style="text-align:center;" filterMaxLength="3">
+					<h:outputText value="#{numeracionDispNoPST.serie.nir.codigo}" />
+				</p:column>
+				<p:column filterBy="#{numeracionDispNoPST.idSna}"  headerText="SNA"
+				    filterMaxLength="5">
+					<h:outputText value="#{numeracionDispNoPST.serie.snaAsString}" />
+				</p:column>
+				<p:column filterBy="#{numeracionDispNoPST.ocupacion}" headerText="Ocupación"
+				    filterMaxLength="5">
+					<h:outputText value="#{numeracionDispNoPST.ocupacion}" />
+				</p:column>
+				<p:column filterBy="#{numeracionDispNoPST.disponible}" headerText="Disponible"
+				    filterMaxLength="5">
+					<h:outputText value="#{numeracionDispNoPST.disponible}" />
+				</p:column>
+			</p:dataTable>
+
+			<!-- Tabla Numeración disponible por serie -->
+			<p:dataTable 
+				id="TBLGN_detalleSeries" 
+				var="numeracionDispSerie"
+				widgetVar="wid_detalleSeries"
+				value="#{cc.attrs.nameBean.lineasDisponiblesSeriesList}"
+				rowSelectMode="checkbox" 
+				selection="#{cc.attrs.nameBean.selectSerieLibre.seleccionTabla}"
+				emptyMessage="#{msg['buscador.noresultados']}"
+				lazy="true"
+				rows="#{cc.attrs.nameBean.registroPorPagina}"
+            	paginator="true"
+            	paginatorPosition="bottom">
+			
+				<f:facet name="header">#{msg['analisis.tabla.series']}</f:facet>
+				<p:ajax 
+					event="toggleSelect" 
+					listener="#{cc.attrs.nameBean.seleccionPaginaSerieLibre}" 
+					update="#{cc.attrs.update}">
+				</p:ajax>
+			
+				<p:ajax 
+					event="rowSelectCheckbox" 
+					listener="#{cc.attrs.nameBean.seleccionSerieLibre}" 
+					update="#{cc.attrs.update}">
+				</p:ajax>
+			
+	       		<p:ajax 
+	       			event="rowUnselectCheckbox" 
+					listener="#{cc.attrs.nameBean.deSeleccionSerieLibre}"
+					update="#{cc.attrs.update}">
+				</p:ajax>
+			
+				<p:column
+					selectionMode="multiple"
+			    	headerText=""
+			    	width="15" 
+			    	style="font-size:12px;">
+			    </p:column>
+		    
+				<p:column filterBy="#{numeracionDispSerie.idAbn}" headerText="#{msg['analisis.abn']}"
+				    filterMaxLength="3">
+					<h:outputText value="#{numeracionDispSerie.serie.nir.abn.codigoAbn}" />
+				</p:column>
+				<p:column filterBy="#{numeracionDispSerie.cdgNir}" sortBy="#{numeracionDispSerie.cdgNir}" headerText="NIR"
+				    filterMaxLength="3">
+					<h:outputText value="#{numeracionDispSerie.serie.nir.codigo}" />
+				</p:column>
+				<p:column filterBy="#{numeracionDispSerie.idSna}" headerText="SNA" 
+				    filterMaxLength="5">
+					<h:outputText value="#{numeracionDispSerie.serie.snaAsString}" />
+				</p:column>
+				<p:column filterBy="#{numeracionDispSerie.ocupacion}" headerText="Ocupación" 
+				    filterMaxLength="5">
+					<h:outputText value="#{numeracionDispSerie.ocupacion}"/>
+				</p:column>
+				<p:column filterBy="#{numeracionDispSerie.disponible}" headerText="Disponible"
+				    filterMaxLength="5">
+					<h:outputText value="#{numeracionDispSerie.disponible}" />
+				</p:column>
+			</p:dataTable>
+
+		</h:panelGrid>
+	
+		<h:panelGrid 
+			id="PGD_porcentaje" 
+			columns="6" 
+			style="margin-top:20px" 
+			cellpadding="3"	
+			cellspacing="3"
+			rendered="#{cc.attrs.nameBean.analizado eq true}">
+	
+			<p:outputLabel value="Series con asignación: " />
+			<h:outputText value="#{cc.attrs.nameBean.cantSeriesAsignadaAbn}"/>
+			
+			<p:outputLabel value="Total de series en la ABN: " />
+			<h:outputText value="#{cc.attrs.nameBean.totalSeriesAbn}"/>
+			
+			<p:outputLabel value="% de ocupación de series: " />
+			<h:outputText value="#{cc.attrs.nameBean.porcentajeOcupacionSerie} %"/>
+			
+			<p:outputLabel value="Numeración asignada en la ABN: " />
+			<h:outputText value="#{cc.attrs.nameBean.cantNumeracionAsignadaAbn}"/>
+			
+			<p:outputLabel value="Total de numeración sobre la ABN:  " />
+			<h:outputText value="#{cc.attrs.nameBean.totalNumeracionAbn}"/>
+			
+			<p:outputLabel value="% de ocupación de la numeración: " />
+			<h:outputText value="#{cc.attrs.nameBean.porcentajeOcupacionNumeracion} %"/>
+		</h:panelGrid>
+	
+		<h:panelGrid 
+			id="PGP_detalleSeleccionado" 
+			style="vertical-align:top;margin-top:20px">
+			
+			<!-- Tabla Serie ocupada seleccionada  -->
+			<p:dataTable 
+				id="TBLGN_detalleSeleccionado"
+				var="serieSeleccionada"
+				value="#{cc.attrs.nameBean.numeracionAsignadaSerieList}"
+				rows="#{cc.attrs.nameBean.registroPorPagina}"
+            	paginator="true" 
+				rendered="#{cc.attrs.nameBean.renderSerieOcupada}">
+			
+				<f:facet name="header">Numeración asignada en la serie</f:facet>
+
+				<p:column headerText="#{msg['analisis.abn']}">
+					<h:outputText value="#{serieSeleccionada.serie.nir.abn.codigoAbn}" />
+				</p:column>
+				<p:column headerText="NIR">
+					<h:outputText value="#{serieSeleccionada.serie.nir.codigo}" />
+				</p:column>
+				<p:column headerText="SNA">
+					<h:outputText value="#{serieSeleccionada.serie.snaAsString}" />
+				</p:column>
+				<p:column headerText="Numero inicial">
+					<h:outputText value="#{serieSeleccionada.numInicio}" />
+				</p:column>
+				<p:column headerText="Numero Final">
+					<h:outputText value="#{serieSeleccionada.numFinal}" />
+				</p:column>
+				<p:column headerText="Tipo de Servicio ">
+					<h:outputText value="#{serieSeleccionada.tipoRed.descripcion}" rendered="#{serieSeleccionada.tipoRed.cdg != 'M'}"/>
+					<h:outputText value="#{serieSeleccionada.tipoRed.descripcion}-#{serieSeleccionada.tipoModalidad.cdg}" rendered="#{serieSeleccionada.tipoRed.cdg == 'M'}"/>
+				</p:column>
+				<p:column headerText="PST Asignatario">
+					<h:outputText value="#{serieSeleccionada.asignatario.nombre}" />
+				</p:column>
+				<p:column headerText="Estado">
+					<h:outputText value="#{serieSeleccionada.poblacion.municipio.estado.nombre}" />
+				</p:column>
+				<p:column headerText="Municipio">
+					<h:outputText value="#{serieSeleccionada.poblacion.municipio.nombre}" />
+				</p:column>
+				<p:column headerText="Población">
+					<h:outputText value="#{serieSeleccionada.poblacion.nombre}" />
+				</p:column>
+			</p:dataTable>
+		</h:panelGrid>	
+	</ui:composition>
+</html>

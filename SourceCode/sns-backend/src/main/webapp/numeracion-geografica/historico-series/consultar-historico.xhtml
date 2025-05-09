@@ -1,0 +1,298 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<script type="text/javascript">
+				function showStatus() {
+					PF('statusHistoricoDialog').show();
+				}
+				function hideStatus() {
+					PF('statusHistoricoDialog').hide();
+				}
+			</script>
+
+
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionGeografica']}/#{msg['historico']}</legend>
+
+			<p:messages id="MSG_Historico" showDetail="false" autoUpdate="false"
+				closable="true" showIcon="false" />
+
+			<h:form id="FRM_Historico">
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.series.buscador']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda" columns="10" style="float:left"
+						cellpadding="3" cellspacing="3">
+						<h:outputLabel value="#{msg['general.consulta.abn']}" />
+						<p:inputText size="3" id="TXT_Abn" required="false" minValue="1"
+							maxlength="3" value="#{historicoBean.abn}">
+							<f:validator validatorId="AbnValidator" />
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['general.consulta.nir']}" />
+						<p:inputText id="TXT_Nir" required="false" minValue="1"
+							maxlength="3" size="3" value="#{historicoBean.nir}">
+							<f:validator validatorId="NirValidator" />
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['general.consulta.serie']}" />
+						<p:inputText id="TXT_Serie" required="false" minValue="1"
+							maxlength="4" value="#{historicoBean.serie}" size="4">
+							<f:validator validatorId="SerieValidator" />
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['general.consulta.numInicial']}" />
+						<p:inputText id="TXT_NumInicial" required="false" minValue="1"
+							maxlength="4" value="#{historicoBean.numIni}"
+							label="#{msg['general.consulta.numInicial']}" size="4">
+							<f:validator validatorId="NumeroInternoValidator" />
+						</p:inputText>
+
+						<h:outputLabel value="#{msg['general.consulta.numFinal']}" />
+						<p:inputText id="TXT_NumFinal" required="false" minValue="1"
+							maxlength="4" value="#{historicoBean.numFin}"
+							label="#{msg['general.consulta.numFinal']}" size="4">
+							<f:validator validatorId="NumeroInternoValidator" />
+						</p:inputText>
+
+						<h:outputLabel for="SEL_Tipo_Red"
+							value="#{msg['general.consulta.tipoRed']}" />
+						<p:selectOneMenu id="SEL_Tipo_Red"
+							value="#{historicoBean.tipoRed}" converter="#{tipoRedConverter}">
+							<p:ajax event="valueChange"
+								listener="#{historicoBean.habilitarModalidad}"
+								update="TXT_Modalidad" />
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems value="#{historicoBean.tiposRed}" var="tipoRedSel"
+								itemLabel="#{tipoRedSel.descripcion}" itemValue="#{tipoRedSel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel for="TXT_Modalidad"
+							value="#{msg['general.consulta.modalidad']}" />
+						<p:selectOneMenu id="TXT_Modalidad"
+							value="#{historicoBean.tipoModalidad}"
+							converter="#{tipoModalidadConverter}"
+							disabled="#{historicoBean.modalidadDisabled}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems value="#{historicoBean.tiposModalidad}"
+								var="modalidadSel" itemLabel="#{modalidadSel.descripcion}"
+								itemValue="#{modalidadSel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['general.consulta.fecInicial']}" />
+						<p:calendar id="fAsignacionDesde" required="false" locale="mx_MX"
+							value="#{historicoBean.fechaDesdeAsignacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['general.consulta.fecInicial']}" navigator="true"
+							size="9" yearRange="1995:c+10">
+						</p:calendar>
+
+						<h:outputLabel value="#{msg['general.consulta.fecFinal']}" />
+						<p:calendar id="fAsignacionHasta" required="false" locale="mx_MX"
+							value="#{historicoBean.fechaHastaAsignacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['general.consulta.fecFinal']}" navigator="true"
+							yearRange="1995:c+10" size="9">
+						</p:calendar>
+
+						<p:outputLabel for="SEL_Estado"
+							value="#{msg['general.consulta.estado']}" />
+						<p:selectOneMenu id="SEL_Estado" value="#{historicoBean.estado}"
+							label="#{msg['general.consulta.estado']}"
+							converter="#{estadoConverter}">
+							<p:ajax event="valueChange"
+								listener="#{historicoBean.habilitarMunicipio}"
+								update="SEL_Municipio SEL_Poblacion" />
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{historicoBean.estados}" var="estados"
+								itemLabel="#{estados.nombre}" itemValue="#{estados}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="SEL_Municipio"
+							value="#{msg['general.consulta.municipio']}" />
+						<p:selectOneMenu id="SEL_Municipio"
+							disabled="#{historicoBean.municipiosDisabled}"
+							value="#{historicoBean.municipio}"
+							label="#{msg['general.consulta.municipio']}"
+							converter="#{municipioConverter}">
+							<p:ajax event="valueChange" update="SEL_Poblacion"
+								listener="#{historicoBean.habilitarPoblacion}" />
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{historicoBean.municipios}"
+								var="municipios" itemLabel="#{municipios.nombre}"
+								itemValue="#{municipios}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="SEL_Poblacion"
+							value="#{msg['general.consulta.poblacion']}" />
+						<p:selectOneMenu id="SEL_Poblacion"
+							disabled="#{historicoBean.poblacionesDisabled}"
+							value="#{historicoBean.poblacion}"
+							label="#{msg['general.consulta.municipio']}"
+							converter="#{poblacionConverter}">
+							<p:ajax event="valueChange" />
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{historicoBean.poblaciones}"
+								var="poblaciones" itemLabel="#{poblaciones.nombre}"
+								itemValue="#{poblaciones}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						actionListener="#{historicoBean.buscar}"
+						update=":MSG_Historico TBL_HistoricoSeries BTN_exportarHistorico"
+						style="height:30px; width:82px" ajax="true">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{historicoBean.limpiar}"
+						style="margin-right:20px; height:30px; width:82px"
+						update=":MSG_Historico PNL_Busqueda TBL_HistoricoSeries BTN_exportarHistorico"
+						process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogos.series']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton value="#{msg.exportar}"
+								id="BTN_exportarHistorico"
+								disabled="#{historicoBean.emptySearch}" ajax="false"
+								onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+								<p:fileDownload value="#{historicoBean.ficheroHistoricoSeries}" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_HistoricoSeries" var="consultar"
+						value="#{historicoBean.model}" lazy="true" paginator="true"
+						paginatorPosition="bottom"
+						rows="#{historicoBean.registroPorPagina}" resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column headerText="#{msg['general.consulta.consecutivo']}">
+							<h:outputText value="#{consultar.consecutivo}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.tipoSolicitud']}">
+							<h:outputText value="#{consultar.tiposolicitud}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.nOficio']}">
+							<h:outputText value="#{consultar.numOficio}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.pst']}">
+							<h:outputText value="#{consultar.nombrePst}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.ido']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.ido}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.ida']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.ida}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.fecAsignacion']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.fechaAsignacion}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.abn']}" size="3"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.idAbn}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.nir']}" size="3"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.cdgNir}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.serie']}" size="4"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.idSerieAsString}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.nInicial']}"
+							size="4" style="text-align:center;">
+							<h:outputText value="#{consultar.inicioRango}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.nFinal']}" size="4"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.finRango}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.tipoRed']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.idTipoRed}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.modalidad']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.idTipoModalidad}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.estado']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.estado}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.municipio']}">
+							<h:outputText value="#{consultar.municipio}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.poblacion']}">
+							<h:outputText value="#{consultar.poblacion}" />
+						</p:column>
+
+						<p:column headerText="#{msg['general.consulta.claveCensal']}"
+							style="text-align:center;">
+							<h:outputText value="#{consultar.inegi}" />
+						</p:column>
+
+					</p:dataTable>
+				</fieldset>
+			</h:form>
+		</fieldset>
+
+		<p:ajaxStatus id="temporizador_historico_BUI"
+			onstart="PF('statusHistoricoDialog').show()"
+			onsuccess="PF('statusHistoricoDialog').hide()" />
+		<p:dialog widgetVar="statusHistoricoDialog" modal="true"
+			draggable="false" closable="false" resizable="false"
+			showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+		<!-- <p:blockUI block="FRM_Historico" widgetVar="hist_bui">
+			 	<ui:include src="/componentes/loader.xhtml"/>
+ 			</p:blockUI>	 -->
+	</ui:define>
+</ui:composition>
+</html>

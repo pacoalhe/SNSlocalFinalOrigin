@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+
+<composite:interface>
+	<composite:attribute name="beanTabRef" required="true"></composite:attribute>
+</composite:interface>
+
+<composite:implementation>
+	<!-- Mensajes de error -->
+	<p:messages id="MSG_CargaFichero" showDetail="true" autoUpdate="false" closable="true" showIcon="false"/>
+	<p:fieldset styleClass="grupoCampos">
+		<h:panelGroup style="margin: 35px auto; display:block; text-align:center;">
+			<p:fileUpload 
+				id="uploadedFile" 
+				sizeLimit="#{cc.attrs.beanTabRef.maxTamFichero}" fileLimit="1"
+				mode="advanced" allowTypes="/(\.|\/)(xlsx|csv)$/"
+				fileUploadListener="#{cc.attrs.beanTabRef.uploadAttachment}"
+				uploadLabel="#{msg['automatica.Subir']}"
+				cancelLabel="#{msg['automatica.Cancelar']}"
+				label="#{msg['automatica.Elegir']}"
+				fileLimitMessage="#{msg['automatica.Limite']}"
+				invalidFileMessage="#{msg['automatica.Archivo.Invalido']}"
+				invalidSizeMessage="#{msg['automatica.Archivo.Tamaño']}"
+				update="MSG_CargaFichero BTN_EjecutarProceso uploadedFile" 
+				style="height:30px;font-size:1em"
+				oncomplete="reset(xhr, status, args)">
+			</p:fileUpload>
+		</h:panelGroup>
+	</p:fieldset>
+
+	<h:panelGroup columns="2" style="display:block; text-align:right;">
+		<p:commandButton id="BTN_EjecutarProceso"
+			value="#{msg['automatica.Ejecutar']}"
+			actionListener="#{cc.attrs.beanTabRef.ejecutarProceso}"
+			update="TBLGN_errores MSG_CargaFichero BTN_AnadirCentral"
+			disabled="#{!cc.attrs.beanTabRef.procesarHabilitado}">
+		</p:commandButton>
+	</h:panelGroup>
+	
+	<p:dataTable 
+		id="TBLGN_errores" 
+		rows="5"
+		styleClass="ui-datatable ui-widget"
+		value="#{cc.attrs.beanTabRef.listaErrores}"
+		var="error" paginator="true" paginatorPosition="bottom">
+		<f:facet name="header">
+			<p:outputLabel value="#{msg['automatica.Errores']}"
+				style="background: none;"
+				styleClass="text-title-table ui-datatable-header ui-widget-header ui-corner-top" />
+			<h:commandLink>
+				<p:graphicImage style="background:#7ac142;"
+					value="/img/excel.png" width="16" height="16"/>
+				<p:dataExporter type="xls" target="TBLGN_errores"
+					fileName="lista_errores" pageOnly="false" />
+			</h:commandLink>
+		</f:facet>
+		<p:column headerText="#{msg['automatica.Tabla.Registro']}"
+			style="text-align: left; width:33%;">
+			<h:outputText value="#{error.numRegistro}" />
+		</p:column>
+		<p:column headerText="#{msg['automatica.Tabla.Descripcion']}"
+			style="text-align: left; width:44%">
+			<h:outputText value="#{error.descripcion}" />
+		</p:column>
+		<p:column headerText="#{msg['automatica.Tabla.Clasificacion']}"
+			style="text-align: left; width:23%">
+			<h:outputText value="#{error.codigo}" />
+		</p:column>
+	</p:dataTable>
+	
+	<p:commandButton
+		id="BTN_AnadirCentral"
+		style="width:120px;" 
+		value="#{msg['automatica.Anadir']}" 
+		actionListener="#{cc.attrs.beanTabRef.anadirCentral}" 
+		disabled="#{!cc.attrs.beanTabRef.anadirCentral}"
+		update="BTN_AnadirCentral TBLGN_errores MSG_CargaFichero">
+	</p:commandButton>
+	
+	<script type="text/javascript">
+		function reset(xhr, status, args){
+		        this.clearMessages();
+    			return this.init(this.cfg);	
+		    }    
+	</script>
+</composite:implementation>
+</html>

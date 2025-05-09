@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<p:messages id="MSG_Marca" showDetail="false" showSummary="true"
+	autoUpdate="false" closable="true" showIcon="false" />
+<h:form id="FORM_Marca">
+	<p:panel id="PNL_marcaContainer" style="background:transparent">
+		<p:wizard widgetVar="wizard_marca" id="wizard_marca"
+			showNavBar="false"
+			style="min-width:900px">
+			<p:tab id="tab_nueva_marca"
+				title="#{msg['catalogo.marcaModelo.generales']}">
+
+				<h:panelGrid columns="6" cellpadding="3" cellspacing="3"
+					style="margin: 0 auto;">
+					<p:outputLabel value="#{msg['catalogo.marcamodelo.marca.codigo']}" />
+					<p:inputText value="#{marcaBean.marca.id}" disabled="true"
+						style="width:50px;" />
+
+					<p:outputLabel value="#{msg['catalogo.marcamodelo.marca.nombre']}"
+						for="nombreMarca" />
+					<p:inputText id="nombreMarca" value="#{marcaBean.marca.nombre}"
+						style="width:200px;" maxlength="40" />
+
+					<p:outputLabel for="selestatus"
+						value="#{msg['catalogo.marcaModelo.modelo.estado']}" />
+
+					<p:selectOneMenu id="selestatus" value="#{marcaBean.marca.estatus}"
+						style="width:144px;" converter="#{estatusConverter}">
+						<f:selectItems value="#{marcaBean.listaEstados}" var="estadosel"
+							itemLabel="#{estadosel.descripcion}" itemValue="#{estadosel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+
+
+				</h:panelGrid>
+
+
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all"
+					style="width: 750px">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.marcaModelo.modelos']}</legend>
+					<h:panelGrid columns="6" cellpadding="3" cellspacing="3">
+						<p:outputLabel
+							value="#{msg['catalogo.marcamodelo.modelo.nombre']}" />
+						<p:inputText value="#{marcaBean.modeloNuevo.tipoModelo}"
+							style="width:50px;" maxlength="18" />
+
+						<p:outputLabel
+							value="#{msg['catalogo.marcamodelo.modelo.descripcion']}" />
+						<p:inputText value="#{marcaBean.modeloNuevo.descripcion}"
+							style="width:200px;" maxlength="60" />
+
+						<p:outputLabel for="selestatusM"
+							value="#{msg['catalogo.marcaModelo.modelo.estado']}" />
+						<p:selectOneMenu id="selestatusM"
+							value="#{marcaBean.modeloNuevo.estatus}" style="width:144px;"
+							converter="#{estatusConverter}">
+							<f:selectItems value="#{marcaBean.listaEstados}" var="estadoMsel"
+								itemLabel="#{estadoMsel.descripcion}" itemValue="#{estadoMsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+					</h:panelGrid>
+
+
+					<fieldset
+						class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+						<p:panelGrid style="display:block; ">
+							<p:commandButton
+								value="#{msg['catalogo.marcaModelo.modelo.agregar']}"
+								action="#{marcaBean.agregarModelo}"
+								update=":MSG_Marca :FORM_Marca:PNL_marcaContainer"
+								style="height:30px;  width:120px;">
+							</p:commandButton>
+						</p:panelGrid>
+					</fieldset>
+					<p:dataTable id="TBL_Modelos2" widgetVar="TBL_Modelos2"
+						var="consultar" value="#{marcaBean.marca.modelos}" lazy="true"
+						paginator="true" paginatorPosition="bottom" rows="5"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+
+						<p:column
+							headerText="#{msg['catalogo.marcamodelo.modelo.nombre']}"
+							width="20%">
+							<h:outputText value="#{consultar.tipoModelo}" />
+						</p:column>
+
+						<p:column
+							headerText="#{msg['catalogo.marcamodelo.modelo.descripcion']}">
+							<h:outputText value="#{consultar.descripcion}" />
+						</p:column>
+
+						<!--   <p:column headerText="#{msg['catalogo.marcaModelo.modelo.estado']}">
+					        <h:outputText value="#{consultar.estatus}" />
+					    </p:column> -->
+					    <p:column headerText="#{msg['catalogo.marcaModelo.modelo.estado']}" style="text-align:center;">
+					    	<p:selectOneMenu 
+							id="selestatus" 
+							value="#{consultar.estatus}"
+							style="width:144px;"
+							required="true"
+							converter="#{estatusConverter}">
+							<f:selectItems 
+								value="#{marcaBean.listaEstados}" 
+								var="estadosel"
+								itemLabel="#{estadosel.descripcion}"
+								itemValue="#{estadosel}">
+							</f:selectItems>
+							
+							</p:selectOneMenu>
+					    </p:column>
+					    
+					    <!-- Este boton solo sale (rendered) si estamos en alta -> id Marca es nulo -->
+					    <p:column headerText="#{msg['consultar.Operaciones']}" exportable="false" width="20%" style="text-align:center;">
+							<p:commandButton
+								title="#{msg['catalogo.marcaModelo.modelo.eliminar']}"
+								icon="ui-icon-circle-close" update=":FORM_Marca:PNL_marcaContainer"
+								action="#{marcaBean.eliminarModelo}"
+								oncomplete="PF('MDL_Marca').show()"
+								rendered="#{consultar.id == null}">
+								<f:setPropertyActionListener
+									target="#{marcaBean.modeloSeleccionado}" value="#{consultar}" />
+							</p:commandButton>
+
+						</p:column>
+
+					</p:dataTable>
+
+				</fieldset>
+
+				<p:panel id="panel_boton" styleClass="botonera">
+					<p:commandButton id="btnSalvar"
+						value="#{msg['manual.generales.btn.guardar']}" icon="ui-icon-disk"
+						actionListener="#{marcaBean.guardarCambios}"
+						update=":MSG_Marca :FORM_Marca:PNL_marcaContainer"
+						style="height:30px;  width:96px ;margin-right:20px;">
+					</p:commandButton>
+				</p:panel>
+			</p:tab>
+		</p:wizard>
+	</p:panel>
+</h:form>
+<!-- <p:ajaxStatus id="triggerblockuiMarca" onstart="PF('marca_bui').show()"
+	onsuccess="PF('marca_bui').hide()">
+
+</p:ajaxStatus>
+
+<p:blockUI block="FORM_Marca" widgetVar="marca_bui">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI> -->
+</html>

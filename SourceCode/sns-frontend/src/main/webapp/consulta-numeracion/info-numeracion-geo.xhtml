@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<p:messages id="MSG_ConsultaFront" showDetail="true" autoUpdate="false" closable="true" showIcon="false"/>
+<!-- <p:ajaxStatus id="FORM_infoANir_AS"
+	onstart="PF('FORM_infoANir_BUI').show()"
+	onsuccess="PF('FORM_infoANir_BUI').hide()">
+</p:ajaxStatus>
+<p:blockUI block="FORM_infoANir" widgetVar="FORM_infoANir_BUI">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI> -->
+<h:form id="FORM_infoANir">
+	<p:panelGrid id="TBL_infoGeo" columns="2" layout="grid"
+		styleClass="mycustomtablesa">
+
+		<f:facet name="header">
+           			INFORMACIÓN DEL ÁREA GEOGRÁFICA DE NUMERACIÓN 
+       			</f:facet>
+		<p:row>
+			<h:outputText
+				value="Número(s) Identificador(es) de Región (Claves de larga distancia)" />
+		</p:row>
+		<p:row>
+			<ui:repeat var="nir" value="#{consultaPublicaMarcacionBean.abn.nirs}"
+				varStatus="status">
+				<h:outputText styleClass="nirs #{status.last?'last':''}"
+					value="#{nir.codigo}" />
+			</ui:repeat>
+		</p:row>
+		<h:outputText value="Longitud del número nacional" />
+		<h:outputText
+			value="#{consultaPublicaMarcacionBean.numeroDigitos} dígitos" />
+		<p:row>
+			<h:outputText value="Marcación Nacional desde un número fijo o móvil" />
+		</p:row>
+		<p:row>
+			<h:panelGroup style="display:block;">
+				<h:outputText styleClass="greenText" value="" />
+				<h:outputText value="Número nacional (#{consultaPublicaMarcacionBean.numeroDigitos} dígitos)" />
+			</h:panelGroup>
+
+	
+		</p:row>
+
+		<p:row>
+			<h:outputText value="Marcación desde los Estados Unidos y Canadá" />
+		</p:row>
+		<p:row>
+			<h:outputText value="011 52 " />
+			<h:outputText value="+ Número nacional (#{consultaPublicaMarcacionBean.numeroDigitos} dígitos)" />
+		</p:row>
+
+		<p:row>
+			<h:outputText value="Marcación desde el resto del Mundo" />
+		</p:row>
+
+		<p:row>
+			<h:outputText value="+52 " />
+			<h:outputText value="+ Número nacional (#{consultaPublicaMarcacionBean.numeroDigitos} dígitos)" />
+		</p:row>
+		<h:outputText value="Ciudad con mayor cantidad de numeración asignada"
+			rendered="#{consultaPublicaMarcacionBean.poblacionAbnMaxNumAsignada != null}" />
+		<h:outputText
+			value="#{consultaPublicaMarcacionBean.poblacionAbnMaxNumAsignada.nombre}"
+			rendered="#{consultaPublicaMarcacionBean.poblacionAbnMaxNumAsignada != null}" />
+		<h:outputText value="Poblaciones con numeración asignada" />
+		<p:commandLink
+			actionListener="#{detallePoblacionBean.activateAndSetPoblacion(consultaPublicaMarcacionBean.nir)}"
+			update=":DLG_detallePoblacionMunicipioProveedor"
+			oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
+			<h:outputText
+				value="#{consultaPublicaMarcacionBean.poblacionesNumeracionAsignadaNir.size()}" />
+		</p:commandLink>
+		<h:outputText value="Municipios que conforman el Área Geográfica de Numeración" />
+		<p:commandLink
+			actionListener="#{detallePoblacionBean.activateAndSetMunicipio(consultaPublicaMarcacionBean.abn, consultaPublicaMarcacionBean.nir)}"
+			update=":DLG_detallePoblacionMunicipioProveedor"
+			oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
+
+			<h:outputText
+				value="#{consultaPublicaMarcacionBean.municipiosNir.size()}" />
+		</p:commandLink>
+
+		<h:outputText
+			value="Empresas de telefonía que prestan el servicio dentro del Área Geográfica de Numeración" />
+
+		<p:commandLink
+			actionListener="#{detallePoblacionBean.activateAndSetConcesionario(consultaPublicaMarcacionBean.abn, consultaPublicaMarcacionBean.nir)}"
+			update=":DLG_detallePoblacionMunicipioProveedor"
+			oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
+			<h:outputText
+				value="#{consultaPublicaMarcacionBean.proveedoresNir.size()}" />
+		</p:commandLink>
+
+		<h:outputText
+			value="Numeración asignada (no representa líneas en servicio)" />
+		<h:outputText
+			value="#{consultaPublicaMarcacionBean.numeracionNirFormat}" />
+
+	</p:panelGrid>
+</h:form>
+<!-- Modal 'Asignacion' -->
+<!-- <p:dialog id="paginated-results2" widgetVar="paginatedResults2"
+	header="RESULTADOS DE LA CONSULTA" modal="true" scrollable="true"
+	resizable="false" appendTo="@(body)" height="500" width="95%">
+	<ui:include
+		src="/consulta-numeracion/detalle-numero-identificador.xhtml" />
+</p:dialog> -->
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+	
+	<h:form id="FRM_EdicionClaveServicio">
+		<p:messages id="MSG_EdicionClaveServicio" showDetail="false" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		
+		<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+				<p:column>
+					<p:outputLabel for="TXT_ClaveServicio" value="#{msg['catalogo.clave.servicio']}" style="width:50px;"/>
+				</p:column>
+				<p:column>
+					<p:inputMask 
+						id="TXT_ClaveServicio" 
+						required="true"
+						readonly="#{edicionClaveServicioBean.modoEdicion}"
+						label="#{msg['catalogo.clave.servicio']}" 
+						value="#{edicionClaveServicioBean.claveServicio.codigo}"  
+						size="3"
+						style="width: 50px;"
+						maxlength="3"
+						mask="9?99">
+						<f:validateLongRange minimum="100" maximum="999" for="TXT_ClaveServicio"/>
+					</p:inputMask>
+				</p:column>
+				<p:column>
+					<p:outputLabel for="TXT_Descripcion" value="#{msg['catalogo.clave.servicio.descripcion']}" style="width:50px;"/>
+				</p:column>
+				<p:column>
+					<p:inputText
+						id="TXT_Descripcion"
+						value="#{edicionClaveServicioBean.claveServicio.descripcion}"
+						size="50"
+						maxlength="50"
+						required="true">
+					</p:inputText>
+				</p:column>
+				<p:column>
+					<p:outputLabel rendered="#{edicionClaveServicioBean.modoEdicion}" for="selEstatus" value="#{msg['catalogo.clave.servicio.estatus']}" style="width:50px;"/>
+				</p:column>
+				<p:column>
+					<p:selectOneMenu 
+						id="selEstatus" 
+						style="width: 100px;" 
+						value="#{edicionClaveServicioBean.claveServicio.estatus}"
+						converter="#{estatusConverter}"
+						required="#{edicionClaveServicioBean.modoEdicion}"
+						rendered="#{edicionClaveServicioBean.modoEdicion}"> 
+						<f:selectItem itemLabel="Seleccionar"/>
+						<f:selectItems
+							value="#{edicionClaveServicioBean.listadoEstatus}"
+							var="estatusSel"
+							itemLabel="#{estatusSel.descripcion}"
+							itemValue="#{estatusSel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</p:column>
+				<p:column>
+					<p:outputLabel for="chbVisibleWeb" value="#{msg['catalogo.clave.servicio.publicaWeb']}" style="width:50px;"/>
+				</p:column>
+				<p:column>
+					<p:selectBooleanCheckbox
+						id="chbVisibleWeb"
+						value="#{edicionClaveServicioBean.claveServicio.visibleWeb}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+			</h:panelGrid>
+			
+			<p:panelGrid style="display:block; text-align:center;">
+				<p:commandButton
+					id="BTN_Guardar"
+					value="#{msg['manual.generales.btn.guardar']}"
+					action="#{edicionClaveServicioBean.guardar}"
+					update="FRM_EdicionClaveServicio"
+					style="height:30px; width:85px">
+				</p:commandButton>
+			</p:panelGrid>
+		</fieldset>
+	</h:form>
+	
+</html>

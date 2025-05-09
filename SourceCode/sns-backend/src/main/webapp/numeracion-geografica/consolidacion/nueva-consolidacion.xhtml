@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<h:form id="FORM_nuevaConsolidacion">
+
+
+	<p:messages id="MSG_DatosGenerales" showDetail="false"
+		showSummary="true" autoUpdate="false" closable="true" showIcon="false" />
+
+	<p:fieldset legend="Consolidación de ABNs"
+		style="margin-left:1em; margin-right: 1em;">
+		<p:panel id="PNL_Abns" style="background: transparent">
+			<div class="ui-grid">
+				<div class="ui-grid-row">
+					<div class="ui-grid-col-4">
+						<p:outputLabel for="TXT_AbnRecibe" style="margin-right: 10px;"
+							value="#{msg['consolidacion.AbnRecibe']}" />
+						<p:inputText id="TXT_AbnRecibe" maxlength="3" required="true"
+							value="#{solicitudConsolidacionBean.consolidacion.codigoAbnRecibe}"
+							style="width: 150px;"
+							disabled="#{(solicitudConsolidacionBean.consolidacion.modoEdicion or (!solicitudConsolidacionBean.consolidacion.interfazHabilitado))}"
+							validator="#{clientSideFieldValidatorBean.checkEnteroPositivoMayorCero}"
+							autocomplete="off">
+						</p:inputText>
+					</div>
+
+					<div class="ui-grid-col-4">
+						<p:outputLabel for="TXT_AbnEntrega" style="margin-right: 10px;"
+							value="#{msg['consolidacion.AbnEntrega']}" />
+						<p:inputText id="TXT_AbnEntrega" maxlength="3" required="true"
+							value="#{solicitudConsolidacionBean.consolidacion.codigoAbnEntrega}"
+							style="width: 150px;"
+							disabled="#{(solicitudConsolidacionBean.consolidacion.modoEdicion or (!solicitudConsolidacionBean.consolidacion.interfazHabilitado))}"
+							validator="#{clientSideFieldValidatorBean.checkEnteroPositivoMayorCero}"
+							autocomplete="off">
+						</p:inputText>
+					</div>
+
+					<div class="ui-grid-col-4">
+						<p:outputLabel style="margin-right: 10px;"
+							value="#{msg['consultar.Consecutivo']}" />
+						<p:inputText id="TXT_Consecutivo" required="false" minValue="9"
+							maxlength="9" mask="9"
+							value="#{solicitudConsolidacionBean.consolidacion.solicitud.id}"
+							label="#{msg['consultar.Consecutivo']}" style="width: 150px;"
+							disabled="true">
+						</p:inputText>
+					</div>
+				</div>
+			</div>
+		</p:panel>
+
+		<h:panelGrid id="PNL_Botones" columns="2" style="margin:0 auto;">
+			<p:commandButton id="BTN_ConsoTot"
+				style=" margin-top:20px; margin-left: 0px; margin-right:10px; height:30px;  width:150px"
+				value="#{msg['consolidacion.total']}"
+				actionListener="#{solicitudConsolidacionBean.consolidacion.consolidacionTotal}"
+				disabled="#{(solicitudConsolidacionBean.consolidacion.modoEdicion or (!solicitudConsolidacionBean.consolidacion.interfazHabilitado))}"
+				update="PNL_Ubicacion PNL_Consolidar PNL_ContainerResumen MSG_DatosGenerales PNL_Abns">
+			</p:commandButton>
+			<p:commandButton id="BTN_ConsoParc"
+				style="margin-top:20px;margin-left: 10px;margin-right: 10px; height:30px;  width:150px"
+				value="#{msg['consolidacion.parcial']}"
+				actionListener="#{solicitudConsolidacionBean.consolidacion.consolidacionParcial}"
+				disabled="#{(solicitudConsolidacionBean.consolidacion.modoEdicion or (!solicitudConsolidacionBean.consolidacion.interfazHabilitado))}"
+				update="PNL_Ubicacion PNL_Consolidar PNL_ContainerResumen MSG_DatosGenerales PNL_Abns">
+			</p:commandButton>
+		</h:panelGrid>
+	</p:fieldset>
+
+	<p:panel id="PNL_Ubicacion" styleClass="paneldiv">
+		<p:fieldset legend="#{msg['consolidacion.seleccion.poblacion']}"
+			rendered="#{solicitudConsolidacionBean.consolidacion.consolidacionParcial and solicitudConsolidacionBean.consolidacion.interfazHabilitado}"
+			style="margin: 0px">
+			<div class="ui-grid">
+				<div class="ui-grid-row">
+
+					<div class="ui-grid-col-12"
+						style="margin-top: 25px; margin-bottom: 25px; text-align: center">
+						<p:outputLabel value="#{msg['consultar.Estados.lista']}"
+							style="margin-right: 10px;" />
+						<p:selectOneMenu id="selestado"
+							value="#{solicitudConsolidacionBean.consolidacion.estadoMun}"
+							style="width:150px;" label="#{msg['ubicacion.estado']}"
+							converter="#{estadoConverter}"
+							disabled="#{!(solicitudConsolidacionBean.consolidacion.interfazHabilitado)}">
+
+							<p:ajax event="change"
+								listener="#{solicitudConsolidacionBean.consolidacion.cargarMunicipios}"
+								update="TBL_Municipios TBL_Poblaciones">
+							</p:ajax>
+
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{solicitudConsolidacionBean.consolidacion.listaEstados}"
+								var="estados" itemLabel="#{estados.nombre}"
+								itemValue="#{estados}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					</div>
+				</div>
+
+				<div class="ui-grid-row">
+					<div class="ui-grid-col-6" style="margin-right: 12px;">
+						<p:dataTable id="TBL_Municipios" widgetVar="wid_Municipios"
+							var="municipio"
+							value="#{solicitudConsolidacionBean.consolidacion.municipioAbnModel}"
+							rowSelectMode="add" lazy="true"
+							selection="#{solicitudConsolidacionBean.consolidacion.listaEstadoMunicipio.seleccionTabla}"
+							rowKey="#{municipio.id}" paginator="true"
+							paginatorPosition="bottom"
+							rows="#{solicitudConsolidacionBean.consolidacion.registroPorPagina}"
+							resizableColumns="true"
+							emptyMessage="#{msg['buscador.noresultados']}"
+							disabledSelection="#{!(solicitudConsolidacionBean.consolidacion.interfazHabilitado)}">
+
+							<f:facet name="header">#{msg['consolidacion.tabla.municipio']}</f:facet>
+
+							<p:ajax event="toggleSelect"
+								listener="#{solicitudConsolidacionBean.consolidacion.seleccionPaginaMunicipios}"
+								update=":FORM_nuevaConsolidacion:TBL_Poblaciones :FORM_nuevaConsolidacion:MSG_DatosGenerales 
+										:FORM_nuevaConsolidacion:PNL_ContainerResumen :FORM_nuevaConsolidacion:PNL_Consolidar">
+							</p:ajax>
+
+							<p:ajax event="rowSelect"
+								listener="#{solicitudConsolidacionBean.consolidacion.seleccionMunicipio}"
+								update=":FORM_nuevaConsolidacion:TBL_Poblaciones :FORM_nuevaConsolidacion:MSG_DatosGenerales">
+							</p:ajax>
+
+							<p:ajax event="rowUnselect"
+								listener="#{solicitudConsolidacionBean.consolidacion.deSeleccionMunicipio}"
+								update=":FORM_nuevaConsolidacion:TBL_Poblaciones :FORM_nuevaConsolidacion:MSG_DatosGenerales 
+										:FORM_nuevaConsolidacion:PNL_ContainerResumen :FORM_nuevaConsolidacion:PNL_Consolidar">
+							</p:ajax>
+
+							<p:ajax event="rowSelectCheckbox"
+								listener="#{solicitudConsolidacionBean.consolidacion.seleccionMunicipio}"
+								update=":FORM_nuevaConsolidacion:TBL_Poblaciones :FORM_nuevaConsolidacion:MSG_DatosGenerales">
+							</p:ajax>
+
+							<p:ajax event="rowUnselectCheckbox"
+								listener="#{solicitudConsolidacionBean.consolidacion.deSeleccionMunicipio}"
+								update=":FORM_nuevaConsolidacion:TBL_Poblaciones :FORM_nuevaConsolidacion:MSG_DatosGenerales 
+										:FORM_nuevaConsolidacion:PNL_ContainerResumen :FORM_nuevaConsolidacion:PNL_Consolidar">
+							</p:ajax>
+
+							<p:column headerText="" selectionMode="multiple"
+								style="font-size:12px;" width="17">
+							</p:column>
+
+							<p:column 
+								headerText="#{msg['ubicacion.identificador.estado']}"
+								style="text-align:center;" width="70">
+								<h:outputText value="#{municipio.estado.codEstado}" />
+							</p:column>
+
+							<p:column 
+								headerText="#{msg['ubicacion.estado']}">
+								<h:outputText value="#{municipio.estado.nombre}" />
+							</p:column>
+
+							<p:column
+								headerText="#{msg['ubicacion.identificador.municipio']}"
+								filterBy="#{municipio.id.codMunicipio}" filterMaxLength="3"
+								style="text-align:center;" width="70">
+								<h:outputText value="#{municipio.id.codMunicipio}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.municipio']}"
+								filterBy="#{municipio.nombre}">
+								<h:outputText value="#{municipio.nombre}" />
+							</p:column>
+
+						</p:dataTable>
+					</div>
+
+					<div class="ui-grid-col-6" style="margin-left: 12px;">
+						<p:dataTable id="TBL_Poblaciones" widgetVar="wid_Poblaciones"
+							var="poblacion"
+							value="#{solicitudConsolidacionBean.consolidacion.poblacionAbnNgModel}"
+							rowSelectMode="checkbox" lazy="true"
+							selection="#{solicitudConsolidacionBean.consolidacion.listaEstadoMunicipioPoblacion.seleccionTabla}"
+							rowKey="#{poblacion.inegi.cdgPoblacion}" paginator="true"
+							paginatorPosition="bottom"
+							rows="#{solicitudConsolidacionBean.consolidacion.registroPorPagina}"
+							resizableColumns="true"
+							emptyMessage="#{msg['buscador.noresultados']}"
+							disabledSelection="#{!(solicitudConsolidacionBean.consolidacion.interfazHabilitado)}">
+
+							<f:facet name="header">#{msg['consolidacion.tabla.poblacion']}</f:facet>
+
+							<p:ajax event="toggleSelect"
+								listener="#{solicitudConsolidacionBean.consolidacion.seleccionPaginaPoblacion}"
+								update=":FORM_nuevaConsolidacion:MSG_DatosGenerales :FORM_nuevaConsolidacion:PNL_ContainerResumen :FORM_nuevaConsolidacion:PNL_Consolidar">
+							</p:ajax>
+
+							<p:ajax event="rowSelectCheckbox"
+								listener="#{solicitudConsolidacionBean.consolidacion.seleccionPoblacion}"
+								update=":FORM_nuevaConsolidacion:MSG_DatosGenerales :FORM_nuevaConsolidacion:PNL_ContainerResumen :FORM_nuevaConsolidacion:PNL_Consolidar">
+							</p:ajax>
+
+							<p:ajax event="rowUnselectCheckbox"
+								listener="#{solicitudConsolidacionBean.consolidacion.deSeleccionPoblacion}"
+								update=":FORM_nuevaConsolidacion:MSG_DatosGenerales :FORM_nuevaConsolidacion:PNL_ContainerResumen :FORM_nuevaConsolidacion:PNL_Consolidar">
+							</p:ajax>
+
+							<p:column selectionMode="multiple" headerText="" width="17"
+								style="font-size:12px;">
+							</p:column>
+
+							<p:column
+								headerText="#{msg['ubicacion.identificador.municipio']}"
+								style="text-align:center;" width="70">
+								<h:outputText value="#{poblacion.inegi.municipio.id.codMunicipio}" />
+							</p:column>
+
+							<p:column 
+								headerText="#{msg['ubicacion.municipio']}">
+								<h:outputText value="#{poblacion.inegi.municipio.nombre}" />
+							</p:column>
+
+							<p:column
+								headerText="#{msg['ubicacion.identificador.poblacion']}"
+								filterBy="#{poblacion.inegi.cdgPoblacion}" filterMaxLength="4"
+								style="text-align:center;" width="70">
+								<h:outputText value="#{poblacion.inegi.cdgPoblacion}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.poblacion']}"
+								filterBy="#{poblacion.inegi.nombre}">
+								<h:outputText value="#{poblacion.inegi.nombre}" />
+							</p:column>
+						</p:dataTable>
+					</div>
+				</div>
+			</div>
+		</p:fieldset>
+	</p:panel>
+
+	<p:panel id="PNL_InfoParcial" styleClass="paneldiv">
+		<p:fieldset legend="#{msg['consolidacion.resumen.poblacion']}"
+			rendered="#{solicitudConsolidacionBean.consolidacion.consolidacionParcial and (!solicitudConsolidacionBean.consolidacion.interfazHabilitado)}"
+			style="margin: 0px">
+
+			<div class="ui-grid">
+				<div class="ui-grid-row">
+					<div class="ui-grid-col-6" style="margin-right: 12px;">
+
+						<p:dataTable id="TBL_MunicipiosEdicion"
+							widgetVar="TBL_MunicipiosEdicion" var="municipio"
+							value="#{solicitudConsolidacionBean.consolidacion.listaMunicipiosEdicion}"
+							selectionMode="single"
+							selection="#{solicitudConsolidacionBean.consolidacion.municipio}"
+							rowKey="#{municipio.id}" paginator="true"
+							paginatorPosition="bottom"
+							rows="#{solicitudConsolidacionBean.consolidacion.registroPorPagina}"
+							resizableColumns="true"
+							emptyMessage="#{msg['buscador.noresultados']}">
+
+							<f:facet name="header">#{msg['consolidacion.tabla.municipio']}</f:facet>
+
+							<p:ajax event="rowSelect"
+								listener="#{solicitudConsolidacionBean.consolidacion.seleccionMunicipioEdicion}"
+								update=":FORM_nuevaConsolidacion:TBL_PoblacionesEdicion :FORM_nuevaConsolidacion:MSG_DatosGenerales">
+							</p:ajax>
+
+							<p:ajax event="rowUnselect"
+								listener="#{solicitudConsolidacionBean.consolidacion.deSeleccionMunicipioEdicion}"
+								update=":FORM_nuevaConsolidacion:TBL_PoblacionesEdicion :FORM_nuevaConsolidacion:MSG_DatosGenerales">
+							</p:ajax>
+
+							<p:column headerText="#{msg['ubicacion.identificador.estado']}"
+								filterBy="#{municipio.estado.codEstado}" filterMaxLength="2"
+								style="text-align:center;" width="70">
+								<h:outputText value="#{municipio.estado.codEstado}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.estado']}"
+								filterBy="#{municipio.estado.nombre}">
+								<h:outputText value="#{municipio.estado.nombre}" />
+							</p:column>
+
+							<p:column
+								headerText="#{msg['ubicacion.identificador.municipio']}"
+								filterBy="#{municipio.id.codMunicipio}" filterMaxLength="3"
+								style="text-align:center;" width="70">
+								<h:outputText value="#{municipio.id.codMunicipio}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.municipio']}"
+								filterBy="#{municipio.nombre}">
+								<h:outputText value="#{municipio.nombre}" />
+							</p:column>
+						</p:dataTable>
+					</div>
+
+					<div class="ui-grid-col-6" style="margin-left: 12px;">
+						<p:dataTable id="TBL_PoblacionesEdicion"
+							widgetVar="TBL_PoblacionesEdicion" var="poblacion"
+							value="#{solicitudConsolidacionBean.consolidacion.listaPoblacionesAbnEdicion}"
+							paginator="true" paginatorPosition="bottom"
+							rows="#{solicitudConsolidacionBean.consolidacion.registroPorPagina}"
+							resizableColumns="true" disabledSelection="true"
+							emptyMessage="#{msg['buscador.noresultados']}">
+
+							<f:facet name="header">#{msg['consolidacion.tabla.poblacion']}</f:facet>
+
+							<p:column
+								headerText="#{msg['ubicacion.identificador.municipio']}"
+								style="text-align:center;" width="70">
+								<h:outputText value="#{poblacion.inegi.municipio.id.codMunicipio}" />
+							</p:column>
+
+							<p:column 
+								headerText="#{msg['ubicacion.municipio']}">
+								<h:outputText value="#{poblacion.inegi.municipio.nombre}" />
+							</p:column>
+
+							<p:column
+								headerText="#{msg['ubicacion.identificador.poblacion']}"
+								filterBy="#{poblacion.inegi.cdgPoblacion}" filterMaxLength="4"
+								style="text-align:center;" width="70">
+								<h:outputText value="#{poblacion.inegi.cdgPoblacion}" />
+							</p:column>
+
+							<p:column headerText="#{msg['ubicacion.poblacion']}"
+								filterBy="#{poblacion.inegi.nombre}">
+								<h:outputText value="#{poblacion.inegi.nombre}" />
+							</p:column>
+						</p:dataTable>
+					</div>
+				</div>
+			</div>
+
+		</p:fieldset>
+	</p:panel>
+
+	<p:panel id="PNL_ContainerResumen" style="background:transparent">
+		<div class="ui-grid">
+			<div class="ui-grid-row">
+				<div class="ui-grid-col-6" style="padding-right:10px">
+					<p:fieldset id="FLDS_AbnEntrega" legend="#{msg.abnEntrega}"
+						rendered="#{solicitudConsolidacionBean.consolidacion.resumenHabilitado}">
+						<h:panelGrid id="PNL_AbnEntregaResumen" columns="1">
+							<h:outputLabel
+								value="#{msg['consolidacion.nirs.antes']} #{solicitudConsolidacionBean.consolidacion.nirEntAntes}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.nirs.despues']} #{solicitudConsolidacionBean.consolidacion.nirEntDespues}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.municipios.antes']} #{solicitudConsolidacionBean.consolidacion.municipioEntAntes}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.municipios.despues']} #{solicitudConsolidacionBean.consolidacion.municipioEntDespues}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.poblaciones.antes']} #{solicitudConsolidacionBean.consolidacion.poblacionesEntAntes}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.poblaciones.despues']} #{solicitudConsolidacionBean.consolidacion.poblacionesEntDespues}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.entrega.antes']} #{solicitudConsolidacionBean.consolidacion.numRegAbnEntAntes}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.entrega.despues']} #{solicitudConsolidacionBean.consolidacion.numRegAbnEntDespues}" />
+						</h:panelGrid>
+					</p:fieldset>
+				</div>
+				<div class="ui-grid-col-6" style="padding-left:10px">
+					<p:fieldset id="FLDS_AbnRecibe" legend="#{msg.abnRecibe}"
+						rendered="#{solicitudConsolidacionBean.consolidacion.resumenHabilitado}">
+						<h:panelGrid id="PNL_AbnRecibeResumen" columns="1">
+							<h:outputLabel
+								value="#{msg['consolidacion.nirs.antes']} #{solicitudConsolidacionBean.consolidacion.nirRecAntes}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.nirs.despues']} #{solicitudConsolidacionBean.consolidacion.nirRecDespues}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.municipios.antes']} #{solicitudConsolidacionBean.consolidacion.municipioRecAntes}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.municipios.despues']} #{solicitudConsolidacionBean.consolidacion.municipioRecDespues}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.poblaciones.antes']} #{solicitudConsolidacionBean.consolidacion.poblacionesRecAntes}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.poblaciones.despues']} #{solicitudConsolidacionBean.consolidacion.poblacionesRecDespues}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.recibe.antes']} #{solicitudConsolidacionBean.consolidacion.numRegAbnRecAntes}" />
+							<h:outputLabel
+								value="#{msg['consolidacion.recibe.despues']} #{solicitudConsolidacionBean.consolidacion.numRegAbnRecDespues}" />
+						</h:panelGrid>
+					</p:fieldset>
+				</div>
+			</div>
+		</div>
+	</p:panel>
+
+	<p:panel id="PNL_Consolidar">
+		<p:fieldset id="FLS_Consolidar" legend="Consolidar"
+			rendered="#{solicitudConsolidacionBean.consolidacion.resumenHabilitado}">
+			<h:panelGrid id="PNLG_Fecha" columns="4">
+				<p:outputLabel for="fconsolidacion"
+					value="#{msg['consolidacion.Fecha_Consolidacion']}"
+					style="margin-right:10px;" />
+				<p:calendar id="fconsolidacion" locale="mx_MX"
+					value="#{solicitudConsolidacionBean.consolidacion.fechaConsolidacion}"
+					pattern="dd/MM/yyyy" mask="true" style="width:100px;"
+					disabled="#{!solicitudConsolidacionBean.consolidacion.interfazHabilitado}">
+				</p:calendar>
+
+				<p:commandButton id="BTN_Consolidar"
+					value="#{msg['consolidacion.consolidar']}"
+					onclick="PF('DLG_AceptacionConsolidacion').show()"
+					disabled="#{!solicitudConsolidacionBean.consolidacion.interfazHabilitado}"
+					style="margin-left:10px; height:30px; width:150px">
+				</p:commandButton>
+
+				<p:messages id="MSG_Fecha" for="MSG_Fecha" showDetail="false"
+					showSummary="true" autoUpdate="false" closable="true"
+					showIcon="false">
+				</p:messages>
+			</h:panelGrid>
+		</p:fieldset>
+	</p:panel>
+
+</h:form>
+
+
+</html>

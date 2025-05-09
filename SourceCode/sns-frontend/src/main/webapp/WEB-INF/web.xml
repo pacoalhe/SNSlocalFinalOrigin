@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	version="3.0">
+
+	<display-name>sns-frontend</display-name>
+
+	<context-param>
+		<description>State saving method: 'client' or 'server' (=default). See JSF Specification 2.5.2</description>
+		<param-name>javax.faces.STATE_SAVING_METHOD</param-name>
+		<param-value>server</param-value>
+	</context-param>
+
+<!-- 	<context-param> -->
+<!-- 		<param-name>primefaces.PUBLIC_CAPTCHA_KEY</param-name> -->
+<!-- 		<param-value>6LeaNQwTAAAAAPyuQoe5HSKotN3T7Fk8ab60EXoa</param-value> -->
+<!-- 	</context-param> -->
+
+<!-- 	<context-param> -->
+<!-- 		<param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name> -->
+<!-- 		<param-value>6LeaNQwTAAAAANKjNPtvN7kUWKwSBx70zV5VJzsQ</param-value> -->
+<!-- 	</context-param> -->
+
+ 	<context-param>
+        <param-name>primefaces.PUBLIC_CAPTCHA_KEY</param-name>
+        <param-value>6LcOiAkUAAAAAEPK2QomWZKks0ZPS46SGpf_EVsZ</param-value>
+    </context-param>
+    <context-param>
+        <param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name>
+        <param-value>6LcOiAkUAAAAAPJ6G9bRgbM4oc5HsBgfAo75vn6S</param-value>
+    </context-param>
+
+
+	<context-param>
+		<description>
+			Means that you get extra debugging support. In particular, a Java action that
+			has no corresponding file results in an error message, rather than the original
+			page being displayed with no hint about the problem.
+		</description>
+		<param-name>javax.faces.PROJECT_STAGE</param-name>
+		<param-value>Production</param-value>
+	</context-param>
+	<context-param>
+		<param-name>javax.servlet.jsp.jstl.fmt.localizationContext</param-name>
+		<param-value>resources.application</param-value>
+	</context-param>
+	<context-param>
+		<param-name>primefaces.THEME</param-name>
+		<param-value>sns-frontend-tema</param-value>
+	</context-param>
+	<context-param>
+		<param-name>primefaces.UPLOADER</param-name>
+		<param-value>commons</param-value>
+	</context-param>
+	<listener>
+		<listener-class>com.sun.faces.config.ConfigureListener</listener-class>
+	</listener>
+	<servlet>
+		<servlet-name>Faces Servlet</servlet-name>
+		<servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Faces Servlet</servlet-name>
+		<url-pattern>*.xhtml</url-pattern>
+	</servlet-mapping>
+	<filter>
+		<filter-name>PrimeFaces FileUpload Filter</filter-name>
+		<filter-class>org.primefaces.webapp.filter.FileUploadFilter</filter-class>
+		<init-param>
+			<param-name>thresholdSize</param-name>
+			<param-value>51200</param-value>
+		</init-param>
+		<init-param>
+			<param-name>uploadDirectory</param-name>
+			<param-value>/tmp</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>PrimeFaces FileUpload Filter</filter-name>
+		<servlet-name>Faces Servlet</servlet-name>
+	</filter-mapping>
+	<session-config>
+		<session-timeout>10</session-timeout>
+		<cookie-config>
+			<name>FRONTAPPID</name>
+			<http-only>true</http-only>
+			<secure>true</secure>
+		</cookie-config>
+	</session-config>
+	<welcome-file-list>
+		<welcome-file>index.xhtml</welcome-file>
+	</welcome-file-list>
+	<error-page>
+		<error-code>403</error-code>
+		<location>/errores/unauthorized.xhtml</location>
+	</error-page>
+	<error-page>
+		<error-code>404</error-code>
+		<location>/errores/not-found.xhtml</location>
+	</error-page>
+	<error-page>
+		<error-code>500</error-code>
+		<location>/errores/error.xhtml</location>
+	</error-page>
+	<error-page>
+		<error-code>503</error-code>
+		<location>/errores/error.xhtml</location>
+	</error-page>
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>SNS frontend</web-resource-name>
+			<url-pattern>/*</url-pattern>
+		</web-resource-collection>
+		<user-data-constraint>
+			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
+		</user-data-constraint>
+	</security-constraint>
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>SNS planes</web-resource-name>
+			<url-pattern>/planes-numeracion/privado/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ANALISTA</role-name>
+			<role-name>ABD-PRE</role-name>
+			<role-name>IFT</role-name>
+			<role-name>PST</role-name>
+			<role-name>ABD</role-name>
+		</auth-constraint>
+		<user-data-constraint>
+			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
+		</user-data-constraint>
+	</security-constraint>
+	<login-config>
+		<auth-method>FORM</auth-method>
+		<realm-name>default</realm-name>
+		<form-login-config>
+			<form-login-page>/login.xhtml</form-login-page>
+			<form-error-page>/errores/login-error.xhtml</form-error-page>
+		</form-login-config>
+	</login-config>
+	<security-role>
+		<role-name>ANALISTA</role-name>
+	</security-role>
+	<security-role>
+		<role-name>ABD-PRE</role-name>
+	</security-role>
+	<security-role>
+		<role-name>IFT</role-name>
+	</security-role>
+	<security-role>
+		<role-name>PST</role-name>
+	</security-role>
+	<security-role>
+		<role-name>ABD</role-name>
+	</security-role>
+</web-app>

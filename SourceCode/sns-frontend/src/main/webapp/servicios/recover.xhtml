@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+<ui:composition template="/WEB-INF/templates/plantillaFront.xhtml">
+	<ui:define name="centro">
+		<p:messages id="MSG_ConsultaFront" showDetail="true" autoUpdate="false" closable="true" showIcon="false"/>
+		<div class="dialogoLogin">
+			<div data-widget="widget_j_idt17"
+				class="ui-panel ui-widget ui-widget-content ui-corner-all centered"
+				id="j_idt17">
+				<div
+					class="ui-panel-titlebar ui-widget-header ui-helper-clearfix ui-corner-all"
+					id="j_idt17_header">
+					<span class="ui-panel-title">Recuperar Contraseña</span>
+				</div>
+				<div class="grupoCampos">
+					<div class="ui-panel-content ui-widget-content"
+						id="j_idt17_content">
+
+						<h:form id="FORM_recover">
+							<p:panel id="P_containerrecover" styleClass="mycustompanel">
+								<p:messages id="MSG_ConsultaFront" showDetail="true" autoUpdate="false" closable="true" showIcon="false"></p:messages>
+								<div style="margin-left: 35px; margin-top: 15px">
+									<table>
+										<tbody>
+											<tr>
+												<td><p:outputLabel
+														rendered="#{recuperarClaveBean.camposActivados}"> Usuario </p:outputLabel></td>
+												<td><h:inputText
+														value="#{recuperarClaveBean.idUsuario}"
+														rendered="#{recuperarClaveBean.camposActivados}"
+														autocomplete="off" /></td>
+											</tr>
+											<tr>
+												<td><br></br></td>
+											</tr>
+											<tr>
+												<td><p:outputLabel
+														rendered="#{recuperarClaveBean.camposActivados}"> Email </p:outputLabel></td>
+												<td><h:inputText value="#{recuperarClaveBean.email}"
+														rendered="#{recuperarClaveBean.camposActivados}"
+														autocomplete="off" /></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<p:commandButton value="Volver"
+									rendered="#{!recuperarClaveBean.camposActivados}"
+									icon="ui-icon-arrowreturnthick-1-w"
+									action="/planes-numeracion/privado/index.xhtml?faces-redirect=true"
+									styleClass="sombreado"
+									style="width: auto; height: auto; font-size: 1em; margin-bottom: 2%; background: #D4D4D4;" />
+								<br></br>
+								<h:outputLabel rendered="#{recuperarClaveBean.camposActivados}"
+									value="Por favor, introduzca el texto de la siguiente imagen" />
+								<br></br>
+								<br></br>
+								<p:captcha id="cp" label="Captcha" language="es" secure="true"
+									rendered="#{recuperarClaveBean.camposActivados}" />
+								<br></br>
+								<p:commandButton value="Enviar"
+									rendered="#{recuperarClaveBean.camposActivados}"
+									actionListener="#{recuperarClaveBean.chequeaUsuarioEmail}"
+									update="MSG_ConsultaFront" styleClass="sombreado"
+									style="width: auto; height: auto; font-size: 1em; margin-bottom: 2%; background: #D4D4D4;" />
+							</p:panel>
+						</h:form>
+
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>
+</html>

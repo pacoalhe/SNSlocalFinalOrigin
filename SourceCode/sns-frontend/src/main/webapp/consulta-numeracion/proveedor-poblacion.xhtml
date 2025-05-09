@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+	<h:form id="FORM_proveedorPoblacion">
+	<!-- tabla de poblaciones proveedor -->
+		<p:dataTable id="TBL_poblacionesProveedor1"
+			value="#{detallePoblacionProveedorBean.poblacionNumeracionProveedorEstado}"
+			var="poblacionProveedor" paginator="true"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			rowsPerPageTemplate="5,10,15,20,25" rows="15" styleClass="mycustomtable"
+			paginatorPosition="bottom">
+
+			<f:facet name="header">
+           		CIUDADES Y POBLACIONES DEL PROVEEDOR
+		</f:facet>
+
+			<p:column headerText="Ciudades y Población de #{detallePoblacionProveedorBean.estadoProveedor.nombre}
+			con Servicio de Telefonía Ofrecido por: #{detallePoblacionProveedorBean.prestadorNumero.nombre}"  sortBy="#{poblacionProveedor.poblacion.nombre}">
+				<h:outputText value="#{poblacionProveedor.poblacion.nombre}" />
+			</p:column>
+			<p:column headerText="NIR" style="text-align:center" >
+				<ui:repeat var="nir"
+						value="#{detallePoblacionProveedorBean.buscaNirsPoblacion(poblacionProveedor.poblacion)}"
+						varStatus="status">
+						<h:outputText
+							value="#{nir.codigo}" />
+					</ui:repeat> 
+			</p:column>
+			<p:column headerText="Numeración Asignada (no representa líneas en servicio)" style="text-align:center">
+				<h:outputText value="#{detallePoblacionProveedorBean.formatoNumeracionAsignada(poblacionProveedor.numeracionAsignada)}" />
+			</p:column>
+
+		</p:dataTable>
+	</h:form>
+	
+
+</html>

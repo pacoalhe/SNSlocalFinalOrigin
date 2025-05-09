@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusNgActualDialog').show();
+			}
+			function hideStatus() {
+				PF('statusNgActualDialog').hide();
+			}
+		</script>
+
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['reporteador.title']}/#{msg['reporteador.ng']}</legend>
+			<p:messages id="MSG_ReporteadorNgActual" showDetail="false"
+				showSummary="true" autoUpdate="false" closable="true"
+				showIcon="false" />
+
+			<h:form id="FORM_Buscador">
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['reporteador.ng.buscador']}</legend>
+
+					<h:panelGrid id="PNL_Ordenacion" columns="2"
+						style="margin-bottom:20px;float:left" cellpadding="3"
+						cellspacing="3">
+						<p:outputLabel for="selOrdenacion1"
+							value="#{msg['reporteador.ng.primera.columna']}" />
+						<p:selectOneMenu id="selOrdenacion1" autoWidth="false"
+							value="#{reporteadorNGFechaActualBean.elemento1Seleccionado}"
+							converter="#{elementoAgrupadorConverter}" style="width:150px">
+
+							<p:ajax event="change"
+								listener="#{reporteadorNGFechaActualBean.seleccionPrimeraOrdenacion}"
+								update=":MSG_ReporteadorNgActual selOrdenacion2">
+							</p:ajax>
+
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{reporteadorNGFechaActualBean.listaPrimeraOrdenacion}"
+								var="selordenacion1" itemLabel="#{selordenacion1.descripcion}"
+								itemValue="#{selordenacion1}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selOrdenacion2"
+							value="#{msg['reporteador.ng.segunda.columna']}" />
+						<p:selectOneMenu id="selOrdenacion2" autoWidth="false"
+							value="#{reporteadorNGFechaActualBean.elemento2Seleccionado}"
+							converter="#{elementoAgrupadorConverter}" style="width:150px">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{reporteadorNGFechaActualBean.listaSegundaOrdenacion}"
+								var="selOrdenacion2" itemLabel="#{selOrdenacion2.descripcion}"
+								itemValue="#{selOrdenacion2}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+					</h:panelGrid>
+					<h:panelGrid id="PNL_Filtro" columns="2"
+						style="margin-bottom:20px;float:left" cellpadding="3"
+						cellspacing="3">
+						<p:outputLabel for="selPst" value="#{msg['reporteador.ng.pst']}" />
+						<p:selectOneMenu id="selPst" autoWidth="false"
+							value="#{reporteadorNGFechaActualBean.pstSeleccionada}"
+							converter="#{proveedorConverter}" style="width:250px">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{reporteadorNGFechaActualBean.listaPst}"
+								var="pstsel" itemLabel="#{pstsel.nombre}" itemValue="#{pstsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selEstado"
+							value="#{msg['catalogo.estados.estado']}" />
+						<p:selectOneMenu id="selEstado"
+							value="#{reporteadorNGFechaActualBean.estadoSeleccionado}"
+							converter="#{estadoConverter}" style="width:250px">
+							<p:ajax event="change"
+								listener="#{reporteadorNGFechaActualBean.seleccionEstado}"
+								update=":MSG_ReporteadorNgActual selMunicipio">
+							</p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{reporteadorNGFechaActualBean.listaEstado}"
+								var="estadosel" itemLabel="#{estadosel.nombre}"
+								itemValue="#{estadosel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selMunicipio"
+							value="#{msg['catalogo.poblaciones.municipio']}" />
+						<p:selectOneMenu id="selMunicipio"
+							value="#{reporteadorNGFechaActualBean.municipioSeleccionado}"
+							converter="#{municipioConverter}" style="width:250px;">
+							<p:ajax event="change"
+								listener="#{reporteadorNGFechaActualBean.seleccionMunicipio}"
+								update=":MSG_ReporteadorNgActual selPoblacion">
+							</p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{reporteadorNGFechaActualBean.listaMunicipio}"
+								var="municipiosel" itemLabel="#{municipiosel.nombre}"
+								itemValue="#{municipiosel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selPoblacion"
+							value="#{msg['catalogo.poblaciones.poblacion']}" />
+						<p:selectOneMenu id="selPoblacion" autoWidth="false"
+							value="#{reporteadorNGFechaActualBean.poblacionSeleccionada}"
+							converter="#{poblacionConverter}" style="width:250px;">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{reporteadorNGFechaActualBean.listaPoblacion}"
+								var="poblacionsel" itemLabel="#{poblacionsel.nombre}"
+								itemValue="#{poblacionsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['catalogo.poblaciones.abn']}" />
+						<p:inputText id="TXT_Abn" required="false" size="3" maxlength="3"
+							mask="3" value="#{reporteadorNGFechaActualBean.abnSeleccionado}"
+							label="#{msg['catalogo.poblaciones.abn']}" style="width: 41px;">
+						</p:inputText>
+
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						process="@this"
+						actionListener="#{reporteadorNGFechaActualBean.resetPantalla}"
+						update="selOrdenacion1 selOrdenacion2 selPst selEstado selMunicipio selPoblacion TXT_Abn :MSG_ReporteadorNgActual"
+						style="height:30px; width:82px; margin-right:20px;">
+					</p:commandButton>
+					<p:commandButton value="#{msg.exportar}" ajax="false"
+						style="height:30px; width:130px; margin-right:20px;"
+						update=":MSG_ReporteadorNgActual">
+						<p:fileDownload
+							value="#{reporteadorNGFechaActualBean.exportReporteadorNGFechaActual}" />
+					</p:commandButton>
+				</p:panelGrid>
+
+			</h:form>
+
+		</fieldset>
+		<p:ajaxStatus id="triggerblockuiCentral"
+			onstart="PF('statusNgActualDialog').show()"
+			onsuccess="PF('statusNgActualDialog').hide()"></p:ajaxStatus>
+		<p:dialog widgetVar="statusNgActualDialog" modal="true"
+			draggable="false" closable="false" resizable="false"
+			showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+		<!--  <p:blockUI block="FORM_Buscador" widgetVar="bui" >
+	        <ui:include src="/componentes/loader.xhtml"/>
+	     </p:blockUI> -->
+
+	</ui:define>
+</ui:composition>
+</html>

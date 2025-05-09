@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+		<composite:attribute name="formAsignacion" required="true"></composite:attribute>
+	</composite:interface>
+	
+	<composite:implementation>
+		
+		<p:panel id="pn_analisis">
+		<p:messages id="MSG_Analisis" showDetail="false" showSummary="true"  closable="true" showIcon="false"/>
+		
+		<h:outputText value="#{msg['asignacion.nng.proveedorsolictante']}: #{cc.attrs.nameBean.solicitud.proveedorSolicitante.nombre}" style="margin-bottom:40px"/>
+		
+		<h:panelGrid id="pn_claveservicio" columns="8" style="margin-bottom:20px" cellpadding="3" cellspacing="3">
+			<h:outputLabel for="selClaveServicio" value="#{msg['catalogo.clave.servicio']} *" style="width:30px;"/>
+			<p:selectOneMenu
+				id="selClaveServicio" 
+				converter="#{claveServicioConverter}"
+				style="width: 141px;"
+				value="#{cc.attrs.nameBean.numeracionSolicitada.claveServicio}"> 
+				<f:selectItem itemLabel="Seleccionar"/>
+				<f:selectItems 
+					value="#{cc.attrs.nameBean.listaClavesServicio}"
+					var="claveServicioSel" 
+					itemLabel="#{claveServicioSel.codigo}" 
+					itemValue="#{claveServicioSel}">
+				</f:selectItems>
+				<p:ajax event="change" update="desClaveServicio" global="false" />
+			</p:selectOneMenu>
+			
+			<p:outputLabel for="desClaveServicio" value="Descripción"/>
+			<p:inputText disabled="true" id="desClaveServicio" 
+				value="#{cc.attrs.nameBean.numeracionSolicitada.claveServicio.descripcion}" style="width:150px;"/>
+			
+			<p:commandButton 				
+				id="BTN_nuevaClaveServicio"
+				icon="ui-icon-plus" process="@this">
+				<p:ajax
+					event="click" update="pn_claveservicio"
+					oncomplete="PF('MDL_ClaveServicio').show();">
+				</p:ajax>
+			</p:commandButton>
+			<p:tooltip for="BTN_nuevaClaveServicio" value="#{msg['catalogo.clave.servicio.nueva']}"/>
+			
+			<p:outputLabel for="in_cantidad" value="#{msg['manual.numeracion.cantidad_num']} *" rendered="#{!cc.attrs.nameBean.especifica}"/>
+			<p:inputText id="in_cantidad" rendered="#{!cc.attrs.nameBean.especifica}" 
+				value="#{cc.attrs.nameBean.cantidadSolicitada}" maxlength="6">	
+		 	</p:inputText>		 	
+			
+		</h:panelGrid>
+		
+		<h:panelGrid id="pn_datosespecifica" columns="8" style="margin-bottom:20px" cellpadding="3" cellspacing="3" rendered="#{cc.attrs.nameBean.especifica}">
+			<p:outputLabel for="in_serie" value="#{msg['asignacion.nng.serie']} *"/>
+			<p:inputText id="in_serie" rendered="#{cc.attrs.nameBean.especifica}" style="width: 70px;"
+				value="#{cc.attrs.nameBean.sna}" maxlength="3"> 		
+		 	</p:inputText>
+		 	
+		 	<p:outputLabel value="Numeracion Inicial *" for="in_numeracionInicial"/>
+			<p:inputText id="in_numeracionInicial" label="Numeracion Inicial *" style="width: 70px;"
+				value="#{cc.attrs.nameBean.numeracionSolicitada.numeroInicial}" maxlength="4">
+			
+			</p:inputText>
+			<p:outputLabel value="Numeracion Final *" for="in_numeracionFinal"/>
+			<p:inputText id="in_numeracionFinal" label="Numeracion Final" style="width: 70px;"
+				value="#{cc.attrs.nameBean.numeracionSolicitada.numeroFinal}" maxlength="4">
+			
+			</p:inputText>	
+			
+			<p:outputLabel value="#{msg['asignacion.nng.cliente']} *" for="in_cliente"/>
+			<p:inputText id="in_cliente" label="#{msg['asignacion.nng.cliente']}" style="width: 282px;"
+				value="#{cc.attrs.nameBean.numeracionSolicitada.cliente}" maxlength="120"/>
+			
+		</h:panelGrid>
+		
+		<h:panelGrid id="pn_variable" columns="2">
+
+			<p:outputLabel for="selconcesionario" value="#{msg['manual.numeracion.concesionario']}" 
+				rendered="#{!cc.attrs.nameBean.pstConcesionario}"/>
+			<p:selectOneMenu id="selconcesionario" autoWidth="false" value="#{cc.attrs.nameBean.numeracionSolicitada.concesionario}" 
+			 	converter="#{proveedorConverter}" rendered="#{!cc.attrs.nameBean.pstConcesionario}"> 
+			 	<p:ajax event="change" update="pn_variable sl_abc" global="false"/>
+				<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+				<f:selectItems value="#{cc.attrs.nameBean.listaConcesionarios}" var="concesionariosel" 
+					itemLabel="#{concesionariosel.nombre}" itemValue="#{concesionariosel}"/>
+			</p:selectOneMenu>
+
+			<p:outputLabel for="selarrendatario" value="#{msg['manual.numeracion.arredar']}" />
+			<p:selectOneMenu id="selarrendatario" autoWidth="false" value="#{cc.attrs.nameBean.numeracionSolicitada.arrendatario}" 
+			 	converter="#{proveedorConverter}"> 
+				<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+				<f:selectItems value="#{cc.attrs.nameBean.listaArrendatarios}" var="arrendatariosel" 
+					itemLabel="#{arrendatariosel.nombre}" itemValue="#{arrendatariosel}"/>
+			</p:selectOneMenu>
+	
+			<p:selectOneRadio id="sl_abc" value="#{cc.attrs.nameBean.numeracionSolicitada.abc}"
+				rendered="#{cc.attrs.nameBean.pstAmbos and !(cc.attrs.nameBean.numeracionSolicitada.concesionario == null)}">
+            	<f:selectItem itemLabel="#{msg['asignacion.nng.abc.propio']}" 
+            		itemValue="#{cc.attrs.nameBean.solicitud.proveedorSolicitante.abc}" />
+            	<f:selectItem itemLabel="#{msg['asignacion.nng.abc.concesionario']}" 
+            		itemValue="#{cc.attrs.nameBean.numeracionSolicitada.concesionario.abc}" />
+	        </p:selectOneRadio>
+	        
+	        <p:commandButton value="#{msg['manual.numeracion.agregar']}" id="bt_seleccionar" styleClass="ui-priority-primary"
+				actionListener="#{cc.attrs.nameBean.agregarNumeracionSolicitada}"
+				update="MSG_Analisis pn_claveservicio pn_variable tbl_num_solicitada tbl_uso_clave pn_datosespecifica panel_boton"
+				style="height:30px; width:82px ;margin: 12px">
+
+			</p:commandButton>	
+			
+			<p:commandButton value="#{msg['manual.numeracion.editar']}" id="bt_seleccionar_ter" styleClass="ui-priority-primary"
+				actionListener="#{cc.attrs.nameBean.editarNumeracion}" 
+				disabled="#{!cc.attrs.nameBean.editarNumeracion}"
+				update="MSG_Analisis pn_claveservicio pn_variable tbl_num_solicitada tbl_uso_clave pn_datosespecifica panel_boton"
+				style="height:30px; width:174px ;margin: 12px" icon="ui-icon-pencil">
+				<p:confirm header="#{msg['confirmacion.titulo']}" message="#{msg['confirmacion.mensaje.modificar']}" 
+ 						icon="ui-icon-alert"/>
+			</p:commandButton>
+			
+				
+		</h:panelGrid>
+		
+		
+		<p:dataTable id="tbl_num_solicitada" var="numeracionSolicitada"
+			value="#{cc.attrs.nameBean.numeracionesSolicitadasModel}"
+			selectionMode="single" selection="#{cc.attrs.nameBean.selectedNumeracionSolicitada}"
+			paginator="true" paginatorPosition="bottom" 
+			rows="#{cc.attrs.nameBean.registroPorPagina}"
+			resizableColumns="true" emptyMessage="#{msg['buscador.noresultados']}">
+			<f:facet name="header">#{msg['asignacion.nng.numeraciones.solicitada']}</f:facet>
+			<p:ajax event="rowSelect" listener="#{cc.attrs.nameBean.selectNumeracionSolicitada}" update=":FORM_SolicitudAsignacionNNG" />
+			<p:column width="10%">
+				<p:commandButton title="#{msg['cancelar']}" process="@this"		 				
+					update=":FORM_SolicitudAsignacionNNG"
+					action="#{cc.attrs.nameBean.cancelarNumeracionSolicitada(numeracionSolicitada)}"
+					icon="ui-icon-circle-close">
+				</p:commandButton>
+			</p:column>
+			<p:column headerText="#{msg['catalogo.clave.servicio']}" 
+			width="15%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{numeracionSolicitada.claveServicio.codigo}" />
+			</p:column>
+			<p:column headerText="#{msg['analisis.cantSolicitada']}" rendered="#{!cc.attrs.nameBean.especifica}" 			
+			width="15%" style="font-size:14px;">
+				<h:outputText value="#{numeracionSolicitada.cantidadSolicitada}" />
+			</p:column>
+			<p:column headerText="#{msg['analisis.cantidadAsignada']}" rendered="#{!cc.attrs.nameBean.especifica}"
+			width="15%" style="font-size:14px;">
+				<h:outputText value="#{numeracionSolicitada.cantidadAsignada}"/>
+			</p:column>
+			<p:column headerText="#{msg['asignacion.nng.serie']}"  rendered="#{cc.attrs.nameBean.especifica}"
+			width="15%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{numeracionSolicitada.snaAsString}" />
+			</p:column>
+			<p:column headerText="#{msg['asignacion.nng.numero.inicial']}" rendered="#{cc.attrs.nameBean.especifica}"
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{numeracionSolicitada.numeroInicial}"/>
+			</p:column>
+			<p:column headerText="#{msg['asignacion.nng.numero.final']}" rendered="#{cc.attrs.nameBean.especifica}"
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{numeracionSolicitada.numeroFinal}" />
+			</p:column>
+			<p:column headerText="#{msg['asignacion.nng.cliente']}" 
+				width="30%" style="font-size:14px;">
+					<h:outputText value="#{numeracionSolicitada.cliente}"/>
+				</p:column>
+			<p:column headerText="#{msg['consultar.PST_Solicitante']}"
+			width="30%" style="font-size:14px;">
+				<h:outputText value="#{numeracionSolicitada.solicitudAsignacion.proveedorSolicitante.nombre}" />
+			</p:column>
+			<p:column headerText="#{msg['analisis.pstArrendatario']}" 
+			width="30%" style="font-size:14px;">
+				<h:outputText value="#{numeracionSolicitada.arrendatario.nombre}"/>
+			</p:column>
+			<p:column headerText="#{msg['analisis.pstConcesionario']}" rendered="#{!cc.attrs.nameBean.pstConcesionario}"
+			width="30%" style="font-size:14px;">
+				<h:outputText value="#{numeracionSolicitada.concesionario.nombre}"/>
+			</p:column>
+			<p:column headerText="#{msg['historico.serie.bcd']}"
+			width="30%" style="font-size:14px; text-align:center;">
+				<h:outputText value="#{numeracionSolicitada.bcd != null ? numeracionSolicitada.bcd : numeracionSolicitada.concesionario.bcd}" />
+			</p:column>
+
+		</p:dataTable>
+		
+		<p:commandButton value="#{msg['boton.validar']}" id="bt_validar" styleClass="ui-priority-primary"
+				disabled="#{cc.attrs.nameBean.selectedNumeracionSolicitada == null}"
+				actionListener="#{cc.attrs.nameBean.validarNumeracion}" rendered="#{cc.attrs.nameBean.especifica}"
+				update="MSG_Analisis pn_claveservicio pn_variable pn_datosespecifica pn_resultado_asignacion panel_boton"
+				style="height:30px; width:82px ;margin: 12px">
+
+		</p:commandButton>	
+		
+		<h:panelGrid id="pn_cant_asignar"  columns="6" style="margin-top:20px" cellpadding="3" 
+			cellspacing="3" rendered="#{!cc.attrs.nameBean.especifica}">
+			
+			<p:outputLabel for="IPT_asignar" value="#{msg['asignacion.nng.numeracion.asignar']}" />
+			<p:inputText id="IPT_asignar" label="#{msg['asignacion.nng.numeracion.asignar']}" 
+				value="#{cc.attrs.nameBean.cantidadAsignar}" maxlength="7"
+				style="width:92px">
+				<p:ajax event="keyup" update="PGD_numeracionInicial" global="false"/>
+			</p:inputText>
+						
+			<p:outputLabel for="IPT_solicitada" value="#{msg['asignacion.nng.numeracion.solicitada']}" />
+			<p:inputText id="IPT_solicitada" label="#{msg['asignacion.nng.numeracion.solicitada']}" 
+				value="#{cc.attrs.nameBean.selectedNumeracionSolicitada.cantidadSolicitada}" 
+				style="width:92px" disabled="true" />
+				
+			<p:outputLabel for="IPT_asignada" value="#{msg['asignacion.nng.numeracion.asignada']}" />
+			<p:inputText id="IPT_asignada" label="#{msg['asignacion.nng.numeracion.asignada']}" 
+				value="#{cc.attrs.nameBean.selectedNumeracionSolicitada.cantidadAsignada}" 
+				style="width:92px" disabled="true" />
+			
+			<p:commandButton value="#{msg['boton.buscar.rangos']}" id="BTN_buscarRangos"
+				disabled="#{cc.attrs.nameBean.selectedNumeracionSolicitada == null}"
+				actionListener="#{cc.attrs.nameBean.buscarRangos}"
+				update="MSG_Analisis pn_series pn_detalle_serie tbl_serie_ocupada tbl_serie_libre" 				
+				 style="height:30px;  width:150px ; margin: 12px;">
+			</p:commandButton>
+			
+			<p:commandButton value="#{msg['analisis.asignacion.generar']}" id="BTN_generaAnalisis" 
+				 style="height:30px; width:50px; margin:12px" ajax="false"
+				 onclick="PrimeFaces.monitorDownload(showStatus, hideStatus)">
+				<p:fileDownload value="#{cc.attrs.nameBean.analisisNumeracion}" />	
+			</p:commandButton>
+		</h:panelGrid>
+		
+		<h:panelGrid id="pn_series"  columns="2" style="margin-top:20px" cellpadding="3"
+			cellspacing="3" rendered="#{!cc.attrs.nameBean.especifica}">
+			
+			<p:dataTable id="tbl_serie_ocupada" var="detalle"
+				widgetVar="wid_serie_ocupada"
+				value="#{cc.attrs.nameBean.serieOcupadaModel}"
+				selectionMode="single"
+				selection="#{cc.attrs.nameBean.selectedSerieOcupada}"
+				lazy="true" 
+				paginator="true" paginatorPosition="bottom" 
+				rows="#{cc.attrs.nameBean.registroPorPagina}"
+				resizableColumns="true" emptyMessage="#{msg['buscador.noresultados']}">
+				<f:facet name="header">#{msg['asignacion.nng.serie.ocupada']}</f:facet>
+				<p:ajax event="rowSelect" listener="#{cc.attrs.nameBean.selectSerieOcupada}" update=":FORM_SolicitudAsignacionNNG"/>
+				<p:column headerText="#{msg['asignacion.nng.clave']}" style="text-align:center;">
+					<h:outputText value="#{detalle.serie.id.idClaveServicio}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie']}" style="text-align:center;">
+					<h:outputText value="#{detalle.serie.id.snaAsString}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie.ocupacion']}">
+					<h:outputText value="#{detalle.ocupacion}"/>
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie.disponible']}">
+					<h:outputText value="#{detalle.disponible}" />
+				</p:column>
+				<f:facet name="footer">
+					<p:commandButton value="#{msg['boton.seleccion.aleatoria']}" id="BTN_aleatorioOcupado"
+						actionListener="#{cc.attrs.nameBean.seleccionAleatoriaOcupado}"
+						disabled="#{cc.attrs.nameBean.selectedNumeracionSolicitada == null and cc.attrs.nameBean.cantidadAsignar == null}"
+						update=":FORM_SolicitudAsignacionNNG" 				
+						style="height:30px;  width:150px ; margin: 12px;">
+					</p:commandButton>
+				</f:facet>
+			</p:dataTable>
+			
+			<p:dataTable id="tbl_serie_libre" var="detalle"
+				widgetVar="wid_serie_libre"
+				value="#{cc.attrs.nameBean.serieLibreModel}"
+				rowSelectMode="checkbox" 
+				selection="#{cc.attrs.nameBean.selectedSerieLibre.seleccionTabla}"
+				lazy="true"
+				paginator="true" paginatorPosition="bottom" 
+				rows="#{cc.attrs.nameBean.registroPorPagina}"
+				resizableColumns="true" emptyMessage="#{msg['buscador.noresultados']}">
+				<f:facet name="header">#{msg['asignacion.nng.serie.libre']}</f:facet>
+				<p:ajax 
+					event="toggleSelect" 
+					listener="#{cc.attrs.nameBean.seleccionPaginaSerieLibre}" 
+					update=":#{p:component('pn_analisis')}">
+				</p:ajax>
+				
+				<p:ajax 
+					event="rowSelectCheckbox" 
+					listener="#{cc.attrs.nameBean.seleccionSerieLibre}" 
+					update=":#{p:component('pn_analisis')}">
+				</p:ajax>
+				
+	       		<p:ajax 
+	       			event="rowUnselectCheckbox" 
+					listener="#{cc.attrs.nameBean.deSeleccionSerieLibre}"
+					update=":#{p:component('pn_analisis')}">
+				</p:ajax>
+				
+				<p:column
+					selectionMode="multiple"
+			    	headerText=""
+			    	width="15" style="font-size:12px;">
+			    </p:column>
+	
+				<p:column headerText="#{msg['asignacion.nng.clave']}" style="text-align:center;">
+					<h:outputText value="#{detalle.serie.id.idClaveServicio}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie']}" style="text-align:center;">
+					<h:outputText value="#{detalle.serie.id.snaAsString}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie.ocupacion']}">
+					<h:outputText value="#{detalle.ocupacion}"/>
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie.disponible']}">
+					<h:outputText value="#{detalle.disponible}" />
+				</p:column>
+				<f:facet name="footer">
+					<p:commandButton value="#{msg['boton.seleccion.manual']}" id="BTN_manualLibre"
+						disabled="#{!cc.attrs.nameBean.habilitaSeleccionManualLibre}"
+						actionListener="#{cc.attrs.nameBean.seleccionManualLibre}"
+						update=":#{p:component('pn_analisis')}" 				
+						 style="height:30px;  width:150px ; margin: 12px;">
+					</p:commandButton>
+					
+					<p:commandButton value="#{msg['boton.seleccion.aleatoria']}" id="BTN_aleatoriolibre"
+						actionListener="#{cc.attrs.nameBean.seleccionAleatoriaLibre}"
+						disabled="#{cc.attrs.nameBean.selectedNumeracionSolicitada == null and cc.attrs.nameBean.cantidadAsignar == null}"
+						update=":#{p:component('pn_analisis')}" 				
+						 style="height:30px;  width:150px ; margin: 12px;">
+					</p:commandButton>
+				</f:facet>
+			</p:dataTable>
+
+			
+		</h:panelGrid>
+		
+		<h:panelGrid id="pn_detalle_serie" rendered="#{!(cc.attrs.nameBean.selectedSerieOcupada == null)}">
+		
+			<p:dataTable id="tbl_rangos_serie" var="rango" 
+				value="#{cc.attrs.nameBean.listaRangosSeries}"
+				rows="#{cc.attrs.nameBean.registroPorPagina}"
+				emptyMessage="#{msg['buscador.noresultados']}"
+           		paginator="true" paginatorPosition="bottom"
+				resizableColumns="true">
+				<f:facet name="header">#{msg['asignacion.nng.rangos.serie']}</f:facet>
+				<p:column headerText="#{msg['asignacion.nng.clave']}" 
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.id.idClaveServicio}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie']}" 			
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.serie.id.snaAsString}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.numero.inicial']}" 
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.numInicio}"/>
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.numero.final']}" 
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.numFinal}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie.ocupacion']}"
+				width="15%" style="font-size:14px;">
+					<h:outputText value="#{cc.attrs.nameBean.selectedSerieOcupada.ocupacion}"/>
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie.disponible']}"
+				width="15%" style="font-size:14px;">
+					<h:outputText value="#{cc.attrs.nameBean.selectedSerieOcupada.disponible}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.pst']}"
+				width="30%" style="font-size:14px;">
+					<h:outputText value="#{rango.solicitud.proveedorSolicitante.nombre}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.consecutivo.rango']}"
+				width="15%" style="font-size:14px;">
+					<h:outputText value="#{rango.solicitud.id}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.cliente']}" 
+				width="30%" style="font-size:14px;">
+					<h:outputText value="#{rango.cliente}"/>
+				</p:column>
+	
+			</p:dataTable>
+			
+			<h:panelGrid id="PGD_numeracionInicial"  columns="8" style="margin-top:20px" cellpadding="3"
+				cellspacing="3">
+				
+				<p:outputLabel value="Numeracion Inicial:" />
+				<p:inputText id="IPT_numeracionInicial" label="Numeracion Inicial" 
+					value="#{cc.attrs.nameBean.numeracionInicial}" maxlength="4">
+					 <p:ajax event="keyup" update="IPT_numeracionFinal" global="false"/>
+				</p:inputText>
+				<p:outputLabel value="Numeracion Final: " />
+				<p:inputText id="IPT_numeracionFinal" label="Numeracion Final" 
+					value="#{cc.attrs.nameBean.numeracionInicialAsInt + cc.attrs.nameBean.cantidadAsignarAsInt - 1}" disabled="true"/>
+					
+					<!-- Boton que muestra la lista de sugerencia -->
+				<p:commandButton value="Sugerir" id="BTN_sugerir"
+					actionListener="#{cc.attrs.nameBean.sugerirRango}"
+					oncomplete="PF('sugerirNumeraciones').show()"
+					update=":cmp_sugerencia:FORM_sugerencia" 
+					global="false"
+					style="height:30px;  width:92px ;margin-right:20px; margin: 12px;">
+				</p:commandButton>
+				
+					<!-- Boton que selecciona la numeración a asignar-->
+				<p:commandButton value="Seleccionar" id="BTN_seleccionar"
+					actionListener="#{cc.attrs.nameBean.seleccionarRango}"
+					update=":#{p:component('pn_analisis')}"
+					style="margin: 12px;height:30px; width:82">
+				</p:commandButton>
+
+			</h:panelGrid>
+			
+		</h:panelGrid>
+		
+		<h:panelGrid id="pn_resultado_asignacion">
+		
+			<p:dataTable id="tbl_rangos_asignados" var="rango" 
+				value="#{cc.attrs.nameBean.listaRangosAsignados}"
+				scrollable="true" scrollWidth="95%" emptyMessage="#{msg['buscador.noresultados']}"
+				paginator="true" paginatorPosition="bottom"
+				rows="#{cc.attrs.nameBean.registroPorPagina}"
+				resizableColumns="true" rendered="#{cc.attrs.nameBean.especifica}">
+				<f:facet name="header">#{msg['asignacion.nng.numeracion.asignada']}</f:facet>
+				<p:column headerText="#{msg['asignacion.nng.clave']}" 
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.id.idClaveServicio}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie']}" 			
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.serie.id.snaAsString}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.numero.inicial']}" 
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.numInicio}"/>
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.numero.final']}" 
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.numFinal}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.pst']}"
+				width="30%" style="font-size:14px;">
+					<h:outputText value="#{rango.solicitud.proveedorSolicitante.nombre}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.cliente']}" 
+				width="30%" style="font-size:14px;">
+					<h:outputText value="#{rango.cliente}"/>
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.consecutivo.rango']}"
+				width="15%" style="font-size:14px;">
+					<h:outputText value="#{rango.solicitud.id}" />
+				</p:column>
+			    <p:column headerText="#{msg['consultar.Fecha_asignacion']}"
+			    width="20%" style="font-size:14px; text-align:center;">
+			     	 <h:outputText value="#{rango.solicitud.fechaAsignacion}">
+			     	 	<f:convertDateTime pattern="dd/MM/yyyy" />
+			     	</h:outputText>
+			    </p:column>
+   				<p:column headerText="#{msg['consultar.Numero_oficio']}" 
+   				width="30%" style="font-size:14px;">
+       				<h:outputText value="#{rango.solicitud.numOficioSolicitante}"/>
+   				</p:column>
+
+			</p:dataTable>
+			
+			<p:dataTable id="tbl_num_para_asig" var="rango" 
+				widgetVar="wid_numeracionSeleccionada"
+				value="#{cc.attrs.nameBean.listaRangos}"
+				scrollable="true" scrollWidth="95%" 
+				paginator="true" paginatorPosition="bottom" 
+				rows="#{cc.attrs.nameBean.registroPorPagina}"
+				resizableColumns="true" emptyMessage="#{msg['buscador.noresultados']}">
+				<f:facet name="header">#{cc.attrs.nameBean.headerTablaRangos}</f:facet>
+				<p:column width="5%">
+					<p:commandButton title="#{msg['cancelar']}" process="@this"		 				
+						update=":#{cc.attrs.formAsignacion}"
+						action="#{cc.attrs.nameBean.cancelarRango(rango)}"
+						icon="ui-icon-circle-close">
+					</p:commandButton>
+				</p:column>
+				<p:column headerText="#{msg['catalogo.clave.servicio']}" 
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.claveServicio.codigo}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.serie']}" 			
+				width="10%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.snaAsString}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.numero.inicial']}" 
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.inicioRango}"/>
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.numero.final']}" 
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.finRango}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.cliente']}" 
+				width="30%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.numeracionSolicitada.cliente}"/>
+				</p:column>
+				<p:column headerText="#{msg['historico.serie.bcd']}"
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.numeracionSolicitada.bcd != null ? rango.numeracionSolicitada.bcd : rango.numeracionSolicitada.concesionario.bcd}" />
+				</p:column>
+				<p:column headerText="#{msg['proveedor.ida']}" 
+				width="15%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{cc.attrs.nameBean.pstComercializador?cc.attrs.nameBean.solicitud.proveedorSolicitante.ida:cc.attrs.nameBean.pstConcesionario || cc.attrs.nameBean.pstAmbos?cc.attrs.nameBean.solicitud.proveedorSolicitante.ido:rango.numeracionSolicitada.bcd}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.estatus']}" 
+				width="10%" style="font-size:14px; text-align:center;">
+					<h:outputText value="#{rango.estatus.descripcion}" />
+				</p:column>
+	
+	
+			</p:dataTable>
+			
+			<p:dataTable id="tbl_uso_clave" var="detalle" rendered="#{!cc.attrs.nameBean.especifica}"
+				value="#{cc.attrs.nameBean.listaDetalleUsoClaves}"
+				rows="#{cc.attrs.nameBean.registroPorPagina}"
+				emptyMessage="#{msg['buscador.noresultados']}"
+            	paginator="true" paginatorPosition="bottom"
+				resizableColumns="true">
+				<f:facet name="header">#{msg['asignacion.nng.porcentaje.uso']}
+					<h:commandLink>
+						<p:graphicImage style="background:#7ac142;"
+							value="/img/ico-excel.png" />
+						<p:dataExporter type="xls" target="tbl_uso_clave"
+							fileName="porcentaje_uso_claves_servicio" pageOnly="false" />
+					</h:commandLink>
+				</f:facet>
+				<p:column headerText="#{msg['catalogo.clave.servicio']}" 
+					style="font-size:14px; text-align:center;">
+					<h:outputText value="#{detalle.claveServicio.codigo}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.total.numeracion.asignada']}" 
+				 	style="font-size:14px;">
+					<h:outputText value="#{detalle.totalNumeracionAsignada}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.total.numeracion.disponible']}" 			
+					style="font-size:14px;">
+					<h:outputText value="#{detalle.totalNumeracionDisponible}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.total.series.asignada']}" 
+				 	style="font-size:14px;">
+					<h:outputText value="#{detalle.totalSeriesOcupadas}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.total.series.disponible']}" 			
+					style="font-size:14px;">
+					<h:outputText value="#{detalle.totalSeriesDisponibles}" />
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.porcentaje.uso.numeracion']}"
+					 style="font-size:14px;">
+					<h:outputText value="#{detalle.porcentajeUsoNumeracion}"/>
+				</p:column>
+				<p:column headerText="#{msg['asignacion.nng.porcentaje.uso.series']}"
+					style="font-size:14px;">
+					<h:outputText value="#{detalle.porcentajeUsoSerie}" />
+				</p:column>
+	
+			</p:dataTable>
+		</h:panelGrid>
+		
+		<p:panel id="panel_boton" styleClass="botonera alaDcha">
+			<p:commandButton 
+				id="btnSalvar" value="#{msg['manual.generales.btn.guardar']}"
+				icon="ui-icon-disk" 
+				actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+				disabled="#{!cc.attrs.nameBean.tabHabilitado}" 
+				update="MSG_Analisis"
+				style="height:30px;  width:96px ;margin-right:20px;">
+			</p:commandButton>
+		</p:panel>
+		
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="explode" 
+				closeOnEscape="true" closable="false" 
+ 			 	severity="alert" widgetVar="cd">
+	        <p:commandButton value="#{msg['confirmacion.aceptar']}" type="button"  					
+	       					 styleClass="ui-confirmdialog-yes"/>
+	        <p:commandButton value="#{msg['confirmacion.rechazar']}" styleClass="ui-confirmdialog-no"/>
+	    </p:confirmDialog>
+		</p:panel>	
+	</composite:implementation>
+
+</html>

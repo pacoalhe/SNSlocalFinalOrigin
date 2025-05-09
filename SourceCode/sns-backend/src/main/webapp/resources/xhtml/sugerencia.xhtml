@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+	
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+		<composite:attribute name="update" required="true"></composite:attribute>
+	</composite:interface>
+	<composite:implementation>
+		<!-- Tabla de sugerencias de numeracion -->
+	<h:form id="FORM_sugerencia">
+		<p:panel>
+			<p:dataTable id="TBLGN_sugerencia" var="tablaSugerencia"
+				value="#{cc.attrs.nameBean.sugerenciaNumeracionList}"
+				emptyMessage="#{msg['buscador.noresultados']}"	
+				selectionMode="single"
+				selection="#{cc.attrs.nameBean.sugerenciaNumeracionSelect}"
+				rowKey="#{tablaSugerencia.numInicial}" 
+				lazy="true">
+				<p:ajax event="rowSelect"
+					listener="#{cc.attrs.nameBean.sugerenciaOnRowSelect}"
+					oncomplete="PF('wid_numeracionSeleccionada').filter();PF('sugerirNumeraciones').hide()"
+					async="true" update="#{cc.attrs.update}"/>
+		
+				<p:column headerText="Numero inicial" style="text-align:center;">
+					<h:outputText value="#{tablaSugerencia.numInicial}" />
+				</p:column>
+				<p:column headerText="Numero final" style="text-align:center;">
+					<h:outputText value="#{tablaSugerencia.numFinal}" />
+				</p:column>
+			</p:dataTable>
+		</p:panel>
+		
+	<!-- 	<p:ajaxStatus id="triggerblockuisugerencia" onstart="PF('bui_sugerencia').show()" onsuccess="PF('bui_sugerencia').hide()">
+    
+  		</p:ajaxStatus>
+		
+		<p:blockUI block="FORM_sugerencia" widgetVar="bui_sugerencia" >
+			<ui:include src="/componentes/loader.xhtml"/> 	
+ 		</p:blockUI> -->
+	</h:form>	
+	</composite:implementation>
+
+</html>

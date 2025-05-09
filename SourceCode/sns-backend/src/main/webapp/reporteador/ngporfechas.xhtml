@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+		<ui:define name="centro">
+			<script type="text/javascript">
+				function vacio() {
+				}
+			</script>
+			
+			 <f:metadata>
+    				<f:event type="preRenderView" listener="#{reporteadorNGFechasBean.evaluaPeticion}"/>
+   			</f:metadata>
+		
+	        <fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['reporteador.title']}/#{msg['reporteador.cng']}</legend>
+				<p:messages id="MSG_BuscadorNGFecha" showDetail="false" showSummary="true" autoUpdate="false" closable="true" showIcon="false"  escape="false" />
+			<h:form id="FORM_Buscador">
+					<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['reporteador.cng.buscador']}</legend>
+			
+			
+			 		<h:panelGrid id="PNL_Buscador" columns="4" style="margin-bottom:20px;float:left" cellpadding="3" cellspacing="3" >
+			 		    
+				    	<h:outputLabel value="#{msg['reporteador.cng.desde']}" />
+						<p:calendar 
+							id="fDesde" locale="mx_MX"
+							value="#{reporteadorNGFechasBean.fchDesde}"
+							pattern="MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['reporteador.cng.desde']}"
+							navigator="true" size="9" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fHasta" global="false"/>	
+							<p:ajax event="change" update="fHasta" global="false"/>
+						</p:calendar>
+						
+						<h:outputLabel value="#{msg['reporteador.cng.hasta']}" />
+						<p:calendar 
+							id="fHasta"  locale="mx_MX"
+							value="#{reporteadorNGFechasBean.fchHasta}" 
+							pattern="MM/yyyy" mask="true"
+							label="#{msg['reporteador.cng.hasta']}"
+							disabled="#{reporteadorNGFechasBean.fchDesde == null}"
+							navigator="true" size="9" yearRange="1995:c+10">
+							<p:ajax event="change" global="false"/>
+							<p:ajax event="dateSelect" global="false"/>
+						</p:calendar>
+
+						<p:outputLabel for="selPst" value="#{msg['reporteador.ng.pst']}" />
+						<p:selectOneMenu
+							id="selPst" autoWidth="false"
+							value="#{reporteadorNGFechasBean.pstSeleccionada}" 
+							converter="#{proveedorConverter}" 
+							style="width:190px"> 
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+							<f:selectItems 
+								value="#{reporteadorNGFechasBean.listaPst}" 
+								var="pstsel" 
+								itemLabel="#{pstsel.nombre}"
+								itemValue="#{pstsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selEstado" value="#{msg['reporteador.ng.estado']}" />
+						<p:selectOneMenu
+							id="selEstado" autoWidth="false"
+							value="#{reporteadorNGFechasBean.estadoSeleccionado}" 
+							converter="#{estadoConverter}" 
+							style="width:190px"> 
+							<p:ajax 
+								event="change" listener="#{reporteadorNGFechasBean.seleccionEstado()}"
+								update=":MSG_BuscadorNGFecha selMunicipio selPoblacion"
+									>
+							</p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+							<f:selectItems 
+								value="#{reporteadorNGFechasBean.listaEstado}" 
+								var="estadosel" 
+								itemLabel="#{estadosel.nombre}"
+								itemValue="#{estadosel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+			
+						<p:outputLabel for="selMunicipio" value="#{msg['reporteador.ng.municipio']}" />
+						<p:selectOneMenu 
+							id="selMunicipio" autoWidth="false"
+							value="#{reporteadorNGFechasBean.municipioSeleccionado}"
+							converter="#{municipioConverter}" 
+							style="width:190px">
+							<p:ajax 
+								event="change" listener="#{reporteadorNGFechasBean.seleccionMunicipio()}"
+								update=":MSG_BuscadorNGFecha selPoblacion"
+									>
+							</p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+							<f:selectItems 
+								value="#{reporteadorNGFechasBean.listaMunicipio}" 
+								var="municipiosel"
+								itemLabel="#{municipiosel.nombre}"
+								itemValue="#{municipiosel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+						
+						
+						<p:outputLabel for="selPoblacion" value="#{msg['reporteador.ng.poblacion']}" />
+						<p:selectOneMenu 
+							id="selPoblacion" autoWidth="false"
+							value="#{reporteadorNGFechasBean.poblacionSeleccionada}"
+							converter="#{poblacionConverter}"
+							style="width:190px;">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+							<f:selectItems 
+								value="#{reporteadorNGFechasBean.listaPoblacion}" 
+								var="poblacionsel"
+								itemLabel="#{poblacionsel.nombre}"
+								itemValue="#{poblacionsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+						
+						<p:outputLabel for="TXT_Abn" value="#{msg['reporteador.ng.abn']}"/>
+						<p:inputText 
+								id="TXT_Abn"
+								value="#{reporteadorNGFechasBean.abnSeleccionada}"
+								maxlength="3" 
+								style="width: 90px;">
+						</p:inputText>
+						
+						<p:outputLabel for="radioAgrupar" value="#{msg['reporteador.cng.agrupar']}"/>
+						<p:selectOneRadio id="radioAgrupar" value="#{reporteadorNGFechasBean.agruparPor}">
+							<f:selectItem itemLabel="#{msg['reporteador.cng.meses']}" itemValue="M"  />
+							<f:selectItem itemLabel="#{msg['reporteador.cng.anyos']}" itemValue="A" />
+						</p:selectOneRadio>
+			</h:panelGrid>
+		 		</fieldset>	
+		 		<h:panelGrid   id="PNL_Botonera"  columns="2">
+					<p:commandButton value="#{msg['consultar.Limpiar']}" process="@this" id="limpiar" widgetVar="limpiar"
+						actionListener="#{reporteadorNGFechasBean.resetPantalla}"
+						update="PNL_Buscador PNL_Botonera :MSG_BuscadorNGFecha"
+						style="height:30px; width:82px; margin-right:20px;">
+						<p:resetInput target="PNL_Buscador"/>
+					</p:commandButton>
+					
+					<p:commandButton value="#{msg.exportar}" 
+						actionListener="#{reporteadorNGFechasBean.initReport()}"  
+						rendered="#{!reporteadorNGFechasBean.existePeticion }" 
+						update="PNL_Botonera :MSG_BuscadorNGFecha"
+						style="height:30px; margin-right:20px;">
+					</p:commandButton>
+					
+					<p:commandButton value="#{msg['reporteador.cng.actualizar.estado']}" actionListener="#{reporteadorNGFechasBean.isReportRunning()}" ajax="true" process="@this" 
+					     rendered="#{reporteadorNGFechasBean.existePeticion and !reporteadorNGFechasBean.acabado }" 
+						update="PNL_Botonera :MSG_BuscadorNGFecha"
+						style="height:30px; width:150px; margin-right:20px;">
+					</p:commandButton>
+					
+				
+				<p:commandButton id="BTN_Descargar" value="#{msg['reporteador.cng.descargar.reporte']}"  ajax="false" rendered="#{reporteadorNGFechasBean.existePeticion and reporteadorNGFechasBean.acabado}"
+								      style="height:30px" onclick="PrimeFaces.monitorDownload(vacio, limpiaExportacion)"> 
+								     <p:fileDownload value="#{reporteadorNGFechasBean.descargarFichero()}" /> 
+				</p:commandButton>
+				
+				<p:remoteCommand name="limpiaExportacion" action="#{reporteadorNGFechasBean.limpiaExportacion}"  update="PNL_Botonera :MSG_BuscadorNGFecha"/>
+				
+					
+				</h:panelGrid>
+				
+			</h:form>
+			
+		 			
+		 </fieldset>
+		 		<p:ajaxStatus id="triggerblockuiCentral" onstart="PF('statusNgFechasDialog').show()" onsuccess="PF('statusNgFechasDialog').hide()"></p:ajaxStatus>
+		 		<p:dialog widgetVar="statusNgFechasDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+    				<ui:include src="/componentes/loader.xhtml"/>
+				</p:dialog>
+	<!--     <p:blockUI block="FORM_Buscador" widgetVar="bui" >
+	        <ui:include src="/componentes/loader.xhtml"/>
+	     </p:blockUI> -->
+		 
+		 
+		 
+		</ui:define>
+	</ui:composition>
+</html>

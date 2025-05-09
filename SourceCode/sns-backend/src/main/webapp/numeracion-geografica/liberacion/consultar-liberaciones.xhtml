@@ -1,0 +1,316 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+		<ui:define name="centro">
+		
+			<p:messages id="MSG_ConsultarLiberaciones" showDetail="false" showSummary="true" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+			<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionGeografica']}/#{msg['mainMenu.Liberacion']}</legend>
+				
+			<h:form id="FRM_ConsultarLiberaciones">
+				<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['buscador.solicitud']}</legend>
+					
+					<h:panelGrid id="PNL_Busqueda" columns="8" style="float:left" cellpadding="3" cellspacing="3">
+						<h:outputLabel value="#{msg['consultar.Consecutivo']}"/>
+						<p:inputText
+							id="TXT_Consecutivo"
+							required="false" minValue="9" maxlength="9" mask="9"
+							value="#{consultarLiberacionesNgBean.consecutivo}"
+							label="#{msg['consultar.Consecutivo']}"
+							style="width: 150px;">
+						</p:inputText>
+						
+						<h:outputLabel for="selproveedor" value="#{msg.proveedor}" />
+						<p:selectOneMenu
+							id="selproveedor" autoWidth="false" style="width:150px;"
+							value="#{consultarLiberacionesNgBean.proveedorSeleccionado}" 
+				 			converter="#{proveedorConverter}"> 
+							<f:selectItem itemLabel="Seleccionar"/>
+							<f:selectItems 
+								value="#{consultarLiberacionesNgBean.listaProveedores}"
+								var="proveedorsel" 
+								itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="#{msg['consultar.Numero_oficio']}" />
+						<p:inputText 
+							id="TXT_Oficio"
+							required="false" maxlength="51"
+							value="#{consultarLiberacionesNgBean.oficioPstSolicitante}"
+							label="#{msg['consultar.Numero_oficio']}"
+							style="width: 150px;">
+				    	</p:inputText>
+				    	
+				    	<h:outputLabel for="selestado" value="#{msg['consultar.Estatus']}" />
+						<p:selectOneMenu 
+							id="selestado" style="width:150px;" 
+							value="#{consultarLiberacionesNgBean.estadoSeleccionado}" 
+			 				converter="#{estatusSolicitudConverter}"> 
+							<f:selectItem itemLabel="Seleccionar"/>
+							<f:selectItems
+								value="#{consultarLiberacionesNgBean.listaEstados}"
+								var="estados1"
+								itemLabel="#{estados1.descripcion}"
+								itemValue="#{estados1}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					
+				    	<h:outputLabel value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}" />
+						<p:calendar 
+							id="fSolicitudDesde" required="false" locale="mx_MX"
+							value="#{consultarLiberacionesNgBean.fechaSolDesde}" 
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							navigator="true" yearRange="1995:c+10"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}">
+							<p:ajax 
+								event="dateSelect" global="false"
+								update="fSolicitudHasta"
+								listener="#{consultarLiberacionesNgBean.habilitarFechaSolicitudHasta}">
+							</p:ajax>
+						</p:calendar>
+						
+						<h:outputLabel value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}" />
+						<p:calendar 
+							id="fSolicitudHasta" required="false" locale="mx_MX"
+							value="#{consultarLiberacionesNgBean.fechaSolHasta}" 
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							disabled="#{!consultarLiberacionesNgBean.fechaSolHastaHabilitado}"
+							navigator="true" yearRange="1995:c+10"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}">
+							<p:ajax event="change" global="false"/>
+							<p:ajax event="dateSelect" global="false"/>
+						</p:calendar>
+				
+				    	<h:outputLabel value="#{msg['consultar.Fecha_liberacion']} #{msg.fechaDesde}" />
+						<p:calendar 
+							id="fLiberacionDesde" required="false" locale="mx_MX"
+							value="#{consultarLiberacionesNgBean.fechaLibDesde}" 
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							navigator="true" yearRange="1995:c+10"
+							label="#{msg['consultar.Fecha_liberacion']} #{msg.fechaDesde}">
+							<p:ajax 
+								event="dateSelect" global="false"
+								update="fLiberacionHasta" 
+								listener="#{consultarLiberacionesNgBean.habilitarFechaLiberacionHasta}">	
+							</p:ajax>
+						</p:calendar>
+						
+						<h:outputLabel value="#{msg['consultar.Fecha_liberacion']} #{msg.fechaHasta}" />
+						<p:calendar 
+							id="fLiberacionHasta" required="false" locale="mx_MX"
+							value="#{consultarLiberacionesNgBean.fechaLibHasta}" 
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							disabled="#{!consultarLiberacionesNgBean.fechaLibHastaHabilitado}"
+							navigator="true" yearRange="1995:c+10"
+							label="#{msg['consultar.Fecha_liberacion']} #{msg.fechaHasta}">
+							<p:ajax event="change" global="false"/>
+							<p:ajax event="dateSelect" global="false"/>
+						</p:calendar>
+						
+				    	<h:outputLabel for="TXT_Nir" value="#{msg['cesion.NIR']}" />
+						<p:inputText 
+							id="TXT_Nir"
+							required="false" maxlength="3"
+							value="#{consultarLiberacionesNgBean.cdgNir}"
+							label="#{msg['cesion.NIR']}"
+							style="width: 150px;"
+							validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+				    	</p:inputText>
+				    	
+				    	<h:outputLabel for="TXT_Serie" value="#{msg['cesion.serie']}" />
+						<p:inputText 
+							id="TXT_Serie"
+							required="false" maxlength="5"
+							value="#{consultarLiberacionesNgBean.sna}"
+							label="#{msg['cesion.serie']}"
+							style="width: 150px;"
+							validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+				    	</p:inputText>
+				    	
+					</h:panelGrid>
+				</fieldset>
+				
+				<p:panelGrid style="display:block;">
+					<p:commandButton
+						value="#{msg['consultar.Buscar']}"
+						action="#{consultarLiberacionesNgBean.realizarBusqueda}"
+						update=":MSG_ConsultarLiberaciones TBL_SolicitudesLiberacion"
+						style="height:30px; width:82px">
+					</p:commandButton>
+					<p:commandButton 
+						value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarLiberacionesNgBean.limpiarBusqueda}"
+						update=":MSG_ConsultarLiberaciones PNL_Busqueda TBL_SolicitudesLiberacion" 
+						style="margin-right:20px; height:30px; width:82px"
+						process="@this">
+						<p:resetInput target="PNL_Busqueda"/>
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['liberacion.consulta']}</legend>
+					
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton 
+								value="#{msg['liberacion.nueva']}"
+								title="Editar" icon="ui-icon-pencil"
+								action="#{solicitudLiberacionNgBean.nuevaSolicitud}"
+								update=":MDL_Liberaciones"
+								oncomplete="PF('MDL_Liberaciones').show();">
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+				
+					<p:dataTable 
+						id="TBL_SolicitudesLiberacion"
+						widgetVar="tabla"
+						var="consultar" 
+						value="#{consultarLiberacionesNgBean.solicitudesLiberacionModel}"
+						lazy="true"
+						paginator="true" paginatorPosition="bottom" 
+						rows="#{consultarLiberacionesNgBean.registroPorPagina}" 
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+		
+					    <p:column headerText="#{msg['consultar.Consecutivo']}">
+					        <h:outputText value="#{consultar.consecutivo}" />
+					    </p:column>
+	 
+					    <p:column headerText="#{msg['liberacion.proveedor']}">
+					        <h:outputText value="#{consultar.solicitante}" />
+					    </p:column>
+					    
+						<p:column headerText="#{msg['consultar.Fecha_solicitud']}" style="text-align:center;">
+					     	 <h:outputText value="#{consultar.fechaSolicitud}"/>
+					    </p:column>
+					    
+						<p:column headerText="#{msg['oficios.FechaOficio']}" style="text-align:center;">
+					     	 <h:outputText value="#{consultar.fechaOficio}"/>
+					    </p:column>
+						
+						<p:column headerText="#{msg['consultar.Numero_oficio']}">
+	        				<h:outputText value="#{consultar.numOficio}" />
+	    				</p:column>
+
+	    				<p:column headerText="#{msg['consultar.Fecha_liberacion']}" style="text-align:center;">
+	    	 				<h:outputText value="#{consultar.fechaLiberacion}"/>
+	    				</p:column>
+	    
+					    <p:column headerText="#{msg['consultar.Estatus']}" style="text-align:center;">
+					        <h:outputText value="#{consultar.estatus}" />
+					    </p:column>
+	    
+	     				<p:column headerText="#{msg['consultar.Operaciones']}" style="text-align:center;">
+	       					<p:commandButton 
+	       						title="#{msg['consultas.generales.detalle']}"
+	       						icon="ui-icon-pencil"
+	       						action="#{consultarLiberacionesNgBean.editarSolicitud}"
+	       						update=":MDL_Liberaciones"
+	       						oncomplete="PF('MDL_Liberaciones').show();">
+	       						<f:setPropertyActionListener 
+									value="#{consultar}" 
+									target="#{consultarLiberacionesNgBean.solicitudSeleccionada}">
+								</f:setPropertyActionListener>
+	       					</p:commandButton>
+	       					
+							<p:commandButton
+								title="#{msg['consultas.generales.cancelar']}" 
+								icon="ui-icon-circle-close"
+								disabled="#{!consultar.cancelarDisponible}"
+								onclick="PF('DLG_Cancelar').show()" global="false">
+								<f:setPropertyActionListener 
+									value="#{consultar}" 
+									target="#{consultarLiberacionesNgBean.solicitudSeleccionada}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+	    				</p:column>
+	    
+					</p:dataTable>
+				</fieldset>
+
+			</h:form>
+			
+			<!-- Modal 'Solicitud Liberacion' -->
+			<p:dialog
+				id="MDL_Liberaciones" widgetVar="MDL_Liberaciones"
+				modal="true" appendTo="@(body)"
+				header="#{msg['mainMenu.NumeracionGeografica']}/#{msg['mainMenu.Liberacion']}"
+				closable="false" scrollable="true" resizable="true"
+				width="80%" height="400px" >
+				<ui:include 
+					src="/numeracion-geografica/liberacion/solicitud-liberacion.xhtml">
+				</ui:include>
+				<p:commandButton
+					id="BTN_Salir_Solicitud_Liberacion" 
+					styleClass="customCloseModal"
+					value="X"
+					closable="false"
+					onclick="PF('DLG_Salir_Solicitud_Liberacion').show()" global="false">
+					<p:resetInput target=":#{p:component('FORM_SolicitudLiberacion')}" />	
+				</p:commandButton>
+			</p:dialog>
+
+			<!-- Confirmación al salir solicitud liberacion-->
+			<p:dialog 
+				id="DLG_Salir_Solicitud_Liberacion" modal="true"
+				widgetVar="DLG_Salir_Solicitud_Liberacion" global="false"
+				closeOnEscape="true" closable="false" resizable="false"
+				header="Salir" appendTo="@(body)" 
+				width="250"
+				height="115">
+				<sns:exit-custom-dialog
+					confirmActionListener="#{solicitudLiberacionNgBean.resetTabs}"
+					message="#{msg['cerrarDialogo.mensaje']}"
+					onCompleteExit="PF('DLG_Salir_Solicitud_Liberacion').hide();PF('MDL_Liberaciones').hide();"
+					onCompleteCancel="PF('DLG_Salir_Solicitud_Liberacion').hide();"
+					updateComponentId=":FRM_ConsultarLiberaciones:TBL_SolicitudesLiberacion"
+					blockUIWidgetVar="salirSolicitudLiberacion_BUI" resetValues="true">
+				</sns:exit-custom-dialog>
+			</p:dialog>
+				
+			<!-- Modal para cancelar la solicitud -->
+			<p:dialog 
+				id="DLG_Cancelar" widgetVar="DLG_Cancelar" 
+				modal="true" closeOnEscape="true"
+				closable="false" resizable="false"
+				header="#{msg['cancelar.registro']}"
+				 appendTo="@(body)" width="250"
+				height="50">
+				<sns:confirm-custom-dialog 
+					message="#{msg['eliminar.registro.confirmar']}"
+					blockUIWidgetVar="cancelarSolicitud_BUI"
+					confirmActionListener ="#{consultarLiberacionesNgBean.eliminarSolicitud}"
+					dialogWidgetVar="DLG_Cancelar"
+					updateComponentId=":FRM_ConsultarLiberaciones:TBL_SolicitudesLiberacion :MSG_ConsultarLiberaciones">
+				</sns:confirm-custom-dialog>
+			</p:dialog>
+			
+
+			<p:ajaxStatus 
+				id="FRM_ConsultarLiberaciones_AS" 
+				onstart="PF('statusLiberacionDialog').show()"
+				onsuccess="PF('statusLiberacionDialog').hide()"> 
+			</p:ajaxStatus>
+				<p:dialog widgetVar="statusLiberacionDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+    <ui:include src="/componentes/loader.xhtml"/>
+</p:dialog>
+			
+			<!-- <p:blockUI block="FRM_ConsultarLiberaciones" widgetVar="FRM_ConsultarLiberaciones_BUI">
+				<ui:include src="/componentes/loader.xhtml"/>
+			</p:blockUI> -->
+
+          </fieldset>
+		</ui:define>
+	</ui:composition>
+</html>

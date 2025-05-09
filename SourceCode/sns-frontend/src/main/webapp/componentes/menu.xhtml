@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+
+<f:subview id="menuSuperiorView">
+	<h:body>
+		<ui:composition>
+			<h:form>
+
+				<p:menubar style="border-left: 1px solid #989898">
+
+					<p:submenu label="Consultas de Numeración"
+						styleClass="withoutArrow" icon="ico-geog">
+						<p:menuitem value="Consulta Numeración Geográfica"
+							action="/consulta-numeracion/numeracion-geografica.xhml?faces-redirect=true"
+							ajax="false" styleClass="withoutArrow">
+						</p:menuitem>
+						<p:menuitem value="Consulta de Numeración No Geográfica"
+							action="/consulta-numeracion/numeracion-no-geografica.xhml?faces-redirect=true"
+							styleClass="withoutArrow" ajax="false">
+						</p:menuitem>
+					</p:submenu>
+					<p:menuitem value="Mapas de Áreas Geográficas de Numeración"
+						action="/areas-geograficas-numeracion/areas-numeracion.xhtml?faces-redirect=true"
+						icon="ico-cpsn" styleClass="withoutArrow" ajax="false">
+					</p:menuitem>
+					<p:submenu label="Plan Nacional de Numeración" icon="ico-cpsi"
+						styleClass="withoutArrow">
+						<p:menuitem value="Acceso a Proveedores de Servicios de Telecomunicaciones"
+							action="/planes-numeracion/privado/index.xhtml?faces-redirect=true"
+							ajax="false" styleClass="withoutArrow">
+						</p:menuitem>
+						
+						<p:menuitem value="Acceso a Descarga Pública"
+							action="/planes-numeracion/descarga-publica.xhtml?faces-redirect=true"
+							styleClass="withoutArrow" ajax="false">
+						</p:menuitem>
+					</p:submenu>
+					<p:menuitem value="Descarga de Numeración No Geográfica"
+						action="/descarga-numeracion-no-geografica/descarga-numeracion-no-geografica.xhml?faces-redirect=true"
+						icon="ico-cpsi" styleClass="withoutArrow" ajax="false">
+					</p:menuitem>
+
+				</p:menubar>
+			</h:form>
+		</ui:composition>
+	</h:body>
+</f:subview>
+</html>

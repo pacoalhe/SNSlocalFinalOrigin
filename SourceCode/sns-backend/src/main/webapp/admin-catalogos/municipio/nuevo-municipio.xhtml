@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<h:form id="FRM_nuevoMunicipio">
+	<p:wizard widgetVar="wiz_nuevo_municipio" id="wiz_nuevo_municipio" showNavBar="false">
+		<p:tab id="tab_nueva_central" title="#{msg['catalogo.municipio.nuevo']}">
+			<p:messages id="MSG_nuevoMunicipio" showDetail="true" showSummary="false" autoUpdate="false" closable="true" escape="false" showIcon="false"/>	
+			<h:panelGrid>
+			<h:panelGrid id="PNG_datosMunicipio" columns="6" style="float:left" cellpadding="3" cellspacing="3">
+				<h:outputLabel for="selestado" value="#{msg['catalogo.estados.estado']}" />
+				<p:selectOneMenu label="#{msg['catalogo.estados.estado']}" 
+					id="selestado" style="width:150px;"
+					value="#{nuevoMunicipioBean.municipio.estado}" 
+		 			converter="#{estadoConverter}"
+		 			required="true"> 
+					<f:selectItem itemLabel="Seleccionar"/>
+					<f:selectItems 
+						value="#{nuevoMunicipioBean.listaEstados}"
+						var="estadosel" 
+						itemLabel="#{estadosel.nombre}"
+						itemValue="#{estadosel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+				
+				<h:outputLabel for="selclave" value="#{msg['catalogo.municipio.clave']} *" />
+				<p:inputText id="selclave" value="#{nuevoMunicipioBean.municipio.id.codMunicipio}" label="#{msg['catalogo.municipio.clave']}" 
+					maxlength="3" required="true">
+
+				</p:inputText>
+				
+				<h:outputLabel for="selnombre" value="#{msg['catalogo.municipio.nombre']} *" />
+				<p:inputText id="selnombre" value="#{nuevoMunicipioBean.municipio.nombre}" label="#{msg['catalogo.municipio.nombre']}"
+					maxlength="60" required="true"/>
+					
+				<h:outputLabel for="selregioncelular" value="#{msg['catalogo.municipios.region.celular']} *" />
+				<p:selectOneMenu label="#{msg['catalogo.municipios.region.celular']}"
+					id="selregioncelular" style="width:150px;"
+					value="#{nuevoMunicipioBean.municipio.regionCelular}" 
+		 			converter="#{regionConverter}"
+		 			required="true"> 
+					<f:selectItem itemLabel="Seleccionar"/>
+					<f:selectItems 
+						value="#{nuevoMunicipioBean.listaRegionesCelular}"
+						var="regionsel" 
+						itemLabel="#{regionsel.descripcion}"
+						itemValue="#{regionsel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+				
+				<h:outputLabel for="selregionpcs" value="#{msg['catalogo.municipios.region.pcs']} *" />
+				<p:selectOneMenu label="#{msg['catalogo.municipios.region.pcs']}"
+					id="selregionpcs" style="width:150px;"
+					value="#{nuevoMunicipioBean.municipio.regionPcs}" 
+		 			converter="#{regionConverter}"
+		 			required="true"> 
+					<f:selectItem itemLabel="Seleccionar"/>
+					<f:selectItems 
+						value="#{nuevoMunicipioBean.listaRegionesPcs}"
+						var="regionsel" 
+						itemLabel="#{regionsel.descripcion}"
+						itemValue="#{regionsel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+			
+			</h:panelGrid>
+			<p:panelGrid style="display:block;">
+		        <p:commandButton value="#{msg['manual.numeracion.agregar']}" id="bt_seleccionar"
+					actionListener="#{nuevoMunicipioBean.agregar}"
+					update="MSG_nuevoMunicipio PNG_datosMunicipio TBL_Municipios btn_guardar"
+					style="height:30px; width:82px ;margin: 12px">
+	
+				</p:commandButton>	
+			</p:panelGrid>	 
+			
+			<p:dataTable 
+				id="TBL_Municipios"
+				var="dato" 
+				value="#{nuevoMunicipioBean.listaMunicipios}"
+				lazy="true" rowKey="#{municipio.id}"
+				paginator="true" paginatorPosition="bottom" 
+				rows="5" resizableColumns="true"
+
+				emptyMessage="#{msg['buscador.noresultados']}">
+				
+		
+			    <p:column headerText="#{msg['catalogo.municipios.estado.codigo']}" width="10%" style="text-align:center;">
+			        <h:outputText value="#{dato.id.codEstado}" />
+			    </p:column>
+		
+			    <p:column headerText="#{msg['catalogo.estados.nombre']}" width="10%">
+			        <h:outputText value="#{dato.estado.nombre}" />
+			    </p:column>
+			    
+			    <p:column headerText="#{msg['catalogo.municipio.clave']}" width="10%" style="text-align:center;">
+			        <h:outputText value="#{dato.id.codMunicipio}" />
+			    </p:column>
+			    
+			    <p:column headerText="#{msg['catalogo.municipio']}" width="10%">
+			        <h:outputText value="#{dato.nombre}" />
+			    </p:column>
+			    
+			    <p:column headerText="#{msg['catalogo.municipios.region.celular']}" width="10%">
+			     	 <h:outputText value="#{dato.regionCelular.descripcion}"/>
+			    </p:column>
+			    
+			    <p:column headerText="#{msg['catalogo.municipios.region.pcs']}" width="10%">
+			     	 <h:outputText value="#{dato.regionPcs.descripcion}"/>
+			    </p:column>
+			    
+		 		<p:column width="5%" style="text-align:center;">
+		 			<p:commandButton title="#{msg.eliminar}" process="@this"
+							update=":FRM_nuevoMunicipio:MSG_nuevoMunicipio TBL_Municipios :FRM_nuevoMunicipio:btn_guardar"
+							action="#{nuevoMunicipioBean.eliminarMunicipio(dato)}"
+							icon="ui-icon-circle-close">
+					</p:commandButton>
+		 		</p:column>	
+			</p:dataTable>		
+			</h:panelGrid>
+			
+			<p:commandButton value="#{msg['manual.generales.btn.guardar']}" id="btn_guardar" process="@this"
+				icon="ui-icon-disk" disabled="#{nuevoMunicipioBean.listaMunicipios.size() == 0}"
+				actionListener="#{nuevoMunicipioBean.guardar}"
+				update="MSG_nuevoMunicipio TBL_Municipios" 
+				style="height:30px; width:94px ;margin-right:20px;">
+			</p:commandButton>
+		</p:tab>
+	</p:wizard>
+</h:form>
+
+</html>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+	
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+		<composite:attribute name="message" required="true"></composite:attribute>
+		
+	</composite:interface>
+	
+	<composite:implementation>
+		<p:fieldset id="fs_ubicacion" legend="#{msg['manual.numeracion.field.ubicacion']}" style="margin-bottom:20px" toggleable="false">
+
+				<h:panelGrid id="pn_ubicacion" columns="2" cellpadding="3" cellspacing="3" >
+					
+					<h:panelGrid id="pn_ubicacionClaveCensal" columns="2" cellpadding="3" cellspacing="3" >
+						<p:outputLabel for="in_clave" value="#{msg['manual.numeracion.field.ubicacion.clave.censal']}"></p:outputLabel>
+						<p:inputText id="in_clave" value="#{cc.attrs.nameBean.claveCensal}" maxlength="9">
+							<p:ajax event="change" update="pn_ubicacion :FORM_asignacionManual" listener="#{cc.attrs.nameBean.claveCensalChange}"/>
+						</p:inputText>
+						<p:tooltip for="in_clave" value="#{msg['manual.numeracion.field.ubicacion.clave.tooltip']}"></p:tooltip>
+					</h:panelGrid>
+					<h:panelGrid id="pn_ubicacionTop" columns="2" cellpadding="3" cellspacing="3" >
+						<p:outputLabel for="in_abn" value="#{msg['manual.numeracion.field.ubicacion.abn']}"></p:outputLabel>
+						<p:inputText id="in_abn"
+							value="#{cc.attrs.nameBean.abn}" maxlength="3">
+							<p:ajax event="change" update="pn_ubicacion" listener="#{cc.attrs.nameBean.abnChange}"/>
+						</p:inputText>
+						<p:tooltip for="in_abn" value="#{msg['manual.numeracion.field.ubicacion.clave.tooltip']}"></p:tooltip>
+					</h:panelGrid>
+	
+					<p:outputLabel for="in_estado" value="#{msg['ubicacion.estado']}"></p:outputLabel>
+					<p:selectOneMenu id="in_estado" value="#{cc.attrs.nameBean.estado}" 
+					 	converter="#{estadoConverter}">
+					 	<p:ajax event="change" listener="#{cc.attrs.nameBean.habilitarMunicipio}" update="pn_ubicacion in_municipio"></p:ajax>
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+						<f:selectItems value="#{cc.attrs.nameBean.listaEstados}" var="tipoestadosel" itemLabel="#{tipoestadosel.nombre}"
+							itemValue="#{tipoestadosel}"/>
+					</p:selectOneMenu>
+	
+					<p:outputLabel for="in_municipio" value="#{msg['ubicacion.municipio']}"></p:outputLabel>
+					<p:selectOneMenu id="in_municipio" value="#{cc.attrs.nameBean.municipio}" 
+					 	converter="#{municipioConverter}">
+					 	<p:ajax event="change" update="pn_ubicacion in_poblacion" listener="#{cc.attrs.nameBean.habilitarPoblacion}"/>
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+						<f:selectItems value="#{cc.attrs.nameBean.listaMunicipios}" var="tipomunicipiosel" itemLabel="#{tipomunicipiosel.nombre}"
+							itemValue="#{tipomunicipiosel}"/>
+					</p:selectOneMenu>
+	
+					<p:outputLabel for="in_poblacion" value="#{msg['ubicacion.poblacion']}"></p:outputLabel>
+					<p:selectOneMenu id="in_poblacion" value="#{cc.attrs.nameBean.poblacion}" 
+					 	converter="#{poblacionConverter}">
+					 	<p:ajax event="change" update="pn_ubicacion" listener="#{cc.attrs.nameBean.generaClave}"/>
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+						<f:selectItems value="#{cc.attrs.nameBean.listaPoblaciones}" var="tipopoblacionsel" itemLabel="#{tipopoblacionsel.nombre}"
+							itemValue="#{tipopoblacionsel}"/>
+					</p:selectOneMenu>
+	
+				</h:panelGrid>
+			</p:fieldset>
+	</composite:implementation>
+	
+</html>

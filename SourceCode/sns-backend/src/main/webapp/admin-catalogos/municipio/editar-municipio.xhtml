@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+<h:form id="FRM_editarMunicipio">
+	<p:wizard widgetVar="wiz_nuevo_municipio" id="wiz_nuevo_municipio" showNavBar="false" style="min-width: 1050px">
+		<p:tab id="tab_edit_municipio" title="#{msg['catalogo.municipio.editar']}">
+			<p:messages id="MSG_editarMunicipio" showDetail="false" showSummary="true" autoUpdate="false" closable="true" escape="false" showIcon="false"/>	
+			<h:panelGrid>
+			<h:panelGrid id="PNG_datosMunicipio" columns="6" style="float:left" cellpadding="3" cellspacing="3">
+				<h:outputLabel for="selestado" value="#{msg['catalogo.municipio.estado']} *" />
+				<p:selectOneMenu label="#{msg['catalogo.municipio.estado']}" disabled="true"
+					id="selestado" style="width:150px;"
+					value="#{editarMunicipioBean.municipio.estado}" 
+		 			converter="#{estadoConverter}"
+		 			required="true"> 
+					<f:selectItem itemLabel="Seleccionar"/>
+					<f:selectItems 
+						value="#{editarMunicipioBean.listaEstados}"
+						var="estadosel" 
+						itemLabel="#{estadosel.nombre}"
+						itemValue="#{estadosel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+				
+				<h:outputLabel for="selclave" value="#{msg['catalogo.municipio.clave']} *" />
+				<p:inputText id="selclave" value="#{editarMunicipioBean.municipio.id.codMunicipio}" label="#{msg['catalogo.municipio.clave']}"
+					maxlength="3" required="true" disabled="true">
+
+				</p:inputText>
+				
+				<h:outputLabel for="selnombre" value="#{msg['catalogo.municipio.nombre']} *" />
+				<p:inputText id="selnombre" value="#{editarMunicipioBean.municipio.nombre}" label="#{msg['catalogo.municipio.nombre']}"
+					maxlength="60" required="true"/>
+					
+				<h:outputLabel for="selregioncelular" value="#{msg['catalogo.municipios.region.celular']}" />
+				<p:selectOneMenu label="#{msg['catalogo.municipios.region.celular']}"
+					id="selregioncelular" style="width:150px;"
+					value="#{editarMunicipioBean.municipio.regionCelular}" 
+		 			converter="#{regionConverter}"
+		 			required="true"> 
+					<f:selectItem itemLabel="Seleccionar"/>
+					<f:selectItems 
+						value="#{editarMunicipioBean.listaRegionesCelular}"
+						var="regionsel" 
+						itemLabel="#{regionsel.descripcion}"
+						itemValue="#{regionsel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+				
+				<h:outputLabel for="selregionpcs" value="#{msg['catalogo.municipios.region.pcs']} *" />
+				<p:selectOneMenu label="#{msg['catalogo.municipios.region.pcs']}"
+					id="selregionpcs" style="width:150px;"
+					value="#{editarMunicipioBean.municipio.regionPcs}" 
+		 			converter="#{regionConverter}"
+		 			required="true"> 
+					<f:selectItem itemLabel="Seleccionar"/>
+					<f:selectItems 
+						value="#{editarMunicipioBean.listaRegionesPcs}"
+						var="regionsel" 
+						itemLabel="#{regionsel.descripcion}"
+						itemValue="#{regionsel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+
+			</h:panelGrid>
+			</h:panelGrid>
+			<p:commandButton value="#{msg['manual.generales.btn.guardar']}" id="btn_guardar"
+				icon="ui-icon-disk"
+				actionListener="#{editarMunicipioBean.guardar}"
+				update="MSG_editarMunicipio" 
+				style="height:30px; width:94px ;margin-right:20px;margin-top:20px;">
+			</p:commandButton>
+		</p:tab>
+	</p:wizard>
+</h:form>
+
+</html>

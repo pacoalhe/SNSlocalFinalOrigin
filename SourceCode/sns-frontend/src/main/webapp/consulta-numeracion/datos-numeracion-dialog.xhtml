@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+<!-- <p:ajaxStatus id="FORM_datosNumeracion_AS"
+	onstart="PF('FORM_datosNumeracion_BUI').show()"
+	onsuccess="PF('FORM_datosNumeracion_BUI').hide()">
+</p:ajaxStatus>
+<p:blockUI block="FORM_datosNumeracion"
+	widgetVar="FORM_datosNumeracion_BUI">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI> -->
+
+<h:form id="FORM_datosNumeracion">
+	<p:panelGrid columns="2" layout="grid" id="TBL_datosNumeracion"
+		styleClass="mycustomtablesa">
+
+		<f:facet name="header">
+           		DATOS GENERALES Y RESUMEN DE ASIGNACIÓN DE NUMERACIÓN DE <h:outputText
+				value="#{representanteBean.prestadorNumero.nombre}" />
+		</f:facet>
+
+		<h:outputText value="Razon social" />
+		<h:outputText value="#{representanteBean.prestadorNumero.nombre}" />
+
+		<h:outputText value="Numeración asignada" />
+		<h:outputText
+			value="#{representanteBean.formatoNumeracionAsignada(representanteBean.numeracionAsignadaProveedor)}" />
+
+		 
+		<p:row>
+			<h:outputText value="Dirección" />
+		</p:row>
+		<p:row>
+			<h:outputText value="#{representanteBean.prestadorNumero.calle}" />
+			<br></br>
+			<h:outputText value="#{representanteBean.prestadorNumero.ciudad}" />
+			<br></br>
+			<h:outputText value="#{representanteBean.prestadorNumero.cp}" />
+
+		</p:row>
+				
+	</p:panelGrid>
+
+	<br></br>
+	<h:outputText
+		value="Seleccionar el tipo de información deseada para consultar " />
+	<p:commandLink oncomplete="PF('numeracionResults').show();"
+		actionListener="#{detalleRepresentanteBean.setEstadosNumeracion(representanteBean.prestadorNumero)}"
+		update=":MDL_numeracionResults">
+		<h:outputText value="estados" />
+	</p:commandLink>
+	<h:outputText value=", " />
+	<p:commandLink oncomplete="PF('numeracionResults').show();"
+		actionListener="#{detalleRepresentanteBean.setNirsNumeracion(representanteBean.prestadorNumero)}"
+		update=":MDL_numeracionResults">
+		<h:outputText value="números identificadores de región" />
+	</p:commandLink>
+	<h:outputText value=" o las " />
+	<p:commandLink oncomplete="PF('numeracionResults').show();"
+		actionListener="#{detalleRepresentanteBean.setPoblacionesNumeracion(representanteBean.prestadorNumero)}"
+		update=":MDL_numeracionResults">
+		<h:outputText value="ciudades y poblaciones" />
+	</p:commandLink>
+	<h:outputText value=" para los cuales " />
+
+	<h:outputText value="#{representanteBean.prestadorNumero.nombre}" />
+	<h:outputText value=" tiene numeración asignada " />
+</h:form>
+
+<!-- Modal 'resultados numeracion proveedor' -->
+<p:dialog id="MDL_numeracionResults" widgetVar="numeracionResults"
+	header="RESULTADOS DE LA CONSULTA" modal="true" scrollable="true"
+	resizable="false" appendTo="@(body)" height="500" width="95%">
+	<ui:include
+		src="/consulta-numeracion/detalle-proveedor-paginated-results-dialog.xhtml" />
+</p:dialog>
+</html>

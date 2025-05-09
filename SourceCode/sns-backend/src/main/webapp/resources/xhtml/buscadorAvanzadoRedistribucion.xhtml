@@ -1,0 +1,151 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+	
+	<composite:interface>
+		<composite:attribute name="beanTabRef" required="true"></composite:attribute>
+		<composite:attribute name="title" required="true"></composite:attribute>
+		<composite:attribute name="update" required="false"></composite:attribute>
+	</composite:interface>
+
+	<composite:implementation>
+		<div id="#{cc.clientId}">
+			<h:form id="FRM_Composite_BuscarSolicitudes">
+				<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['buscador.solicitud']}</legend>
+					<h:panelGrid columns="6" cellpadding="3" cellspacing="3">
+						<h:outputLabel value="#{msg['consultar.Consecutivo']}"/>
+						<p:inputText
+							id="TXT_Consecutivo"
+							required="false" minValue="9" maxlength="9" mask="9"
+							value="#{cc.attrs.beanTabRef.consecutivo}"
+							label="#{msg['consultar.Consecutivo']}"
+							style="width: 150px;">
+						</p:inputText>
+						
+						<h:outputLabel for="selproveedor" value="#{msg['consultar.PST']}" />
+						<p:selectOneMenu autoWidth="false"
+							id="selproveedor" style="width:200px;"
+							value="#{cc.attrs.beanTabRef.proveedorSeleccionado}" 
+				 			converter="#{proveedorConverter}"> 
+							<f:selectItem itemLabel="Seleccionar"/>
+							<f:selectItems 
+								value="#{cc.attrs.beanTabRef.listaProveedores}"
+								var="proveedorsel" 
+								itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+				
+						<h:outputLabel value="#{msg['consultar.Numero_oficio']}" />
+						<p:inputText 
+							id="TXT_Oficio"
+							required="false" maxlength="30"
+							value="#{cc.attrs.beanTabRef.referenciaSolicitud}"
+							label="#{msg['consultar.Numero_oficio']}"
+							style="width: 150px;">
+				    	</p:inputText>
+					</h:panelGrid>
+				    	
+					<h:panelGrid columns="8" style="float:left" cellpadding="3" cellspacing="3">
+				    	<h:outputLabel  value="#{msg['consultar.Inicio_solicitud']}" />
+						<p:calendar 
+							id="fsolicitud_inicio" required="false" locale="mx_MX"
+							value="#{cc.attrs.beanTabRef.numIniciofchSolicitud}" 
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#msg['consultar.Inicio']"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fsolicitud_final" listener="#{cc.attrs.beanTabRef.habilitarFechaFin}"/>	
+						</p:calendar>
+						
+						<h:outputLabel value="#{msg['consultar.Final_solicitud']}" />
+						<p:calendar 
+							id="fsolicitud_final" required="false" locale="mx_MX"
+							value="#{cc.attrs.beanTabRef.numFinalfchSolicitud}" 
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Final']}"
+							disabled="#{!cc.attrs.beanTabRef.fechaHabilitada}"
+							navigator="true" yearRange="1995:c+10">
+						</p:calendar>
+				
+				    	<h:outputLabel value="#{msg['consultar.Inicio_asignacion']}" />
+						<p:calendar 
+							id="fchIniUtilizacion_inicio" required="false" locale="mx_MX"
+							value="#{cc.attrs.beanTabRef.numIniciofchIniUtilizacion}" 
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#msg['consultar.Inicio']"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fchIniUtilizacion_final" listener="#{cc.attrs.beanTabRef.habilitarFechaFin}"/>	
+						</p:calendar>
+						
+							<h:outputLabel value="#{msg['consultar.Final_asignacion']}" />
+						<p:calendar 
+							id="fchIniUtilizacion_final" required="false" locale="mx_MX"
+							value="#{cc.attrs.beanTabRef.numFinalfchIniUtilizacion}" 
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Final']}"
+							disabled="#{!cc.attrs.beanTabRef.fechaHabilitada}"
+							navigator="true" yearRange="1995:c+10">
+						</p:calendar>
+					</h:panelGrid>
+						
+					<h:panelGrid columns="6" style="float:left" cellpadding="3" cellspacing="3">
+						<h:outputLabel for="selestado" value="#{msg['consultar.Estatus']}" />
+						<p:selectOneMenu 
+							id="selestado" 
+							style="width:100px;"
+							value="#{cc.attrs.beanTabRef.estadoSeleccionado}" 
+			 				converter="#{estatusSolicitudConverter}"> 
+							<f:selectItem itemLabel="Seleccionar"/>
+							<f:selectItems
+								value="#{cc.attrs.beanTabRef.listaEstados}"
+								var="estados1"
+								itemLabel="#{estados1.descripcion}"
+								itemValue="#{estados1}">
+							</f:selectItems>
+						</p:selectOneMenu>	
+						
+						<h:outputLabel value="#{msg['redistribucion.nir']}"/>
+				 		<p:inputText
+				 			id="nir"
+				 			required="false"
+				 			minValue="3" 
+				 			maxlength="25"
+				 			value="#{cc.attrs.beanTabRef.nir}"
+				 			label="#{msg['redistribucion.nir']}"
+				 			style="width: 150px;">
+				 		</p:inputText>
+				 
+				 		<h:outputLabel value="#{msg['redistribucion.serie']}"/>
+				 		<p:inputText
+				 			id="sna"
+							required="false"
+							minValue="4" maxlength="4"
+							value="#{cc.attrs.beanTabRef.sna}"
+							label="#{msg['redistribucion.sna']}"
+							style="width: 150px;">
+						</p:inputText>
+					</h:panelGrid>
+				</fieldset>		
+					
+				<p:panelGrid style="display:block;">
+					<p:commandButton
+						value="#{msg['consultar.Buscar']}"
+						action="#{cc.attrs.beanTabRef.realizarBusqueda}"
+						update="#{cc.attrs.update}"
+						style="height:30px;  width:82px">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{cc.attrs.beanTabRef.limpiarBusqueda}"
+						style="margin-right:20px; height:30px;  width:82px"
+						update="TXT_Consecutivo selproveedor TXT_Oficio fsolicitud_inicio fsolicitud_final fchIniUtilizacion_inicio fchIniUtilizacion_final selestado nir sna" > 
+					</p:commandButton>
+				</p:panelGrid>
+				
+			</h:form>
+		</div>
+	</composite:implementation>
+</html>

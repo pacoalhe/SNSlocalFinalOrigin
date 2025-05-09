@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+		<p:messages id="MSG_ConsultarClaveServicio" showDetail="true"
+			autoUpdate="false" closable="true" showIcon="false" />
+
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all"
+			style="text-align: center;">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogos.title']}/#{msg['catalogo.clave.servicio']}</legend>
+
+			<h:form id="FRM_ConsultarClaveServicio">
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.clave.servicio.busqueda']}</legend>
+
+					<h:panelGrid columns="4" cellpadding="3" cellspacing="3">
+						<h:outputLabel value="#{msg['catalogo.clave.servicio']}"
+							style="width:50px;" />
+						<p:selectOneMenu id="selClaveServicio" style="width: 250px;"
+							value="#{consultarClaveServicioBean.claveServicioSeleccionada}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarClaveServicioBean.listaClavesServicio}"
+								var="claveServicioSel"
+								itemLabel="#{claveServicioSel.codigo} - #{claveServicioSel.descripcion}"
+								itemValue="#{claveServicioSel.codigo}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['catalogo.clave.servicio.estatus']}"
+							style="width:50px;" />
+						<p:selectOneMenu id="selEstatus" style="width: 100px;"
+							value="#{consultarClaveServicioBean.estatusClaveServicioSeleccionado}"
+							converter="#{estatusConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarClaveServicioBean.listadoEstatus}"
+								var="estatusSel" itemLabel="#{estatusSel.descripcion}"
+								itemValue="#{estatusSel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarClaveServicioBean.realizarBusqueda}"
+						update=":MSG_ConsultarClaveServicio TBL_ClaveServicio">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarClaveServicioBean.limpiarBusqueda}"
+						style="margin-right:20px;"
+						update="selClaveServicio selEstatus :MSG_ConsultarClaveServicio TBL_ClaveServicio">
+					</p:commandButton>
+				</p:panelGrid>
+
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.clave.servicio']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton title="#{msg['catalogo.clave.servicio.nueva']}"
+								value="#{msg['catalogo.clave.servicio.nueva']}"
+								icon="ui-icon-pencil" update=":MDL_EditarClaveServicio "
+								oncomplete="PF('MDL_EditarClaveServicio').show();">
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_ClaveServicio" 
+						widgetVar="TBL_ClaveServicio"
+						var="clave"
+						value="#{consultarClaveServicioBean.claveServicioLazyModel}"
+						lazy="true" paginator="true" 
+						paginatorPosition="bottom"
+						rows="#{consultarClaveServicioBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column headerText="#{msg['catalogo.clave.servicio.codigo']}"
+							width="50px;" 
+							style="text-align:center;">
+							<h:outputText value="#{clave.codigo}" />
+						</p:column>
+
+						<p:column
+							headerText="#{msg['catalogo.clave.servicio.descripcion']}"
+							width="250px;">
+							<h:outputText value="#{clave.descripcion}" />
+						</p:column>
+
+						<p:column
+							headerText="#{msg['catalogo.clave.servicio.publicaWeb']}"
+							width="50px;" 
+							style="text-align:center;">
+							<h:outputText value="#{clave.visibleWebString}" />
+						</p:column>
+
+						<p:column headerText="#{msg['catalogo.clave.servicio.estatus']}"
+							width="100px;" 
+							style="text-align:center;">
+							<h:outputText value="#{clave.estatus.descripcion}" />
+						</p:column>
+
+						<p:column headerText="Operaciones" width="50px;"
+							style="text-align:center;">
+							<p:commandButton title="#{msg['detalleEditar']}"
+								icon="ui-icon-pencil"
+								action="#{consultarClaveServicioBean.editarClaveServicio}"
+								update=":MDL_EditarClaveServicio TBL_ClaveServicio"
+								oncomplete="PF('MDL_EditarClaveServicio').show();">
+								<f:setPropertyActionListener value="#{clave}"
+									target="#{consultarClaveServicioBean.claveServicioEdicion}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</fieldset>
+
+				<p:remoteCommand name="recargarListadoClavesServicio"
+					update=":MSG_ConsultarClaveServicio TBL_ClaveServicio :#{p:component('selClaveServicio')}"
+					actionListener="#{consultarClaveServicioBean.recargarListadoClavesServicio}" />
+
+			</h:form>
+		</fieldset>
+
+		<p:dialog id="MDL_EditarClaveServicio"
+			widgetVar="MDL_EditarClaveServicio" 
+			global="false" 
+			modal="true"
+			closable="false" 
+			appendTo="@(body)"
+			header="#{msg['catalogo.clave.servicio']}" 
+			scrollable="false"
+			resizable="false" 
+			width="600" height="250">
+			<p:ajax event="close" 
+				global="false"
+				listener="#{consultarClaveServicioBean.edicionClaveServicioBean.resetValues}"
+				update="FRM_ConsultarClaveServicio:TBL_ClaveServicio :#{p:component('selClaveServicio')} :#{p:component('FRM_EdicionClaveServicio')}"
+				oncomplete="recargarListadoClavesServicio();" />
+			<p:commandButton id="BTN_Salir_ClaveServicio"
+				styleClass="customCloseModal" 
+				value="X"
+				onclick="PF('DLG_Salir_ClaveServicio').show()" 
+				global="false">
+				<p:resetInput target=":#{p:component('FRM_EdicionClaveServicio')}" />
+			</p:commandButton>
+			<ui:include
+				src="/admin-catalogos/clave-servicio/editar-clave-servicio.xhtml" />
+		</p:dialog>
+
+		<p:dialog id="DLG_Salir_ClaveServicio"
+			widgetVar="DLG_Salir_ClaveServicio" modal="true" resizable="false"
+			closeOnEscape="true" closable="false"
+			 header="Salir"
+			appendTo="@(body)" width="250" height="115">
+			<sns:exit-custom-dialog-no-listener
+				message="#{msg['cerrarDialogo.mensaje']}"
+				blockUIWidgetVar="salirClaveServicio_BUI"
+				onCompleteExit="PF('DLG_Salir_ClaveServicio').hide();PF('MDL_EditarClaveServicio').hide();"
+				onCompleteCancel="PF('DLG_Salir_ClaveServicio').hide();"
+				resetValues="true"
+				global="false">
+			</sns:exit-custom-dialog-no-listener>
+		</p:dialog>
+
+		<p:ajaxStatus id="cargando" onstart="PF('statusClaveServicioDialog').show()"
+			onsuccess="PF('statusClaveServicioDialog').hide()">
+		</p:ajaxStatus>
+				<p:dialog widgetVar="statusClaveServicioDialog" 
+					modal="true" 
+					draggable="false" 
+					closable="false" 
+					resizable="false" 
+					showHeader="false">
+    				<ui:include src="/componentes/loader.xhtml"/>
+				</p:dialog>
+		<!-- <p:blockUI block="FRM_ConsultarClaveServicio"
+			widgetVar="ClaveServicio_BUI">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:blockUI> -->
+	</ui:define>
+</ui:composition>
+</html>

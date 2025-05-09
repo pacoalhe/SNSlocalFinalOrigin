@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+		
+<h:form>					
+	<p:panel>
+		<p:dataTable 
+			id="TBL_EstudioEquiposCPSI" 
+			widgetVar="TBL_EstudioEquiposCPSI"		
+			var="estudio" 
+			value="#{consultarEquiposSenalizacionCpsiBean.listadoEstudio}"
+			paginator="false"
+			resizableColumns="false"
+			style="width:100%; margin-bottom:5px;"
+			scrollable="false"
+			emptyMessage="#{msg['buscador.noresultados']}">
+				
+		    <p:column width="50" headerText="#{msg['cpsn.equiposSenalizacion.CPSN.estudio.utilizados']}" style="text-align:center;">
+		        <h:outputText value="#{estudio.numUtilizados}"/>
+		    </p:column>
+		    
+		    <p:column width="75" headerText="#{msg['cpsn.equiposSenalizacion.CPSN.estudio.asignados']}" style="text-align:center;">
+		        <h:outputText value="#{estudio.numAsignados}"/>
+		    </p:column>
+		    
+			<p:column width="75" headerText="#{msg['cpsn.equiposSenalizacion.CPSN.estudio.porcentaje']}" style="text-align:center;">
+		        <h:outputText value="#{estudio.porcentaje}"/>
+		    </p:column>
+		</p:dataTable>
+
+	</p:panel>
+</h:form>
+</html>

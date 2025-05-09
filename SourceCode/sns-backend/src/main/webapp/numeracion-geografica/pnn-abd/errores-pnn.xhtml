@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+	
+	<h:panelGrid columns="1" id="PNL_ErroresPNN" style="background:transparent">
+		<p:dataTable
+			id="TBL_errores_pnn" 
+			var="err" 
+			scrollable="true" 
+			rows="#{pnnABDBean.registroPorPagina}"
+			scrollHeight="150px;"
+			value="#{pnnABDBean.listaErroresRangoPnn}"
+			paginator="true" 
+			paginatorPosition="bottom"  
+			emptyMessage="No hay errores contra el plan de numeración.">
+
+			<f:facet name="header">
+	            <center>Comparación VS Pnn</center>
+	        </f:facet>
+		        
+		 	<p:columnGroup type="header">
+				<p:row>   
+				   <p:column colspan="1" width="100px;" resizable="true" headerText="N. Inicial" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				   <p:column colspan="1" width="100px;" resizable="true" headerText="N. Final" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				   <p:column colspan="1" width="100px;" resizable="true" headerText="IDO Arrendador" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				   <p:column colspan="1" width="350px;" resizable="true" headerText="Descripción Error" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+			  	</p:row>
+			</p:columnGroup>
+	
+			<p:column resizable="true" headerText="Número Inicial" width="100px;" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+				<h:outputText 
+					title="#{err.numeroInicial1}"
+					value="#{err.numeroInicial1}" />
+			</p:column>
+	
+			<p:column resizable="true" headerText="Número Final" width="100px;" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+				<h:outputText 
+					title="#{err.numeroFinal1}"
+					value="#{err.numeroFinal1}" />
+			</p:column>
+	   
+		    <p:column resizable="true" headerText="IDO Arrendador" width="100px;" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+		     	 <h:outputText 
+		     	 	title="#{err.ido1}"
+		     	 	value="#{err.ido1}"  />
+		    </p:column>
+	 	    
+	   		<p:column resizable="true" headerText="Error" width="350px;" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+		        <h:outputText 
+		        	title="#{err.descripcion}"
+		        	value="#{err.descripcion}" />
+		    </p:column>
+		</p:dataTable>
+	</h:panelGrid>
+
+</html>

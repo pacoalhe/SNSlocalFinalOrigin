@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<composite:interface>
+	<composite:attribute name="beanRef" required="true"></composite:attribute>
+	<composite:attribute name="form" required="true"></composite:attribute>
+</composite:interface>
+
+<composite:implementation>
+
+	<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+		<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['cpsn.codigos.CPSN']}</legend>
+
+		<h:panelGrid id="PNL_Botonera" columns="2" width="100%">
+			<h:panelGroup style="display:block; text-align:left">
+				<p:commandButton style="margin-right:20px; margin-bottom: 5px;"
+					value="#{msg['cpsn.equiposSenalizacion.estudio']}"
+					action="#{cc.attrs.beanRef.estudioCPSN}" update=":#{cc.attrs.form}"
+					oncomplete="PF('MDL_EstudioCPSN').show();">
+				</p:commandButton>
+				<p:commandButton id="BTN_ExportarCodigosCPSN"
+					disabled="#{cc.attrs.beanRef.emptySearch}"
+					style="margin-right:20px; margin-bottom: 5px;"
+					value="#{msg.exportar}" ajax="false"
+					onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+					<p:fileDownload value="#{cc.attrs.beanRef.exportar}" />
+				</p:commandButton>
+			</h:panelGroup>
+			<h:panelGroup style="display:block; text-align:right">
+				<p:commandButton id="btn_agrupar" icon="ui-icon-circle-plus"
+					style="margin-right:20px; margin-bottom: 5px;"
+					value="#{msg['cpsn.codigos.CPSN.agrupar']}"
+					rendered="#{cc.attrs.beanRef.activarBotonAgr}"
+					action="#{cc.attrs.beanRef.procesarAgrupacion}"
+					update=":#{p:component('confirmarDLG')}"
+					oncomplete="PF('confirmarDLG').show();">
+				</p:commandButton>
+				<p:commandButton id="btn_desagrupar" icon="ui-icon-circle-minus"
+					style="margin-right:20px; margin-bottom: 5px;"
+					value="#{msg['cpsn.codigos.CPSN.desagrupar']}"
+					rendered="#{cc.attrs.beanRef.activarBotonDesagr}"
+					action="#{cc.attrs.beanRef.procesarDesagrupacion}"
+					update=":#{p:component('confirmarDLG')}"
+					oncomplete="PF('confirmarDLG').show();">
+				</p:commandButton>
+				<p:commandButton icon="ui-icon-locked"
+					style="margin-right:20px; margin-bottom: 5px;"
+					value="#{msg['cpsn.codigos.CPSN.reservar']}"
+					actionListener="#{cc.attrs.beanRef.reservar}"
+					update=":#{cc.attrs.form}">
+				</p:commandButton>
+				<p:commandButton icon="ui-icon-unlocked"
+					style="margin-right:20px; margin-bottom: 5px;"
+					value="#{msg['cpsn.codigos.CPSN.liberar']}"
+					actionListener="#{cc.attrs.beanRef.liberar}"
+					update=":#{cc.attrs.form}">
+				</p:commandButton>
+			</h:panelGroup>
+		</h:panelGrid>
+
+		<p:panel style="float:left; overflow-y: auto; width:100%;">
+			<p:dataTable id="TBL_CodigosCPSN" widgetVar="TBL_CodigosCPSN"
+				var="codigo" value="#{cc.attrs.beanRef.listadoCodigosCPSN}"
+				paginator="false"
+				selection="#{cc.attrs.beanRef.codigosCPSNSeleccionados}"
+				rowKey="#{codigo.id}" selectionMode="multiple"
+				resizableColumns="true" style="width:100%;" scrollHeight="250"
+				scrollable="true" emptyMessage="#{msg['buscador.noresultados']}">
+
+				<p:ajax event="rowSelect" update=":#{p:component('PNL_Botonera')}"
+					listener="#{cc.attrs.beanRef.seleccionarCodigo}" />
+				<p:ajax event="rowUnselect" update=":#{p:component('PNL_Botonera')}"
+					listener="#{cc.attrs.beanRef.deSeleccionarCodigo}" />
+
+				<p:column
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.tipoBloque']}"
+					width="75"
+					style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+					<h:outputText value="#{codigo.tipoBloqueCPSN.descripcion}"
+						title="#{codigo.tipoBloqueCPSN.descripcion}" />
+				</p:column>
+
+				<p:column width="75"
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.binario']}"
+					style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+					<h:outputText value="#{codigo.binario}" title="#{codigo.binario}" />
+				</p:column>
+
+				<p:column width="75"
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalRed']}"
+					style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+					<h:outputText value="#{codigo.decimalRed}"
+						title="#{codigo.decimalRed}" />
+				</p:column>
+
+				<p:column width="75"
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalTotal']}"
+					style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+					<h:outputText value="#{codigo.decimalTotal}"
+						title="#{codigo.decimalTotal}" />
+				</p:column>
+
+				<p:column width="50"
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.decimaDesde']}"
+					style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+					<h:outputText value="#{codigo.decimalDesde}"
+						title="#{codigo.decimalDesde}" />
+				</p:column>
+
+				<p:column width="50"
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalHasta']}"
+					style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+					<h:outputText value="#{codigo.decimalHasta}"
+						title="#{codigo.decimalHasta}" />
+				</p:column>
+
+				<p:column width="75"
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.estatus']}"
+					style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+					<h:outputText value="#{codigo.estatusCPSN.descripcion}"
+						title="#{codigo.estatusCPSN.descripcion}" />
+				</p:column>
+
+				<p:column width="75"
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.pst']}"
+					style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+					<h:outputText value="#{codigo.proveedor.nombre}"
+						title="#{codigo.proveedor.nombre}" />
+				</p:column>
+
+				<p:column width="75"
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.fechaFinCuarentena']}"
+					style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+					<h:outputText value="#{codigo.fechaCuarentena}"
+						title="#{codigo.fechaCuarentena}">
+						<f:convertDateTime pattern="dd/MM/yyyy" />
+					</h:outputText>
+				</p:column>
+
+				<p:column headerText="Operaciones" width="75px;"
+					style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+					<p:commandButton rendered="false"
+						title="#{msg['cpsn.codigos.CPSN.consulta.historico']}"
+						icon="ui-icon-pencil" action="#{cc.attrs.beanRef.estudioCPSN}"
+						update=":#{cc.attrs.form}"
+						oncomplete="PF('MDL_HistoricoCPSN').show();">
+						<f:setPropertyActionListener value="#{codigo}"
+							target="#{cc.attrs.beanRef.codigoCPSNEdicion}">
+						</f:setPropertyActionListener>
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+		</p:panel>
+
+	</fieldset>
+	<p:remoteCommand name="realizarBusqueda"
+		update=":#{cc.attrs.form} TBL_CodigosCPSN"
+		actionListener="#{cc.attrs.beanRef.realizarBusqueda}" />
+	<p:remoteCommand name="rcDesagrupar"
+		actionListener="#{cc.attrs.beanRef.desagrupar}"
+		update=":#{cc.attrs.form}" />
+	<p:remoteCommand name="rcAgrupar"
+		actionListener="#{cc.attrs.beanRef.agrupar}"
+		update=":#{cc.attrs.form}" />
+
+
+	<p:dialog id="confirmarDLG" widgetVar="confirmarDLG" global="false"
+		appendTo="@(body)" closable="false" width="250" modal="true"
+		resizable="false">
+		<f:facet name="header">
+			<h:outputText rendered="#{cc.attrs.beanRef.numCodigosAGenerar != 0}"
+				value="#{msg['cpsn.codigos.CPSN.seleccion.desagrupar.msg1']} #{cc.attrs.beanRef.numCodigosAGenerar} #{msg['cpsn.codigos.CPSN.seleccion.desagrupar.msg2']}" />
+			<h:outputText
+				rendered="#{cc.attrs.beanRef.tipoBloqueAgrupacion != null}"
+				value="#{msg['cpsn.codigos.CPSN.seleccion.agrupar.msg']} #{cc.attrs.beanRef.tipoBloqueAgrupacion}?" />
+		</f:facet>
+		<p:separator style="border-color:#7AC142;" />
+		<div class="ui-grid ui-grid-responsive">
+			<div class="ui-grid-row">
+				<div class="ui-grid-col-1">
+					<br></br>
+				</div>
+				<div class="ui-grid-col-5">
+
+					<p:commandButton
+						rendered="#{cc.attrs.beanRef.numCodigosAGenerar != 0}" value="Si"
+						type="button" styleClass="ui-confirmdialog-yes"
+						icon="ui-icon-check"
+						onclick="PF('confirmarDLG').hide(); rcDesagrupar()" />
+					<p:commandButton
+						rendered="#{cc.attrs.beanRef.tipoBloqueAgrupacion != null}"
+						value="Si" type="button" styleClass="ui-confirmdialog-yes"
+						icon="ui-icon-check"
+						onclick="PF('confirmarDLG').hide(); rcAgrupar()" />
+				</div>
+				<div class="ui-grid-col-5">
+					<p:commandButton id="cdNo" value="No" type="button"
+						styleClass="ui-confirmdialog-no" icon="ui-icon-close"
+						onclick="PF('confirmarDLG').hide();" style="background: #D4D4D4;" />
+				</div>
+			</div>
+		</div>
+
+	</p:dialog>
+
+	<p:dialog id="MDL_HistoricoCPSN" widgetVar="MDL_HistoricoCPSN"
+		global="false" modal="true" closable="true" appendTo="@(body)"
+		header="#{msg['cpsn.codigos.CPSN.estudio']}" scrollable="false"
+		resizable="false" width="800" height="200">
+		<sns:estudio-codigos-cpsn id="estudioCodigosCpsn1"
+			nameBean="#{cc.attrs.beanRef}">
+		</sns:estudio-codigos-cpsn>
+	</p:dialog>
+
+	<p:dialog id="MDL_EstudioCPSN" widgetVar="MDL_EstudioCPSN"
+		global="false" modal="true" closable="true" appendTo="@(body)"
+		header="#{msg['cpsn.codigos.CPSN.estudio']}" scrollable="false"
+		resizable="false" width="875" height="200">
+		<sns:estudio-codigos-cpsn id="estudioCodigosCpsn2"
+			nameBean="#{cc.attrs.beanRef}">
+		</sns:estudio-codigos-cpsn>
+	</p:dialog>
+
+	<!-- <p:ajaxStatus id="FRM_OperacionesCodigosCPSN_AS"
+		onstart="PF('FRM_ConsultarCodigosCPSN_BUI').show()"
+		onsuccess="PF('FRM_ConsultarCodigosCPSN_BUI').hide()">
+	</p:ajaxStatus>
+
+	<p:blockUI block=":#{cc.attrs.form}"
+		widgetVar="FRM_ConsultarCodigosCPSN_BUI">
+		<ui:include src="/componentes/loader.xhtml" />
+	</p:blockUI> -->
+</composite:implementation>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+
+	<h:panelGrid columns="1" id="PNL_ErroresComparacion" style="background:transparent;">
+		
+		<p:dataTable
+			id="TBL_errores_comparacion"
+			var="err"  
+			scrollable="true"
+			value="#{pnnABDBean.listaErroresComparacion}"
+			paginator="true" 
+			paginatorPosition="bottom" 
+			rows="#{pnnABDBean.registroPorPagina}"
+			scrollHeight="150px;" 
+			resizableColumns="true" 
+			emptyMessage="No hay errores entre los ficheros.">
+			
+			<f:facet name="header">
+	            <center>Comparación Archivos Arrendador vs Arrendatario</center>
+	        </f:facet>
+							
+			<p:columnGroup type="header" >
+				<p:row>
+					<p:column rowspan="1" colspan="4" width="400px" headerText="Archivo Arrendador" style="font-size:12px; border-right: 1px solid #000000;"/>
+					<p:column rowspan="1" colspan="4" width="400px" headerText="Archivo Arrendatario" style="font-size:12px; border-right: 1px solid #000000;"/>			
+				</p:row>
+						
+				<p:row>
+				   <p:column colspan="1" headerText="IDO Arrendador" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				   <p:column colspan="1" headerText="IDO Arrendatario" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				   <p:column colspan="1" headerText="Numero inicial" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				   <p:column colspan="1" headerText="Numero final" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;  border-right: 1px solid #000000;"/>
+				   
+				   <p:column colspan="1" headerText="IDO Arrendatario" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				   <p:column colspan="1" headerText="IDO Arrendador" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				   <p:column colspan="1" headerText="Numero inicial" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;"/>
+				   <p:column colspan="1" headerText="Numero final" width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;  border-right: 1px solid #000000;"/>
+				</p:row>
+			</p:columnGroup>
+						
+			<p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+	        	<h:outputText value="#{err.idoArrendador}" title="#{err.idoArrendador}"/>
+		    </p:column>
+		    
+		    <p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+		    	<h:outputText value="#{err.arrendador}" title="#{err.arrendador}"/>
+			</p:column>
+ 
+  				<p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+      				<h:outputText value="#{err.numeroFromArrendador}" title="#{err.numeroFromArrendador}"/>
+  				</p:column>
+
+  				<p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+  	 				<h:outputText value="#{err.numeroToArrendador}" title="#{err.numeroToArrendador}"/>
+  				</p:column>
+    
+		    <p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+		     	 <h:outputText value="#{err.idoArrendatario}" title="#{err.idoArrendatario}"/>
+		    </p:column>
+  
+		    <p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+		        <h:outputText value="#{err.arrendatario}" title="#{err.arrendatario}"/>
+		    </p:column>
+
+		    <p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+		        <h:outputText value="#{err.numeroFromArrendatario}" title="#{err.numeroFromArrendatario}"/>
+		    </p:column>
+		    
+		    <p:column width="100px" style="text-align:center; font-size:12px;text-overflow:ellipsis; white-space: nowrap;">
+		        <h:outputText value="#{err.numeroToArrendatario}" title="#{err.numeroToArrendatario}"/>
+		    </p:column>
+		</p:dataTable>
+	</h:panelGrid>	
+</html>

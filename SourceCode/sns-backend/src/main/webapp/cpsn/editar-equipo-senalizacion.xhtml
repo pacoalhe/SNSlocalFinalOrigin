@@ -1,0 +1,291 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite">
+	
+	<h:form id="FRM_EdicionEquipoSenalizacion">
+		<p:messages id="MSG_EdicionEquipoSenalizacion" showDetail="false" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		
+		<h:panelGrid rendered="#{edicionEquipoSenalizacionBean.modoEdicion}" columns="1" width="100%">
+			<h:panelGroup style="display:block; text-align:right">
+				<p:commandLink style="align:right;" onclick="PF('MDL_ControlCPSN').show()">
+					<span><p:graphicImage value="/img/ico_usuario.png" style="margin-right:10px"/>Control</span>
+				</p:commandLink>
+			</h:panelGroup>
+		</h:panelGrid>
+		
+		<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['cpsn.equiposSenalizacion.edicion.datosGenerales']}</legend>
+			
+				<h:panelGrid columns="2" cellpadding="3" cellspacing="3">
+					<p:column>
+						<p:outputLabel for="edPst" value="#{msg['cpsn.equiposSenalizacion.consulta.pst']}" style="width:50px;"/>
+					</p:column>
+					<p:column>
+						<p:selectOneMenu
+							id="edPst" 
+							required="true"
+							value="#{edicionEquipoSenalizacionBean.equipoSenal.proveedor}" 
+							converter="#{proveedorConverter}"> 
+							<f:selectItem itemLabel="Seleccionar"/>
+							<f:selectItems 
+								value="#{consultarEquiposSenalizacionBean.listadoProveedores}" 
+								var="pstEd" 
+								itemLabel="#{pstEd.nombre}" 
+								itemValue="#{pstEd}">
+							</f:selectItems>
+						</p:selectOneMenu>
+					</p:column>
+				</h:panelGrid>
+				<h:panelGrid columns="3" cellpadding="3" cellspacing="3" style="text-align:center;">
+					<h:outputText></h:outputText>
+					<h:outputText for="TXT_EdBinario"  value="#{msg['cpsn.equiposSenalizacion.consulta.binario']}" style="align:center; width:50px;"/>
+					<h:outputText for="TXT_EdDecimalIndividual"  value="#{msg['cpsn.equiposSenalizacion.consulta.decimal']}" style="align:center; width:200px;"/>
+					
+					<h:outputLabel value="#{msg['cpsn.equiposSenalizacion.consulta.CPSN']}"/>
+					<p:inputText 
+						id="TXT_EdBinario"
+						size="15"
+						maxlength="14"
+						style="width:150px;"
+						required="false"
+						readonly="#{edicionEquipoSenalizacionBean.modoEdicion}"
+						label="#{msg['cpsn.equiposSenalizacion.consulta.binario']}"
+						value="#{edicionEquipoSenalizacionBean.cpsBinario}"
+						onkeypress="return soloBinario(event);">
+						<p:ajax
+							event="keyup"
+							global="false"
+							listener="#{edicionEquipoSenalizacionBean.cpsBinarioChange}"
+							update="MSG_EdicionEquipoSenalizacion TXT_EdDecimalIndividual">
+						</p:ajax>
+		    	   </p:inputText>
+		    	   <p:inputText 
+						id="TXT_EdDecimalIndividual"
+						label="#{msg['cpsn.equiposSenalizacion.consulta.decimal']}"
+						maxlength="5"
+						size="5"
+						style="width:150px;"
+						required="false"
+						readonly="#{edicionEquipoSenalizacionBean.modoEdicion}"
+						value="#{edicionEquipoSenalizacionBean.cpsDecimal}"
+						onkeypress="return soloNumeros(event);">
+						<p:ajax
+							event="keyup"
+							global="false"
+							listener="#{edicionEquipoSenalizacionBean.cpsDecimalChange}"
+							update="MSG_EdicionEquipoSenalizacion TXT_EdBinario">
+						</p:ajax>
+		    	   </p:inputText>
+				</h:panelGrid>
+			</fieldset>
+			<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['cpsn.equiposSenalizacion.edicion.datosCensales']}</legend>
+				<h:panelGrid id="PNL_Ubicacion" columns="4" cellpadding="3" cellspacing="3" >
+					<p:outputLabel for="TXT_ClaveCensal" value="#{msg['cpsn.equiposSenalizacion.edicion.ubicacion.clave.censal']}"/>
+					<p:inputText 
+						id="TXT_ClaveCensal"
+						value="#{edicionEquipoSenalizacionBean.claveCensal}"
+						style="width:100px;"
+						maxlength="9"
+						required="true">
+						<p:ajax 
+							event="change" 
+							global="false"
+							update="SEL_Estado SEL_Municipio SEL_Poblacion TXT_UbiAbn MSG_EdicionEquipoSenalizacion" 
+							listener="#{edicionEquipoSenalizacionBean.cambioClaveCensal}">
+						</p:ajax>
+					</p:inputText>
+					
+					<p:outputLabel for="TXT_UbiAbn" value="#{msg['cpsn.equiposSenalizacion.edicion.ubicacion.abn']}"/>
+					<p:inputText
+						id="TXT_UbiAbn"
+						value="#{edicionEquipoSenalizacionBean.abn.codigoAbn}"
+						style="width:100px;" maxlength="3"
+						required="true">
+						<p:ajax 
+							event="change"
+							global="false"
+							update="SEL_Estado SEL_Municipio SEL_Poblacion TXT_ClaveCensal MSG_EdicionEquipoSenalizacion"
+							listener="#{edicionEquipoSenalizacionBean.cambioAbnUbicacion}">
+						</p:ajax>
+					</p:inputText>
+				</h:panelGrid>
+				
+				<h:panelGrid columns="2" cellpadding="3" cellspacing="3" >
+					<p:outputLabel for="SEL_Estado" value="#{msg['ubicacion.estado']}"/>
+					<p:selectOneMenu 
+						id="SEL_Estado" 
+						value="#{edicionEquipoSenalizacionBean.estado}" 
+					 	converter="#{estadoConverter}"
+					 	style="width:300px;"
+					 	required="true">
+					 	<p:ajax 
+					 		event="change" 
+					 		global="false"
+					 		update="SEL_Municipio SEL_Poblacion TXT_ClaveCensal TXT_UbiAbn MSG_EdicionEquipoSenalizacion"
+					 		listener="#{edicionEquipoSenalizacionBean.habilitarMunicipio}">
+					 	</p:ajax>
+					 	<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+						<f:selectItems
+							value="#{edicionEquipoSenalizacionBean.listaEstados}"
+							var="tipoestadosel"
+							itemLabel="#{tipoestadosel.nombre}"
+							itemValue="#{tipoestadosel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+	
+					<p:outputLabel for="SEL_Municipio" value="#{msg['ubicacion.municipio']}"/>
+					<p:selectOneMenu 
+						id="SEL_Municipio"
+						value="#{edicionEquipoSenalizacionBean.municipio}" 
+					 	converter="#{municipioConverter}"
+					 	style="width:300px;"
+					 	required="true">
+					 	<p:ajax 
+					 		event="change" 
+					 		global="false"
+					 		update="SEL_Estado SEL_Poblacion TXT_ClaveCensal TXT_UbiAbn MSG_EdicionEquipoSenalizacion" 
+					 		listener="#{edicionEquipoSenalizacionBean.habilitarPoblacion}">
+					 	</p:ajax>
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+						<f:selectItems 
+							value="#{edicionEquipoSenalizacionBean.listaMunicipios}"
+							var="tipomunicipiosel"
+							itemLabel="#{tipomunicipiosel.nombre}"
+							itemValue="#{tipomunicipiosel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+	
+					<p:outputLabel for="SEL_Poblacion" value="#{msg['ubicacion.poblacion']}"/>
+					<p:selectOneMenu
+						id="SEL_Poblacion"
+						value="#{edicionEquipoSenalizacionBean.poblacion}" 
+					 	converter="#{poblacionConverter}"
+					 	style="width:300px;"
+					 	required="true">
+					 	<p:ajax 
+					 		event="change" 
+					 		global="false"
+					 		update="SEL_Estado SEL_Municipio TXT_ClaveCensal TXT_UbiAbn MSG_EdicionEquipoSenalizacion" 
+					 		listener="#{edicionEquipoSenalizacionBean.generaClave}">
+					 	</p:ajax>
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+						<f:selectItems
+							value="#{edicionEquipoSenalizacionBean.listaPoblaciones}"
+							var="tipopoblacionsel"
+							itemLabel="#{tipopoblacionsel.nombre}"
+							itemValue="#{tipopoblacionsel}">
+						</f:selectItems>
+					</p:selectOneMenu>
+				</h:panelGrid>
+			</fieldset>
+			<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['cpsn.equiposSenalizacion.edicion.datosGeograficos']}</legend>
+				<h:panelGrid columns="4" cellpadding="3" cellspacing="3" >
+					<p:outputLabel for="TXT_Longitud" value="#{msg['cpsn.equiposSenalizacion.resultados.longitud']}"/>
+					<p:inputText
+						id="TXT_Longitud"
+						value="#{edicionEquipoSenalizacionBean.equipoSenal.longitud}"
+						style="width:200px;"
+						required="true">
+						<p:ajax
+							event="change"
+							global="false"
+							listener="#{edicionEquipoSenalizacionBean.validarLongitud}"
+							update="MSG_EdicionEquipoSenalizacion">
+						</p:ajax>
+					</p:inputText>
+					
+					<p:outputLabel for="TXT_LatGrado" value="#{msg['cpsn.equiposSenalizacion.resultados.latitud']}"/>
+					<p:inputText
+						id="TXT_LatGrado"
+						value="#{edicionEquipoSenalizacionBean.equipoSenal.latitud}"
+						style="width:200px;"
+						required="true">
+						<p:ajax
+							event="change"
+							global="false"
+							listener="#{edicionEquipoSenalizacionBean.validarLatitud}"
+							update="MSG_EdicionEquipoSenalizacion">
+						</p:ajax>
+					</p:inputText>
+				</h:panelGrid>
+			</fieldset>
+			<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['cpsn.equiposSenalizacion.edicion.datosEquipo']}</legend>
+				<h:panelGrid columns="2" cellpadding="3" cellspacing="3" >
+					<p:outputLabel for="TXT_NombreEquipo" value="#{msg['cpsn.equiposSenalizacion.resultados.nombreEquipo']}"/>
+					<p:inputText
+						id="TXT_NombreEquipo"
+						value="#{edicionEquipoSenalizacionBean.equipoSenal.nombre}"
+						size="60"
+						maxlength="100"
+						style="width:400px;"
+						required="true">
+					</p:inputText>
+					<p:outputLabel for="TXT_ClaveEquipo" value="#{msg['cpsn.equiposSenalizacion.resultados.claveEquipo']}"/>
+					<p:inputText
+						id="TXT_ClaveEquipo"
+						value="#{edicionEquipoSenalizacionBean.equipoSenal.clave}"
+						size="60"
+						maxlength="100"
+						style="width:400px;"
+						required="true">
+					</p:inputText>
+					<p:outputLabel for="TXT_TipoEquipo" value="#{msg['cpsn.equiposSenalizacion.resultados.tipoEquipo']}"/>
+					<p:inputText
+						id="TXT_TipoEquipo"
+						value="#{edicionEquipoSenalizacionBean.equipoSenal.tipo}"
+						size="60"
+						maxlength="100"
+						style="width:400px;"
+						required="true">
+					</p:inputText>
+				</h:panelGrid>
+			</fieldset>
+
+			<p:panelGrid style="display:block; text-align:center;">
+				<p:commandButton
+					id="BTN_Guardar"
+					value="#{msg['manual.generales.btn.guardar']}"
+					action="#{edicionEquipoSenalizacionBean.guardar}"
+					update="MSG_EdicionEquipoSenalizacion"
+					style="height:30px; width:85px">
+				</p:commandButton>
+			</p:panelGrid>
+			
+		</fieldset>
+		
+		<p:dialog 
+			id="MDL_ControlCPSN" 
+			widgetVar="MDL_ControlCPSN"
+			global="false"
+			modal="true" 
+			closable="true"
+			appendTo="@(body)"
+			scrollable="false" 
+			resizable="false" 
+			width="800" 
+			height="300">
+			<ui:include src="/resources/xhtml/controlCps.xhtml"/>
+		</p:dialog>
+	</h:form>
+	
+	<!-- <p:ajaxStatus
+		id="FRM_EdicionEquipoSenalizacion_AS"
+		onstart="PF('FRM_EdicionEquipoSenalizacion_BUI').show()"
+		onsuccess="PF('FRM_EdicionEquipoSenalizacion_BUI').hide()">
+	</p:ajaxStatus>
+	
+	<p:blockUI
+		widgetVar="FRM_EdicionEquipoSenalizacion_BUI"
+		block="FRM_EdicionEquipoSenalizacion">
+		<ui:include src="/componentes/loader.xhtml"/>
+	</p:blockUI> -->
+</html>

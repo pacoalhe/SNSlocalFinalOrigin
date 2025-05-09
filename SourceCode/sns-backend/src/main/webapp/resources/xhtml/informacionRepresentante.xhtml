@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+	
+	<composite:interface>
+		<composite:attribute name="representative" required="true"></composite:attribute>
+		<composite:attribute name="collapseAs" required="true"></composite:attribute>
+		<composite:attribute name="title" required="true"></composite:attribute>
+		<composite:attribute name="beanRef" required="true"></composite:attribute>
+		<composite:attribute name="provider" required="true"></composite:attribute>
+		<composite:attribute name="formProvider" required="true"></composite:attribute>
+	</composite:interface>
+
+	<composite:implementation>
+		<div id="#{cc.clientId}">
+			<p:fieldset 
+				id="PFL_Representante"
+				legend="#{cc.attrs.title}"
+				toggleable="true"
+				collapsed="#{!cc.attrs.collapseAs}">
+				
+				<h:panelGrid columns="6">
+					<p:outputLabel value="#{msg['representante.nombre']}"/>
+					<p:inputText value="#{cc.attrs.representative.nombre}" disabled="true" style="width:200px;" />
+					<p:outputLabel value="#{msg['representante.email']}"/>
+					<p:inputText value="#{cc.attrs.representative.email}" disabled="true" style="width:300px;" />
+					<p:outputLabel value="#{msg['representante.telefono']}"/>
+					<p:inputText value="#{cc.attrs.representative.telefono1}" disabled="true" style="width:100px;" />
+					<p:outputLabel value="#{msg['representante.telefono']}"/>
+					<p:inputText value="#{cc.attrs.representative.telefono2}" disabled="true" style="width:100px;" />
+					<p:outputLabel value="#{msg['representante.telefono']}"/>
+					<p:inputText value="#{cc.attrs.representative.telefono3}" disabled="true" style="width:100px;" />	
+				</h:panelGrid>
+				
+				<p:panelGrid style="display:block;">
+					<p:commandButton 
+						id="BTN_ModificarRepresentante" 
+						icon="ui-icon-pencil"
+						value="#{msg['manual.generales.representante.boton.modificar']}"
+						disabled="#{!cc.attrs.beanRef.tabHabilitado or (cc.attrs.representative == null)}">
+						<p:ajax
+							event="click"
+							listener="#{gestionProveedorBean.cargarProveedor(cc.attrs.provider)}"
+							oncomplete="PF('MDL_Proveedores').show();"
+							update="#{cc.attrs.formProvider}">
+						</p:ajax>
+						<p:tooltip for="BTN_ModificarRepresentante" value="#{msg['manual.generales.representante.boton.modificar']}"/>
+					</p:commandButton>
+				</p:panelGrid>					
+			</p:fieldset>
+		</div>
+	</composite:implementation>
+</html>

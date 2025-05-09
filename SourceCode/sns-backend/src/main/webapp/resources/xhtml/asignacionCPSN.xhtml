@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+		<composite:attribute name="formAsignacion" required="true"></composite:attribute>
+
+	</composite:interface>
+	
+	<composite:implementation>
+	
+		<p:messages id="MSG_AsignacionCPSN" showDetail="false" showSummary="true" closable="true" escape="false" showIcon="false"/>
+
+		<h:panelGrid id="pn_CpsnAsignar" columns="4" style="margin-bottom:20px" cellpadding="3" cellspacing="3">
+			<p:dataTable id="TBL_CpsnAsignar" var="cpsnAsignar" 
+					value="#{cc.attrs.nameBean.solicitud.numeracionAsignadas}"
+					paginator="false"
+					resizableColumns="true"
+					style="width:100%;"
+					scrollable="true"
+					scrollHeight="150"
+					emptyMessage="#{msg['buscador.noresultados']}">
+					
+					<f:facet name="header">#{msg['asignacion.cpsn.tab.analisis.CPSN.asignar']}</f:facet>
+					
+					<p:column headerText="#{msg['cpsn.codigos.CPSN.resultados.tipoBloque']}" width="75" style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText value="#{cpsnAsignar.tipoBloqueCpsn.descripcion}" title="#{cpsnAsignar.tipoBloqueCpsn.descripcion}"/>
+				    </p:column>  
+				    
+				    <p:column width="75" headerText="#{msg['cpsn.codigos.CPSN.resultados.binario']}" style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText value="#{cpsnAsignar.binario}" title="#{cpsnAsignar.binario}"/>
+				    </p:column>
+				    
+				    <p:column width="75" headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalRed']}" style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText value="#{cpsnAsignar.decimalRed}" title="#{cpsnAsignar.decimalRed}"/>
+				    </p:column>
+				    
+					<p:column width="75" headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalTotal']}" style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText value="#{cpsnAsignar.decimalTotal}" title="#{cpsnAsignar.decimalTotal}"/>
+				    </p:column>
+				    
+				    <p:column width="50" headerText="#{msg['cpsn.codigos.CPSN.resultados.decimaDesde']}" style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText value="#{cpsnAsignar.decimalDesde}" title="#{cpsnAsignar.decimalDesde}"/>
+				    </p:column>
+ 
+				    <p:column width="50" headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalHasta']}" style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText value="#{cpsnAsignar.decimalHasta}" title="#{cpsnAsignar.decimalHasta}"/>
+				    </p:column>
+				    
+				    <p:column width="75" headerText="#{msg['cpsn.codigos.CPSN.resultados.estatus']}" style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText value="#{cpsnAsignar.estatus.descripcion}" title="#{cpsnAsignar.estatus.descripcion}"/>
+				    </p:column>  
+				    
+				    <p:column width="75" headerText="#{msg['cpsn.codigos.CPSN.resultados.pst']}" style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText value="#{cc.attrs.nameBean.solicitud.proveedorSolicitante.nombre}" title="#{cc.attrs.nameBean.solicitud.proveedorSolicitante.nombre}"/>
+				    </p:column>
+					
+			</p:dataTable>
+		</h:panelGrid>
+		
+		<h:panelGrid id="pn_Asignar" columns="4" style="margin-bottom:20px" cellpadding="3" cellspacing="3">
+			<p:dataTable id="TBL_Asignar" var="cantidad" 
+					value="#{cc.attrs.nameBean.listadoCantidades}"
+					style="width:600px;"
+					rows="5"
+					resizableColumns="true">
+					
+					<p:column headerText="#{msg['asignacion.cpsn.tab.numeracion.resumen.bloque']}">
+						<h:outputText value="#{cantidad.tipoBloque}" />
+					</p:column>
+					
+					<p:column headerText="#{msg['asignacion.cpsn.tab.numeracion.resumen.cantidad.solicitada']}">
+						<h:outputText value="#{cantidad.cantidadSolicitada}" />
+					</p:column>
+					
+					<p:column headerText="#{msg['asignacion.cpsn.tab.numeracion.resumen.cantidad.seleccionada']}">
+						<h:outputText value="#{cantidad.cantidadSeleccionada}" />
+					</p:column>
+			</p:dataTable>
+		</h:panelGrid>
+		
+		<p:fieldset id="PNL_Fechas">
+			<h:panelGrid columns="6" cellspacing="3" cellpadding="3" style="display:block;">
+				<p:outputLabel for="DTE_FechaAsignacion" value="#{msg['consultar.Fecha_asignacion']}"/>
+				<p:calendar 
+					id="DTE_FechaAsignacion"
+					value="#{cc.attrs.nameBean.solicitud.fechaAsignacion}" locale="mx_MX"
+					pattern="dd/MM/yyyy" mask="true" required="true" navigator="true" yearRange="1995:c+10"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<p:ajax 
+						event="dateSelect"
+						update="MSG_AsignacionCPSN PNL_Fechas"
+						listener="#{cc.attrs.nameBean.validarFechaAsignacion}">
+					</p:ajax>
+				</p:calendar>
+				
+				<p:outputLabel for="IPT_DiasAplicacion" value="#{msg['oficios.DiasAplicacion']}"/>
+				<p:inputText
+					id="IPT_DiasAplicacion"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					value="#{cc.attrs.nameBean.diasAplicacion}" 
+					maxlength="3"
+					validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+					<p:ajax 
+						event="change" 
+						update="MSG_AsignacionCPSN PNL_Fechas"
+						listener="#{cc.attrs.nameBean.diasAplicacionChange}">
+					</p:ajax>
+				</p:inputText>
+				
+				<p:outputLabel for="DTE_FechaInicioUtilizacion" value="#{msg['manual.generales.fecha.inicio.utilizacion']}"/>
+				<p:calendar 
+					id="DTE_FechaInicioUtilizacion"
+					value="#{cc.attrs.nameBean.solicitud.fechaIniUtilizacion}" locale="mx_MX"
+					pattern="dd/MM/yyyy" mask="true" required="true" navigator="true" yearRange="1995:c+10"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<p:ajax 
+						event="dateSelect" global="false"
+						update="MSG_AsignacionCPSN PNL_Fechas"
+						listener="#{cc.attrs.nameBean.validarFechaInicioUtilizacion}">
+					</p:ajax>
+				</p:calendar>
+			</h:panelGrid>
+		</p:fieldset>
+		
+		<h:panelGrid id="PNL_Asignar" columns="1" style="text-align:center; margin-bottom:15px; margin-top:15px" width="100%">
+			<h:panelGroup style="display:block; text-align:center">
+				<p:commandButton
+					id="BTN_Asignar"
+					value="#{msg['manual.asignar']}"
+					action="#{cc.attrs.nameBean.asignarBloques}"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and (!cc.attrs.nameBean.bloquesAsignados))}"
+					update="MSG_AsignacionCPSN TBL_CpsnAsignar PNL_Asignar"
+					style="height:30px; width:100px;">
+				</p:commandButton>
+			</h:panelGroup>
+		</h:panelGrid>
+		
+		<p:panel styleClass="botonera alaDcha">
+			<p:commandButton 
+				id="btnSalvar" 
+				value="#{msg['manual.generales.btn.guardar']}"
+				icon="ui-icon-disk" 
+				actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+				disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+				update="MSG_AsignacionCPSN"
+				style="height:30px; width:100px;">
+			</p:commandButton>
+		</p:panel>
+		
+	</composite:implementation>
+
+</html>

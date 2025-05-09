@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<ui:composition template="/WEB-INF/templates/plantilla2.xhtml">
+
+	<ui:define name="htmlhead">
+		<meta http-equiv="REFRESH" content="5;URL=/sns-backend" />
+	</ui:define>
+
+	<ui:define name="centro">
+
+		<h:form id="logout">
+					
+			<p:panel header="Logout" styleClass="dialogoLogin">
+				<h:panelGrid columns="1">
+					<h:link outcome="index" value="Volver" />
+				</h:panelGrid>
+			</p:panel>
+		</h:form>
+	</ui:define>
+</ui:composition>
+
+</html>

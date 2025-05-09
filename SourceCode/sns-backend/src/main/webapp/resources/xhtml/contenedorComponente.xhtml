@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+	<h:form id="FRM_Contenedor_Composite">
+	<p:messages id="MSG_Contenedor_Composite" showDetail="false" autoUpdate="false" closable="true" showIcon="false"/>
+		<sns:operacionesCodigosCpsn
+			id="operacionesCodigosCpsn3" 
+			beanRef="#{consultarCodigosCPSNBean}"
+			form="FRM_Contenedor_Composite">
+		</sns:operacionesCodigosCpsn>
+	</h:form>
+	<!-- <p:ajaxStatus
+		id="cargando"
+		onstart="PF('CodigosCPSN_BUI').show()"
+		onsuccess="PF('CodigosCPSN_BUI').hide()">
+	</p:ajaxStatus>
+	
+	<p:blockUI block="FRM_Contenedor_Composite" widgetVar="CodigosCPSN_BUI">
+		<ui:include src="/componentes/loader.xhtml"/>
+	</p:blockUI> -->
+</html>

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusLineasActivasNngDialog').show();
+			}
+			function hideStatus() {
+				PF('statusLineasActivasNngDialog').hide();
+			}
+		</script>
+
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionNoGeografica']}/#{msg['mainMenu.lineasActivas']}</legend>
+
+			<h:form id="FRM_buscarLineasActivas">
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">Buscador
+						de Reportes de Líneas Activas</legend>
+
+					<p:messages id="MSG_Ubicacion" showDetail="true" autoUpdate="false"
+						closable="true" showIcon="false" />
+
+					<h:panelGrid id="PNL_Busqueda" columns="6" cellpadding="3"
+						cellspacing="3" style="float:left">
+						<h:outputLabel for="tipoconsulta" value="Datos a consultar" />
+						<p:selectOneMenu id="tipoconsulta"
+							value="#{consultarLineasActivasNngBean.tipoConsulta}"
+							converter="#{tipoConsultaLineasConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarLineasActivasNngBean.listaTiposConsulta}"
+								var="tipoconsulta" itemLabel="#{tipoconsulta.descripcion}"
+								itemValue="#{tipoconsulta}">
+							</f:selectItems>
+
+							<p:ajax event="valueChange" update="fecha_inicial,fecha_final"
+								listener="#{consultarLineasActivasNngBean.habilitarFechas}" />
+						</p:selectOneMenu>
+
+						<h:outputLabel for="selproveedor" value="PST" />
+						<p:selectOneMenu id="selproveedor" 
+							autoWidth="false" style="width:150px;"
+							value="#{consultarLineasActivasNngBean.proveedor}"
+							converter="#{proveedorConverter}" maxlength="40">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarLineasActivasNngBean.listaProveedores}"
+								var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel for="selClaveServicio"
+							value="#{msg['catalogo.clave.servicio']}" style="width:30px;" />
+						<p:selectOneMenu id="selClaveServicio"
+							converter="#{claveServicioConverter}" style="width: 141px;"
+							value="#{consultarLineasActivasNngBean.claveServicio}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarLineasActivasNngBean.listaClavesServicio}"
+								var="claveServicioSel" itemLabel="#{claveServicioSel.codigo}"
+								itemValue="#{claveServicioSel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['lineasActivas.fechaInicio']}" />
+						<p:calendar locale="mx_MX" id="fecha_inicial" required="false"
+							size="8" value="#{consultarLineasActivasNngBean.fechaInicial}"
+							pattern="dd/MM/yyyy" mask="true" label="#msg['consultar.Inicio']"
+							navigator="true" yearRange="1995:c+10"
+							disabled="#{consultarLineasActivasNngBean.fechasDisabled}">
+						</p:calendar>
+
+						<h:outputLabel value="#{msg['lineasActivas.fechaFinal']}" />
+						<p:calendar locale="mx_MX" id="fecha_final" required="false"
+							size="8" value="#{consultarLineasActivasNngBean.fechaFinal}"
+							pattern="dd/MM/yyyy" mask="true"
+							label="#{msg['consultar.Final']}" navigator="true"
+							yearRange="1995:c+10"
+							disabled="#{consultarLineasActivasNngBean.fechasDisabled}">
+						</p:calendar>
+					</h:panelGrid>
+
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarLineasActivasNngBean.realizarBusqueda}"
+						update=":FRM_buscarLineasActivas BTN_exportarLineasActivas"
+						onstart="PF('bui').show()" oncomplete="PF('bui').hide()"
+						style="height:30px;  width:82px">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarLineasActivasNngBean.limpiarBusqueda}"
+						style="margin-right:20px; height:30px;  width:82px"
+						update=":FRM_buscarLineasActivas BTN_exportarLineasActivas"
+						process="@this">
+						<p:resetInput target="FRM_buscarLineasActivas" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">Reportes
+						de Líneas Activas</legend>
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton title="#{msg['lineasActivas.cargaLineas']}"
+								value="#{msg['lineasActivas.cargaLineas']}"
+								update=":MDL_lineasActivas"
+								oncomplete="PF('MDL_lineasActivas').show();">
+							</p:commandButton>
+
+							<p:commandButton value="#{msg.exportar}"
+								disabled="#{consultarLineasActivasNngBean.emptySearch}"
+								id="BTN_exportarLineasActivas" ajax="false"
+								onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+								<p:fileDownload
+									value="#{consultarLineasActivasNngBean.ficheroLineasActivas}" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:panel style="float:left;overflow-y: auto;width:1152px;">
+						<p:dataTable id="TBL_LineasActivas" widgetVar="tabla" var="det"
+							value="#{consultarLineasActivasNngBean.model}" lazy="true"
+							scrollable="true" paginator="true" paginatorPosition="bottom"
+							rows="#{consultarLineasActivasNngBean.registroPorPagina}"
+							resizableColumns="true" emptyMessage="No hay datos.">
+
+							<p:column headerText="Consecutivo" resizable="true" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.consecutivo}" />
+							</p:column>
+
+
+							<p:column headerText="PST" width="75" style="font-size:12px;">
+								<h:outputText value="#{det.proveedor.nombre}" />
+							</p:column>
+
+							<p:column headerText="Clave Servicio" width="75"
+								style="font-size:12px;text-align:center;">
+								<h:outputText value="#{det.claveServicio.codigo}" />
+							</p:column>
+
+							<p:column headerText="Fecha" width="75"
+								style="font-size:12px;text-align:center;">
+								<h:outputText value="#{det.fechaReporte}">
+									<f:convertDateTime pattern="dd/MM/yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="Total Asignadas" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.totalAsignadas} " />
+							</p:column>
+
+							<p:column headerText="Total Activas" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.totalLineasActivas}" />
+							</p:column>
+
+							<p:column headerText="% Activas" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.porcentajeUso}" />
+							</p:column>
+
+
+
+						</p:dataTable>
+					</p:panel>
+				</fieldset>
+
+				<p:ajaxStatus id="triggerblockuiCentral"
+					onstart="PF('statusLineasActivasNngDialog').show()"
+					onsuccess="PF('statusLineasActivasNngDialog').hide()"></p:ajaxStatus>
+				<p:dialog widgetVar="statusLineasActivasNngDialog" modal="true"
+					draggable="false" closable="false" resizable="false">
+					<ui:include src="/componentes/loader.xhtml" />
+				</p:dialog>
+				<!--   	<p:blockUI block="FRM_buscarLineasActivas" widgetVar="bui" >
+	        	<ui:include src="/componentes/loader.xhtml"/>
+	     	</p:blockUI> -->
+
+			</h:form>
+
+			<p:dialog id="MDL_lineasActivas" widgetVar="MDL_lineasActivas"
+				header="#{msg['mainMenu.NumeracionNoGeografica']}/#{msg['lineasActivas.cargaLineas.header']}"
+				modal="true" appendTo="@(body)" closeOnEscape="true"
+				scrollable="true" resizable="true" width="80%" height="500">
+				<p:ajax event="close"
+					listener="#{cargaLineasActivasNngBean.resetTabs}"
+					resetValues="true" update=":FORM_cargaLineasActivas">
+				</p:ajax>
+				<ui:include
+					src="/numeracion-no-geografica/lineas-activas/carga-lineas-activas-nng.xhtml">
+				</ui:include>
+			</p:dialog>
+
+		</fieldset>
+	</ui:define>
+</ui:composition>
+
+</html>

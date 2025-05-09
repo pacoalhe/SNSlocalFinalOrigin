@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusLineasActivasDialog').show();
+			}
+			function hideStatus() {
+				PF('statusLineasActivasDialog').hide();
+			}
+		</script>
+
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionGeografica']}/#{msg['mainMenu.Lineas']}</legend>
+
+			<h:form id="FRM_buscarLineasActivas">
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">Buscador
+						de Reportes de Líneas Activas</legend>
+
+					<p:messages id="MSG_Ubicacion" showDetail="true" autoUpdate="false"
+						closable="true" showIcon="false" />
+
+					<h:panelGrid id="temporizador_lineas" columns="6" cellpadding="3"
+						cellspacing="3" style="float:left">
+
+						<h:outputLabel for="tipoconsulta" value="Datos a consultar" />
+						<p:selectOneMenu id="tipoconsulta" autoWidth="false"
+							value="#{consultarLineasActivasBean.tipoConsulta}"
+							converter="#{tipoConsultaLineasConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarLineasActivasBean.listaTiposConsulta}"
+								var="tipoconsulta" itemLabel="#{tipoconsulta.descripcion}"
+								itemValue="#{tipoconsulta}">
+							</f:selectItems>
+
+							<p:ajax event="valueChange" update="fecha_inicial,fecha_final"
+								listener="#{consultarLineasActivasBean.habilitarFechas}" />
+						</p:selectOneMenu>
+
+						<h:outputLabel for="selproveedor" value="PST" />
+						<p:selectOneMenu id="selproveedor" autoWidth="false" style="width:150px"
+							value="#{consultarLineasActivasBean.concesionario}"
+							converter="#{proveedorConverter}" maxlength="40">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarLineasActivasBean.listaConcesionarios}"
+								var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="in_abn" value="#{msg['ubicacion.abn']}"></p:outputLabel>
+						<p:inputText id="in_abn" value="#{consultarLineasActivasBean.abn}"
+							maxlength="3" size="3">
+							<p:ajax event="valueChange"
+								update="temporizador_lineas MSG_Ubicacion"
+								listener="#{consultarLineasActivasBean.abnChange}" />
+							<f:validator validatorId="AbnValidator" />
+						</p:inputText>
+
+
+
+						<p:outputLabel for="in_clave" value="#{msg['ubicacion.inegi']}"></p:outputLabel>
+						<p:inputText id="in_clave"
+							value="#{consultarLineasActivasBean.claveCensal}" maxlength="9"
+							size="9">
+							<p:ajax event="valueChange"
+								update="temporizador_lineas MSG_Ubicacion"
+								listener="#{consultarLineasActivasBean.claveCensalChange}" />
+							<f:validator validatorId="ClaveCensalValidator" />
+						</p:inputText>
+
+						<p:outputLabel for="in_estado" value="#{msg['ubicacion.estado']}"></p:outputLabel>
+						<p:selectOneMenu id="in_estado" autoWidth="false" style="width:150px"
+							value="#{consultarLineasActivasBean.estado}"
+							converter="#{estadoConverter}">
+							<p:ajax event="valueChange"
+								listener="#{consultarLineasActivasBean.habilitarMunicipio}"
+								update="temporizador_lineas in_municipio"/>
+							<f:selectItem itemLabel="#{msg['ubicacion.seleccionar']}" />
+							<f:selectItems value="#{consultarLineasActivasBean.listaEstados}"
+								var="tipoestadosel" itemLabel="#{tipoestadosel.nombre}"
+								itemValue="#{tipoestadosel}" />
+						</p:selectOneMenu>
+
+						<p:outputLabel for="in_municipio"
+							value="#{msg['ubicacion.municipio']}"></p:outputLabel>
+						<p:selectOneMenu id="in_municipio" autoWidth="false" style="width:150px"
+							value="#{consultarLineasActivasBean.municipio}"
+							converter="#{municipioConverter}">
+							<p:ajax event="valueChange"
+								update="temporizador_lineas in_poblacion"
+								listener="#{consultarLineasActivasBean.habilitarPoblacion}"/>
+							<f:selectItem itemLabel="#{msg['ubicacion.seleccionar']}" />
+							<f:selectItems
+								value="#{consultarLineasActivasBean.listaMunicipios}"
+								var="tipomunicipiosel" itemLabel="#{tipomunicipiosel.nombre}"
+								itemValue="#{tipomunicipiosel}" />
+						</p:selectOneMenu>
+
+						<p:outputLabel for="in_poblacion"
+							value="#{msg['ubicacion.poblacion']}"></p:outputLabel>
+						<p:selectOneMenu id="in_poblacion" autoWidth="false" style="width:150px"
+							value="#{consultarLineasActivasBean.poblacion}"
+							converter="#{poblacionConverter}">
+							<p:ajax event="valueChange" update="temporizador_lineas"
+								listener="#{consultarLineasActivasBean.generaClave}" />
+							<f:selectItem itemLabel="#{msg['ubicacion.seleccionar']}" />
+							<f:selectItems
+								value="#{consultarLineasActivasBean.listaPoblaciones}"
+								var="tipopoblacionsel" itemLabel="#{tipopoblacionsel.nombre}"
+								itemValue="#{tipopoblacionsel}" />
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['lineasActivas.fechaInicio']}" />
+						<p:calendar locale="mx_MX" id="fecha_inicial" required="false"
+							size="8" value="#{consultarLineasActivasBean.fechaInicial}"
+							pattern="dd/MM/yyyy" mask="true" label="#msg['consultar.Inicio']"
+							navigator="true" yearRange="1995:c+10"
+							disabled="#{consultarLineasActivasBean.fechasDisabled}">
+						</p:calendar>
+
+						<h:outputLabel value="#{msg['lineasActivas.fechaFinal']}" />
+						<p:calendar locale="mx_MX" id="fecha_final" required="false"
+							size="8" value="#{consultarLineasActivasBean.fechaFinal}"
+							pattern="dd/MM/yyyy" mask="true"
+							label="#{msg['consultar.Final']}" navigator="true"
+							yearRange="1995:c+10"
+							disabled="#{consultarLineasActivasBean.fechasDisabled}">
+						</p:calendar>
+					</h:panelGrid>
+
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarLineasActivasBean.realizarBusqueda}"
+						update=":FRM_buscarLineasActivas BTN_exportarLineasActivas"
+						style="height:30px;  width:82px">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarLineasActivasBean.limpiarBusqueda}"
+						style="margin-right:20px; height:30px;  width:82px"
+						update=":FRM_buscarLineasActivas BTN_exportarLineasActivas"
+						process="@this">
+						<p:resetInput target="temporizador_lineas" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">Reportes
+						de Líneas Activas</legend>
+
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton title="#{msg['lineasActivas.cargaLineas']}"
+								value="#{msg['lineasActivas.cargaLineas']}"
+								update=":MDL_lineasActivas"
+								oncomplete="PF('MDL_lineasActivas').show();">
+							</p:commandButton>
+
+							<p:commandButton value="#{msg.exportar}"
+								disabled="#{consultarLineasActivasBean.emptySearch}"
+								id="BTN_exportarLineasActivas" ajax="false"
+								onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+								<p:fileDownload
+									value="#{consultarLineasActivasBean.ficheroLineasActivas}" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:panel style="float:left;overflow-y: auto;width:1152px;">
+						<p:dataTable id="TBL_LineasActivas" widgetVar="tabla" var="det"
+							value="#{consultarLineasActivasBean.model}" lazy="true"
+							scrollable="true" paginator="true" paginatorPosition="bottom"
+							rows="#{consultarLineasActivasBean.registroPorPagina}"
+							resizableColumns="true" emptyMessage="No hay datos.">
+
+							<p:column headerText="Consecutivo" resizable="true" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.detalleReporte.consecutivo}" />
+							</p:column>
+
+
+							<p:column headerText="PST" width="75" style="font-size:12px;">
+								<h:outputText value="#{det.detalleReporte.proveedor.nombre}" />
+							</p:column>
+
+
+							<p:column headerText="Estado" width="75" style="font-size:12px;">
+								<h:outputText
+									value="#{det.detalleReporte.poblacion.municipio.estado.nombre}" />
+							</p:column>
+
+							<p:column headerText="Municipio" width="75"
+								style="font-size:12px;">
+								<h:outputText
+									value="#{det.detalleReporte.poblacion.municipio.nombre}" />
+							</p:column>
+
+							<p:column headerText="Población" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.detalleReporte.poblacion.nombre}" />
+							</p:column>
+
+							<p:column headerText="ABN" width="75"
+								style="font-size:12px;text-align:center;">
+								<h:outputText
+									value="#{det.detalleReporte.poblacion.abn.codigoAbn}" />
+							</p:column>
+
+							<p:column headerText="Fecha" width="75"
+								style="font-size:12px;text-align:center;">
+								<h:outputText value="#{det.detalleReporte.fechaReporte}">
+									<f:convertDateTime pattern="dd/MM/yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="Total Asignadas" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.detalleReporte.totalAsignadas} " />
+							</p:column>
+
+							<p:column headerText="Total Activas" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.detalleReporte.totalLineasActivas}" />
+							</p:column>
+
+							<p:column headerText="% Activas" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.porcentajeTotal}" />
+							</p:column>
+
+							<p:column headerText="Total Fijas Asignadas" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.detalleReporte.totalAsignadasFijas}" />
+							</p:column>
+
+							<p:column headerText="Total Fijas Activas" width="75"
+								style="font-size:12px;">
+								<h:outputText
+									value="#{det.detalleReporte.totalLineasActivasFijas}" />
+							</p:column>
+
+							<p:column headerText="% Fijas Asignadas" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.porcentajeUtilizacionFijo}" />
+							</p:column>
+
+							<p:column headerText="Total Movil Asignadas" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.totalAsignadoMovil}" />
+							</p:column>
+
+							<p:column headerText="Total Movil Activa" width="75"
+								style="font-size:12px;">
+								<h:outputText
+									value="#{det.detalleReporte.totalLineasActivasCpp + det.detalleReporte.totalLineasActivasMpp}" />
+							</p:column>
+
+							<p:column headerText="% Movil Asignada" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.porcentajeUtilizacionMovil}" />
+							</p:column>
+
+							<p:column headerText="Asignada CPP" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.detalleReporte.totalAsignadasCpp}" />
+							</p:column>
+
+							<p:column headerText="Activa CPP" width="75"
+								style="font-size:12px;">
+								<h:outputText
+									value="#{det.detalleReporte.totalLineasActivasCpp}" />
+							</p:column>
+
+							<p:column headerText="% asignada CPP" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.porcentajeUtilizacionCpp}" />
+							</p:column>
+
+							<p:column headerText="Asignada MPP" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.detalleReporte.totalAsignadasMpp}" />
+							</p:column>
+
+							<p:column headerText="Activa MPP" width="75"
+								style="font-size:12px;">
+								<h:outputText
+									value="#{det.detalleReporte.totalLineasActivasMpp}" />
+							</p:column>
+
+							<p:column headerText="% Asignada MPP" width="75"
+								style="font-size:12px;">
+								<h:outputText value="#{det.porcentajeUtilizacionMpp}" />
+							</p:column>
+
+						</p:dataTable>
+					</p:panel>
+				</fieldset>
+
+				<p:ajaxStatus id="triggerblockuiCentral"
+					onstart="PF('statusLineasActivasDialog').show()"
+					onsuccess="PF('statusLineasActivasDialog').hide()"></p:ajaxStatus>
+				<p:dialog widgetVar="statusLineasActivasDialog" modal="true"
+					draggable="false" closable="false" resizable="false"
+					showHeader="false">
+					<ui:include src="/componentes/loader.xhtml" />
+				</p:dialog>
+				<!-- <p:blockUI block="FRM_buscarLineasActivas" widgetVar="bui" >
+	        	<ui:include src="/componentes/loader.xhtml"/>
+	     	</p:blockUI> -->
+
+
+			</h:form>
+
+
+
+			<!-- Modal para la carga de lineas activas -->
+			<p:dialog id="MDL_lineasActivas" widgetVar="MDL_lineasActivas"
+				header="#{msg['mainMenu.NumeracionGeografica']}/#{msg['lineasActivas.cargaLineas.header']}"
+				modal="true" appendTo="@(body)" closeOnEscape="true"
+				scrollable="true" resizable="true" width="80%" height="500">
+				<p:ajax event="close" listener="#{cargaLineasActivasBean.resetTabs}"
+					resetValues="true" update=":FORM_cargaLineasActivas">
+				</p:ajax>
+				<ui:include
+					src="/numeracion-geografica/lineas-activas/carga-lineas-activas.xhtml">
+				</ui:include>
+			</p:dialog>
+
+		</fieldset>
+	</ui:define>
+</ui:composition>
+
+</html>

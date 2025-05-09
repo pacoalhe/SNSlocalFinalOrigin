@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<composite:interface>
+	<composite:attribute name="beanRef" required="true" />
+</composite:interface>
+
+<composite:implementation>
+	<h:form id="FRM_ConsultarCodigosCPSI">
+		<p:messages id="MSG_ConsultarCodigosCPSI" showDetail="false" autoUpdate="false" closable="true" showIcon="false"/>
+		<p:fieldset legend="#{msg['cpsi.codigos.CPSI.busqueda']}">
+			<h:panelGrid columns="4" cellpadding="3" cellspacing="3"
+				style="text-align:center;">
+				<p:outputLabel value="#{msg['cpsi.codigos.CPSI.consulta.pst']}"
+					style="width:50px;" />
+				<p:selectOneMenu id="selProveedor" style="width: 150px;" autoWidth="false"
+					value="#{cc.attrs.beanRef.proveedorSeleccionado}"
+					converter="#{proveedorConverter}">
+					<f:selectItem itemLabel="Seleccionar" />
+					<f:selectItems value="#{cc.attrs.beanRef.listadoProveedores}"
+						var="proveedorSel" itemLabel="#{proveedorSel.nombre}"
+						itemValue="#{proveedorSel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+
+				<h:outputLabel value="#{msg['cpsi.codigos.CPSI.consulta.estatus']}" />
+				<p:selectOneMenu id="selEstatus" style="width: 150px;"
+					value="#{cc.attrs.beanRef.estatusCPSISeleccionado}"
+					converter="#{estatusCPSIConverter}">
+					<f:selectItem itemLabel="Seleccionar" />
+					<f:selectItems value="#{cc.attrs.beanRef.listadoEstatusCPSI}"
+						var="estatusCPSISel" itemLabel="#{estatusCPSISel.descripcion}"
+						itemValue="#{estatusCPSISel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+			</h:panelGrid>
+		</p:fieldset>
+
+		<p:panelGrid style="display:block;">
+			<p:commandButton value="#{msg['consultar.Buscar']}"
+				action="#{cc.attrs.beanRef.realizarBusqueda}"
+				update="MSG_ConsultarCodigosCPSI TBL_CodigosCPSI BTN_exportarCodigosCPSI">
+			</p:commandButton>
+
+			<p:commandButton value="#{msg['consultar.Limpiar']}"
+				actionListener="#{cc.attrs.beanRef.limpiarBusqueda}"
+				style="margin-right:20px;"
+				update="MSG_ConsultarCodigosCPSI selProveedor selEstatus TBL_CodigosCPSI BTN_exportarCodigosCPSI">
+			</p:commandButton>
+		</p:panelGrid>
+		<p:fieldset legend="#{msg['cpsi.codigos.CPSI']}">
+			<h:panelGrid columns="2" width="100%">
+				<h:panelGroup style="display:block; text-align:left">
+					<p:commandButton style="margin-right:20px; margin-bottom: 5px;"
+						value="#{msg['cpsi.codigos.CPSI.estudio']}"
+						action="#{cc.attrs.beanRef.estudioCPSI}"
+						update=":#{p:component('MDL_EstudioCPSI')}"
+						oncomplete="PF('MDL_EstudioCPSI').show();">
+					</p:commandButton>
+
+					<p:commandButton 
+						id="BTN_exportarCodigosCPSI"
+						disabled="#{cc.attrs.beanRef.emptySearch}"
+						style="margin-right:20px; margin-bottom: 5px;"
+						value="#{msg.exportar}" ajax="false"
+						onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+						<p:fileDownload value="#{cc.attrs.beanRef.exportar}" />
+					</p:commandButton>
+				</h:panelGroup>
+
+
+				<h:panelGroup style="display:block; text-align:right">
+					<p:commandButton icon="ui-icon-locked"
+						style="margin-right:20px; margin-bottom: 5px;"
+						value="#{msg['cpsi.codigos.CPSI.reservar']}"
+						update="MSG_ConsultarCodigosCPSI TBL_CodigosCPSI"
+						actionListener="#{cc.attrs.beanRef.reservar}">
+					</p:commandButton>
+
+					<p:commandButton icon="ui-icon-unlocked"
+						style="margin-right:20px; margin-bottom: 5px;"
+						value="#{msg['cpsi.codigos.CPSI.liberar']}"
+						update="MSG_ConsultarCodigosCPSI TBL_CodigosCPSI"
+						actionListener="#{cc.attrs.beanRef.liberar}">
+					</p:commandButton>
+				</h:panelGroup>
+			</h:panelGrid>
+
+
+
+
+			<p:panel style="float:left; overflow-y: auto; width:100%;">
+				<p:dataTable id="TBL_CodigosCPSI" widgetVar="TBL_CodigosCPSI"
+					var="codigo" value="#{cc.attrs.beanRef.listadoCodigosCPSI}"
+					paginator="false"
+					selection="#{cc.attrs.beanRef.codigosCPSISeleccionados}"
+					rowKey="#{codigo.id}" selectionMode="multiple"
+					resizableColumns="true" scrollable="true" scrollHeight="250"
+					style="width:100%;" emptyMessage="#{msg['buscador.noresultados']}">
+
+					<p:column resizable="true" width="75"
+						headerText="#{msg['cpsi.codigos.CPSI.resultados.binario']}"
+						style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+						<h:outputText value="#{codigo.binario}" title="#{codigo.binario}">
+						</h:outputText>
+					</p:column>
+
+					<p:column resizable="true" width="75"
+						headerText="#{msg['cpsi.codigos.CPSI.resultados.decimalTotal']}"
+						style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+						<h:outputText value="#{codigo.decimalTotal}"
+							title="#{codigo.decimalTotal}">
+						</h:outputText>
+					</p:column>
+
+
+					<!-- formato decimal -->
+					<p:column resizable="true" width="75"
+						headerText="#{msg['cpsi.codigos.CPSI.resultados.formatoDecimal']}"
+						style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+						<h:outputText value="#{codigo.formatoDecimal}"
+							title="#{codigo.formatoDecimal}">
+						</h:outputText>
+					</p:column>
+
+
+					<p:column resizable="true" width="75"
+						headerText="#{msg['cpsi.codigos.CPSI.resultados.estatus']}"
+						style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+						<h:outputText value="#{codigo.estatus.descripcion}"
+							title="#{codigo.estatus.descripcion}">
+						</h:outputText>
+					</p:column>
+
+					<p:column resizable="true" width="75"
+						headerText="#{msg['cpsi.codigos.CPSI.resultados.pst']}"
+						style="text-align:left; font-size:12px; text-overflow:ellipsis;">
+						<h:outputText value="#{codigo.proveedor.nombre}"
+							title="#{codigo.proveedor.nombre}">
+						</h:outputText>
+					</p:column>
+
+
+					<p:column resizable="true" width="75"
+						headerText="#{msg['cpsi.codigos.CPSI.resultados.fechaAsignacionUIT']}"
+						style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+						<h:outputText value="#{codigo.fechaAsignacion}"
+							title="#{codigo.fechaAsignacion}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+
+
+
+					<p:column resizable="true" width="75"
+						headerText="#{msg['cpsi.codigos.CPSI.resultados.referenciaUIT']}"
+						style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+						<h:outputText value="#{codigo.referenciaUit}"
+							title="#{codigo.referenciaUit}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+
+					<p:column resizable="true" width="75"
+						headerText="#{msg['cpsi.codigos.CPSI.resultados.fechaFinCuarentena']}"
+						style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+						<h:outputText value="#{codigo.fechaFinCuarentena}"
+							title="#{codigo.fechaFinCuarentena}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+
+					<p:column headerText="Operaciones" width="75px;"
+						style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+						<p:commandButton rendered="false"
+							title="#{msg['cpsi.codigos.CPSI.consulta.historico']}"
+							icon="ui-icon-pencil" action="#{cc.attrs.beanRef.estudioCPSI}"
+							update=":#{cc.attrs.form}"
+							oncomplete="PF('MDL_HistoricoCPSI').show();">
+							<f:setPropertyActionListener value="#{codigo}"
+								target="#{cc.attrs.beanRef.codigoCPSIEdicion}">
+							</f:setPropertyActionListener>
+						</p:commandButton>
+					</p:column>
+
+				</p:dataTable>
+			</p:panel>
+		</p:fieldset>
+
+	</h:form>
+
+	<p:dialog id="MDL_EstudioCPSI" widgetVar="MDL_EstudioCPSI"
+		global="false" modal="true" closable="true" appendTo="@(body)"
+		header="#{msg['cpsi.codigos.CPSI.estudio']}" scrollable="false"
+		resizable="false" width="800" height="200">
+		<ui:include src="/cpsi/estudio-codigos-cpsi.xhtml" />
+	</p:dialog>
+
+<!-- 	<p:ajaxStatus id="FRM_ConsultarCodigosCPSI_AS"
+		onstart="PF('CodigosCPSI_BUI').show()"
+		onsuccess="PF('CodigosCPSI_BUI').hide()">
+	</p:ajaxStatus>
+
+	<p:blockUI widgetVar="CodigosCPSI_BUI" block="FRM_ConsultarCodigosCPSI">
+		<ui:include src="/componentes/loader.xhtml" />
+	</p:blockUI> -->
+
+</composite:implementation>
+</html>

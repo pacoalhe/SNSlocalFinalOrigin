@@ -1,0 +1,329 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+
+		<p:messages id="MSG_ConsultarAsignacionesNNG" showDetail="false" showSummary="true" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionNoGeografica']}/#{msg['mainMenu.Asignacion']}</legend>
+
+			<h:form id="FRM_ConsultarAsignacionesNNG">
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['buscador.solicitud']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda" columns="8" style="float:left"
+						cellpadding="3" cellspacing="3">
+						<h:outputLabel value="#{msg['consultar.Consecutivo']}" />
+						<p:inputText id="TXT_Consecutivo" required="false" minValue="9"
+							maxlength="9" mask="9"
+							value="#{consultarAsignacionesNngBean.consecutivo}"
+							label="#{msg['consultar.Consecutivo']}" style="width: 141px;">
+						</p:inputText>
+
+						<h:outputLabel for="selproveedor"
+							value="#{msg['consultar.PST_Solicitante']}" />
+						<p:selectOneMenu id="selproveedor" autoWidth="false" style="width:150px;"
+							value="#{consultarAsignacionesNngBean.proveedor}"
+							converter="#{proveedorConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarAsignacionesNngBean.listaProveedores}"
+								var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['consultar.Numero_oficio']}" />
+						<p:inputText id="TXT_Oficio" required="false" maxlength="51"
+							value="#{consultarAsignacionesNngBean.numeroOficio}"
+							label="#{msg['consultar.Numero_oficio']}" style="width: 141px;">
+						</p:inputText>
+
+						<h:outputLabel for="selestado" value="#{msg['consultar.Estatus']}" />
+						<p:selectOneMenu id="selestado"
+							value="#{consultarAsignacionesNngBean.estadoSeleccionado}"
+							converter="#{estatusSolicitudConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarAsignacionesNngBean.listaEstados}"
+								var="estados1" itemLabel="#{estados1.descripcion}"
+								itemValue="#{estados1}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_asignacion']} #{msg.fechaDesde}" />
+						<p:calendar id="fAsignacionDesde" required="false" locale="mx_MX"
+							value="#{consultarAsignacionesNngBean.fechaDesdeAsignacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_asignacion']} #{msg.fechaDesde}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fAsignacionHasta"
+								global="false" />
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_asignacion']} #{msg.fechaHasta}" />
+						<p:calendar id="fAsignacionHasta" required="false" locale="mx_MX"
+							value="#{consultarAsignacionesNngBean.fechaHastaAsignacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_asignacion']} #{msg.fechaHasta}"
+							disabled="#{consultarAsignacionesNngBean.fechaDesdeAsignacion == null}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}" />
+						<p:calendar id="fSolicitudDesde" required="false" locale="mx_MX"
+							value="#{consultarAsignacionesNngBean.fechaDesdeSolicitud}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fSolicitudHasta"
+								global="false" />
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}" />
+						<p:calendar id="fSolicitudHasta" required="false" locale="mx_MX"
+							value="#{consultarAsignacionesNngBean.fechaHastaSolicitud}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}"
+							disabled="#{consultarAsignacionesNngBean.fechaDesdeSolicitud == null}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<h:outputLabel value="#{msg['catalogo.clave.servicio']}"
+							style="width:50px;" />
+						<p:selectOneMenu id="selClave" autoWidth="false"
+							converter="#{claveServicioConverter}" style="width: 141px;"
+							value="#{consultarAsignacionesNngBean.claveServicio}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarAsignacionesNngBean.listaClaves}"
+								var="claveServicioSel"
+								itemLabel="#{claveServicioSel.codigo} - #{claveServicioSel.descripcion}"
+								itemValue="#{claveServicioSel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel for="TXT_Serie" value="#{msg['consultar.serie']}" />
+						<p:inputText id="TXT_Serie" required="false" minValue="4"
+							maxlength="4" value="#{consultarAsignacionesNngBean.sna}"
+							label="#{msg['consultar.serie']}" style="width: 141px;">
+						</p:inputText>
+
+						<h:outputLabel for="seltipoasignacion"
+							value="#{msg['asignacion.nng.tipoasignacion']}" />
+						<p:selectOneMenu id="seltipoasignacion" style="width:150px;"
+							value="#{consultarAsignacionesNngBean.tipoAsignacion}"
+							converter="#{tipoAsignacionConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarAsignacionesNngBean.listaTipoAsignacion}"
+								var="tipoAsignacion" itemLabel="#{tipoAsignacion.descripcion}"
+								itemValue="#{tipoAsignacion}">
+							</f:selectItems>
+							<p:ajax event="change"
+								listener="#{consultarAsignacionesNngBean.tipoAsignacionChange}"
+								update="TXT_cliente" global="false" />
+						</p:selectOneMenu>
+
+						<h:outputLabel for="TXT_cliente"
+							value="#{msg['asignacion.nng.cliente']}" />
+						<p:inputText id="TXT_cliente" required="false" maxlength="120"
+							value="#{consultarAsignacionesNngBean.cliente}"
+							disabled="#{consultarAsignacionesNngBean.disableCliente}"
+							label="#{msg['asignacion.nng.cliente']}" style="width: 282px;">
+						</p:inputText>
+
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarAsignacionesNngBean.realizarBusqueda}"
+						update=":MSG_ConsultarAsignacionesNNG TBL_SolicitudesAsignacion"
+						style="height:30px; width:82px;">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarAsignacionesNngBean.limpiarBusqueda}"
+						update="PNL_Busqueda TBL_SolicitudesAsignacion :MSG_ConsultarAsignacionesNNG"
+						style="height:30px; width:82px; margin-right:20px;"
+						process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['manual.consultas']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton value="#{msg['asignacion.nng.nueva']}"
+								title="#{msg['asignacion.nng.nueva']}" icon="ui-icon-pencil"
+								update=":MDL_Asignaciones"
+								oncomplete="PF('MDL_Asignaciones').show();">
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_SolicitudesAsignacion" widgetVar="tabla"
+						var="detalle"
+						value="#{consultarAsignacionesNngBean.solicitudesAsignacionModel}"
+						lazy="true" paginator="true" paginatorPosition="bottom"
+						rows="#{consultarAsignacionesNngBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column headerText="#{msg['consultar.Consecutivo']}">
+							<h:outputText value="#{detalle.solicitud.id}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.PST_Solicitante']}">
+							<h:outputText
+								value="#{detalle.solicitud.proveedorSolicitante.nombre}" />
+						</p:column>
+
+						<p:column headerText="#{msg['asignacion.nng.cliente']}">
+							<h:outputText value="#{detalle.cliente}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_solicitud']}" style="text-align:center;">
+							<h:outputText value="#{detalle.solicitud.fechaSolicitud}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_asignacion']}" style="text-align:center;">
+							<h:outputText value="#{detalle.solicitud.fechaAsignacion}">
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Numero_oficio']}">
+							<h:outputText value="#{detalle.solicitud.numOficioSolicitante}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Estatus']}" style="text-align:center;">
+							<h:outputText
+								value="#{detalle.solicitud.estadoSolicitud.descripcion}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Operaciones']}" style="text-align:center;">
+							<p:commandButton title="#{msg['consultas.generales.detalle']}"
+								icon="ui-icon-pencil"
+								rendered="#{detalle.solicitud.estadoSolicitud.codigo != 'C'}"
+								action="#{consultarAsignacionesNngBean.editarSolicitud}"
+								update=":MDL_Asignaciones TBL_SolicitudesAsignacion"
+								oncomplete="PF('MDL_Asignaciones').show();">
+								<f:setPropertyActionListener value="#{detalle.solicitud}"
+									target="#{consultarAsignacionesNngBean.registroSeleccionado}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+
+							<p:commandButton title="#{msg['consultas.generales.cancelar']}"
+								icon="ui-icon-circle-close"
+								rendered="#{detalle.solicitud.estadoSolicitud.codigo eq 'E'}"
+								update="TBL_SolicitudesAsignacion"
+								onclick="PF('DLG_Cancelar').show()" global="false">
+								<f:setPropertyActionListener value="#{detalle.solicitud}"
+									target="#{consultarAsignacionesNngBean.registroSeleccionado}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+
+					</p:dataTable>
+				</fieldset>
+			</h:form>
+			<!-- Dialog cancelar -->
+			<p:dialog id="DLG_Cancelar" 	
+				widgetVar="DLG_Cancelar" 
+				global="false"
+				closeOnEscape="true"
+				closable="false" 
+				modal="true" 
+				resizable="false"
+				header="#{msg['cancelar.registro']}" 
+				appendTo="@(body)" 
+				width="250"
+				height="50">
+				<sns:confirm-custom-dialog message="#{msg['dialog.confirmacion']}"
+					blockUIWidgetVar="ConfirmarCancelarAsignacionNNG_BUI"
+					confirmActionListener="#{consultarAsignacionesNngBean.eliminarSolicitud}"
+					dialogWidgetVar="DLG_Cancelar"
+					updateComponentId=":FRM_ConsultarAsignacionesNNG:TBL_SolicitudesAsignacion :MSG_ConsultarAsignacionesNNG">
+				</sns:confirm-custom-dialog>
+			</p:dialog>
+			<!-- Dialog asignaciones nng -->
+			<p:dialog id="MDL_Asignaciones" 
+				widgetVar="MDL_Asignaciones"
+				header="#{msg['mainMenu.NumeracionNoGeografica']}/#{msg['mainMenu.Asignacion']}"
+				modal="true" 
+				appendTo="@(body)" 
+				scrollable="true" 
+				resizable="true"
+				closable="false" 
+				width="80%" 
+				height="500">
+				<ui:include
+					src="/numeracion-no-geografica/asignacion/solicitud-asignacion-nng.xhtml">
+				</ui:include>
+				<p:commandButton id="BTN_Salir_Solicitud_Asignacion"
+					styleClass="customCloseModal" value="X"
+					onclick="PF('DLG_Salir_Solicitud_Asignacion').show()"
+					global="false">
+					<p:resetInput
+						target=":#{p:component('FORM_SolicitudAsignacionNNG')}" />
+				</p:commandButton>
+			</p:dialog>
+			<!-- Confirmación al salir solicitud asignacion-->
+			<p:dialog id="DLG_Salir_Solicitud_Asignacion"
+				widgetVar="DLG_Salir_Solicitud_Asignacion" modal="true"
+				closeOnEscape="true" closable="false" resizable="false"
+				header="Salir" appendTo="@(body)" width="250"
+				height="115">
+				<sns:exit-custom-dialog message="#{msg['cerrarDialogo.mensaje']}"
+					blockUIWidgetVar="salirSolicitudAsignacionNNG_BUI"
+					confirmActionListener="#{solicitudAsignacionNngBean.resetTabs}"
+					onCompleteExit="PF('DLG_Salir_Solicitud_Asignacion').hide();PF('MDL_Asignaciones').hide();"
+					onCompleteCancel="PF('DLG_Salir_Solicitud_Asignacion').hide();"
+					updateComponentId=":FRM_ConsultarAsignacionesNNG:TBL_SolicitudesAsignacion"
+					resetValues="true" />
+			</p:dialog>
+			<p:ajaxStatus id="FRM_ConsultarAsignacionesNNG_AS"
+				onstart="PF('statusAsignacionNngDialog').show()"
+				onsuccess="PF('statusAsignacionNngDialog').hide()">
+			</p:ajaxStatus>
+			<p:dialog widgetVar="statusAsignacionNngDialog" 
+				modal="true"
+				draggable="false" 
+				closable="false" 
+				resizable="false"
+				showHeader="false">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:dialog>
+			<!-- <p:blockUI block="FRM_ConsultarAsignacionesNNG"
+				widgetVar="FRM_ConsultarAsignacionesNNG_BUI">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:blockUI> -->
+
+		</fieldset>
+	</ui:define>
+</ui:composition>
+</html>

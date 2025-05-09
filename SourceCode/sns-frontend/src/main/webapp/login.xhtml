@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<ui:composition template="/WEB-INF/templates/plantillaFront.xhtml">
+	<ui:define name="centro">
+
+		<div class="dialogoLogin">
+			<div data-widget="widget_j_idt17"
+				class="ui-panel ui-widget ui-widget-content ui-corner-all centered"
+				id="j_idt17">
+				<div
+					class="ui-panel-titlebar ui-widget-header ui-helper-clearfix ui-corner-all"
+					id="j_idt17_header">
+					<span class="ui-panel-title">Login</span>
+				</div>
+				<div class="grupoCampos">
+					<div class="ui-panel-content ui-widget-content"
+						id="j_idt17_content">
+
+						<p:messages id="MSG_ConsultaFront" showDetail="false" autoUpdate="false" closable="true" showIcon="false"/>
+
+						<form id="FORM_login" method="post" action="j_security_check">
+
+							<div style="margin-left: 35px; margin-top: 15px">
+								<table>
+									<tbody>
+										<tr>
+											<td><label> Usuario </label></td>
+											<td><input type="text" class="ui-corner-all"
+												title="Inserte su usuario" name="j_username"
+												autocomplete="off" /></td>
+										</tr>
+										<tr>
+											<td><br></br></td>
+										</tr>
+										<tr>
+											<td><label> Clave</label></td>
+											<td><input type="password" class="ui-corner-all"
+												title="Inserte su clave" name="j_password" maxlength="12"
+												autocomplete="off" /></td>
+										</tr>
+									</tbody>
+								</table>
+
+							</div>
+
+						</form>
+test
+						<h:form id="FORM_recover">
+							<h:inputHidden id="csrfTokenRecover" value="#{serviciosBean.token}"></h:inputHidden>
+							<p:commandLink style="color:blue"
+								action="#{serviciosBean.goTo}"
+								value="Recuperar contraseña">
+							</p:commandLink>
+						</h:form>
+						<br></br>
+						<h:form id="Form_captcha">
+							<h:outputLabel
+								value="Por favor, introduzca el texto de la siguiente imagen" />
+							<br></br>
+							<br></br>
+
+						 <p:captcha id="cp" label="Captcha"  secure="true" language="es" requiredMessage="Introduzca el texto de la imagen" validatorMessage="Valor de captcha incorrecto. Por favor, actualice el captcha e introduzca un valor correcto"/> 
+							<h:inputHidden id="csrfTokenCaptcha" value="#{serviciosBean.token}"></h:inputHidden>
+							<br></br>
+							<p:commandButton actionListener="#{captchaBean.submit}"
+								update=":MSG_ConsultaFront" value="Enviar"
+								style="background: #D4D4D4; margin-bottom:15px;"
+								styleClass="sombreado" />
+						</h:form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+
+</ui:composition>
+</html>

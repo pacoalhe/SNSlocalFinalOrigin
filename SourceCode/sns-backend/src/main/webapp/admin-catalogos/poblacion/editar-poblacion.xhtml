@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<h:form id="FRM_editarPoblacion">			
+		<p:messages id="MSG_Poblacion_Edit" showSummary="true" showDetail="false" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		<h:panelGrid columns="6" cellpadding="3" cellspacing="3">
+			<h:outputLabel for="selEstadoEdicion" value="#{msg['catalogo.estados.estado']}" />
+			<p:inputText
+				disabled="true"
+				id="selEstadoEdicion" style="width:150px;"
+				value="#{editarPoblacionBean.estadoSeleccionado.nombre}">
+			</p:inputText>
+			
+			<p:outputLabel for="selMunicipioEdicion" value="#{msg['catalogo.poblaciones.municipio']}" />
+			<p:inputText
+				disabled="true" 
+				id="selMunicipioEdicion" style="width:144px;" 
+				value="#{editarPoblacionBean.municipioSeleccionado.nombre}">
+			</p:inputText>
+			
+			<p:outputLabel value="#{msg['catalogo.poblaciones.codigo']}"/>
+			<p:inputText
+			 	disabled="true"
+				value="#{editarPoblacionBean.poblacion.cdgPoblacion}" style="width:50px;"/>
+
+			<h:outputLabel value="#{msg['catalogo.poblaciones.abn']}" />
+			<p:inputText 
+				required="false" mask="3"
+				value="#{editarPoblacionBean.abnSeleccionado}"
+				label="#{msg['catalogo.poblaciones.abn']}" style="width: 41px;">
+			</p:inputText>
+		
+			<p:outputLabel value="#{msg['catalogo.poblaciones.nombre']}"/>
+			<p:inputText value="#{editarPoblacionBean.poblacion.nombre}"  style="width:200px;" maxlength="80"/>
+		</h:panelGrid>
+		
+		<p:panel id="panel_boton" styleClass="botonera">
+			<p:commandButton 
+				id="btnSalvar" value="#{msg['manual.generales.btn.guardar']}"
+				icon="ui-icon-disk" 
+				actionListener="#{editarPoblacionBean.guardarPoblacionEditada}"
+				update="MSG_Poblacion_Edit" 
+				style="height:30px;  width:96px ;margin-right:20px;">
+			</p:commandButton>
+			<p:commandButton
+				disabled="#{editarPoblacionBean.poblacion.estatus.cdg eq '1'}" 
+				id="btnReactivar" value="#{msg['manual.generales.btn.reactivar']}"
+				icon="ui-icon-disk" 
+				actionListener="#{editarPoblacionBean.activarPoblacion}"
+				update="MSG_Poblacion_Edit btnReactivar" 
+				style="height:30px;  width:96px ;margin-right:20px;">
+			</p:commandButton>
+		</p:panel>
+	</h:form>
+</html>

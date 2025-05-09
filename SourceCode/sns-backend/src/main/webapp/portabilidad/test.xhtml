@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+		
+		<p:messages id="MSG_Sched" showDetail="true" autoUpdate="false" closable="true" showIcon="false"/>
+			
+		<p:fieldset id="sched" legend="Test" >
+		        
+        
+				
+				
+			
+   
+   <h:form  id="sched-form" >
+  	<p:panel styleClass="alaDcha">
+					
+					<p:commandButton id="BTN_validar_ficheros2"	
+					value="Lanzar sinc ABD" 
+					actionListener="#{schedBean.sincronizar}"		/>
+
+		<p:commandButton id="BTN_2"	
+					value="solicitudes programadas" 
+					actionListener="#{schedBean.fireSolicitudesProgramadas}"		/>
+					
+					<p:commandButton id="BTN_3"	
+					value="borrado planes" 
+					actionListener="#{schedBean.fireBorradoPlanes}"		/>
+
+					<p:commandButton id="BTN_4"	
+					value="generar planes" 
+					actionListener="#{schedBean.fireGenerarPlanes}"		/>
+					
+		<p:commandButton 
+			id="BTN_5"	
+			value="Liberar Tareas" 
+			actionListener="#{schedBean.fireCuarentena}">
+		</p:commandButton>
+	</p:panel>
+							
+		
+				
+	</h:form >
+		
+		
+		<p:ajaxStatus id="sin_BUI" onstart="PF('statusTestDialog').show()" onsuccess="PF('statusTestDialog').hide()"/>
+		<p:dialog widgetVar="statusTestDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+    <ui:include src="/componentes/loader.xhtml"/>
+</p:dialog>
+	<!-- 	<p:blockUI block="sched" widgetVar="bui">
+		 	<ui:include src="/componentes/loader.xhtml"/>
+ 		</p:blockUI> -->
+</p:fieldset>		
+
+	</ui:define>
+</ui:composition>
+</html>

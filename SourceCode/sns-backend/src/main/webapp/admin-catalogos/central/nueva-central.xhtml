@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<h:form id="FRM_nuevaCentral">
+<p:panel id="PNL_nuevaCentralContainer" style="background:transparent">
+	<p:wizard widgetVar="wizard_central" id="wizard_central"
+		showNavBar="false" style="min-width:900px">
+		<p:tab id="tab_nueva_central"
+			title="#{msg['catalogo.centrales.generales']}">
+			<p:messages id="MSG_DatosCentral" showDetail="false" autoUpdate="false" closable="true" showIcon="false"/>
+
+			<h:panelGrid id="PNL_Central" columns="4" style="margin-bottom:20px;"
+				cellpadding="3" cellspacing="3">
+
+				<p:outputLabel for="TXT_Nombre"
+					value="#{msg['representante.nombre']}" />
+				<p:inputText id="TXT_Nombre" maxlength="100"
+					value="#{nuevaCentralBean.central.nombre}"
+					label="#{msg['representante.nombre']}"
+					style="width: 100px;"
+					required="true">
+				</p:inputText>
+
+				<p:outputLabel for="selproveedor" value="#{msg.proveedor}"
+					style="margin-left: 5px;" />
+				<p:selectOneMenu id="selproveedor" autoWidth="false" maxlength="15"
+					value="#{nuevaCentralBean.central.proveedor}" style="width:150px;"
+					converter="#{proveedorConverter}"
+					required="true">
+					<f:selectItem itemLabel="Seleccionar" />
+					<f:selectItems value="#{nuevaCentralBean.listaProveedores}"
+						var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+						itemValue="#{proveedorsel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+			</h:panelGrid>
+
+			<h:panelGrid id="PNL_Central2" columns="6"
+				style="margin-bottom:20px;" cellpadding="3" cellspacing="3">
+
+				<p:outputLabel for="selestado" value="#{msg['ubicacion.estado']}" />
+				<p:selectOneMenu id="selestado" autoWidth="false"
+					value="#{nuevaCentralBean.estadoMun}" style="width:150px;"
+					label="#{msg['ubicacion.estado']}" converter="#{estadoConverter}">
+					<p:ajax event="change"
+						listener="#{nuevaCentralBean.habilitarMunicipio}"
+						update="selmunicipio selpoblacion"></p:ajax>
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+					<f:selectItems value="#{nuevaCentralBean.listaEstados}"
+						var="estados" itemLabel="#{estados.nombre}" itemValue="#{estados}">
+					</f:selectItems>
+				</p:selectOneMenu>
+
+				<p:outputLabel for="selmunicipio"
+					value="#{msg['ubicacion.municipio']}" style="margin-left: 5px;" />
+				<p:selectOneMenu id="selmunicipio" autoWidth="false"
+					value="#{nuevaCentralBean.municipio}" style="width:150px;"
+					label="#{msg['ubicacion.municipio']}"
+					converter="#{municipioConverter}">
+					<p:ajax event="change" update="MSG_DatosCentral selpoblacion"
+						listener="#{nuevaCentralBean.habilitarPoblacion}" />
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+					<f:selectItems value="#{nuevaCentralBean.listaMunicipio}"
+						var="municipios" itemLabel="#{municipios.nombre}"
+						itemValue="#{municipios}">
+					</f:selectItems>
+				</p:selectOneMenu>
+
+				<p:outputLabel for="selpoblacion"
+					value="#{msg['ubicacion.poblacion']}" style="margin-left: 5px;" />
+				<p:selectOneMenu id="selpoblacion" autoWidth="false"
+					value="#{nuevaCentralBean.central.poblacion}" style="width:150px;"
+					label="#{msg['ubicacion.poblacion']}"
+					converter="#{poblacionConverter}">
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+					<f:selectItems value="#{nuevaCentralBean.listaPoblacion}"
+						var="poblaciones" itemLabel="#{poblaciones.nombre}"
+						itemValue="#{poblaciones}">
+					</f:selectItems>
+				</p:selectOneMenu>
+
+				<h:outputLabel value="#{msg['proveedor.calle']}" />
+				<p:inputText id="TXT_Calle" maxlength="50"
+					value="#{nuevaCentralBean.central.calle}" label="#{msg['proveedor.calle']}"
+					style="width: 120px;">
+				</p:inputText>
+
+				<h:outputLabel value="#{msg['catalogo.centrales.numeroExterior']}"
+					style="width: 50px; margin-left: 5px;" />
+				<p:inputText id="TXT_NumExt" maxlength="30"
+					value="#{nuevaCentralBean.central.numero}"
+					label="#{msg['catalogo.centrales.numeroExterior']}"
+					style="width: 80px;">
+				</p:inputText>
+
+				<h:outputLabel value="#{msg['proveedor.colonia']}"
+					style="margin-left: 5px;" />
+				<p:inputText id="TXT_Colonia" maxlength="50"
+					value="#{nuevaCentralBean.central.colonia}"
+					label="#{msg['proveedor.colonia']}" style="width: 120px;">
+				</p:inputText>
+
+				<h:outputLabel value="#{msg['proveedor.cp']}" style="width: 50px;" />
+				<p:inputText id="TXT_CodigoPostal" maxlength="5"
+					value="#{nuevaCentralBean.central.cp}"
+					label="#{msg['proveedor.cp']}" style="width: 50px;">
+				</p:inputText>
+
+				<h:outputLabel
+					value="#{msg['manual.numeracion.field.centrales.latitud']}"
+					style="margin-left: 5px;" />
+				<p:inputText id="TXT_Latitud" value="#{nuevaCentralBean.central.latitud}"
+					label="#{msg['manual.numeracion.field.centrales.latitud']}"
+					style="width: 120px;">
+				</p:inputText>
+
+				<h:outputLabel
+					value="#{msg['manual.numeracion.field.centrales.longitud']}"
+					style="margin-left: 5px;" />
+				<p:inputText id="TXT_Longitud" value="#{nuevaCentralBean.central.longitud}"
+					label="#{msg['manual.numeracion.field.centrales.longitud']}"
+					style="width: 120px;">
+				</p:inputText>
+
+				<h:outputLabel value="#{msg['catalogo.centrales.jerarquia']}" />
+				<p:inputText id="TXT_Jerarquia" maxlength="100"
+					value="#{nuevaCentralBean.central.jerarquia}"
+					label="#{msg['catalogo.centrales.jerarquia']}"
+					style="width: 100px;">
+				</p:inputText>
+
+				<h:outputLabel
+					value="#{msg['manual.numeracion.field.centrales.cap.inicial']}"
+					style="margin-left: 5px;" />
+				<p:inputText id="TXT_CapInicial"
+					maxlength="10"
+					value="#{nuevaCentralBean.central.capacidadInicial}"
+					label="#{msg['manual.numeracion.field.centrales.cap.inicial']}"
+					style="width: 120px;">
+				</p:inputText>
+
+				<h:outputLabel
+					value="#{msg['manual.numeracion.field.centrales.cap.final']}"
+					style="margin-left: 5px;" />
+				<p:inputText id="TXT_CapFinal"
+					maxlength="10" 
+					value="#{nuevaCentralBean.central.capacidadFinal}"
+					label="#{msg['manual.numeracion.field.centrales.cap.final']}"
+					style="width: 120px;">
+				</p:inputText>
+
+				<p:outputLabel for="selMarca"
+					value="#{msg['catalogo.marcaModelo.marca']}" />
+				<p:selectOneMenu id="selMarca"
+					value="#{nuevaCentralBean.central.modelo.marca.id}" style="width:190px">
+					<p:ajax event="change"
+						listener="#{nuevaCentralBean.habilitarSeleccionModelo()}"
+						update="MSG_DatosCentral selModelo BTN_CatMarcaEdit">
+					</p:ajax>
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+					<f:selectItems value="#{nuevaCentralBean.listaMarcas}"
+						var="marcasel" itemLabel="#{marcasel.nombre}"
+						itemValue="#{marcasel.id}">
+					</f:selectItems>
+				</p:selectOneMenu>
+
+				<p:commandButton style="height:40px; width:96px; margin-left:15px"
+					id="BTN_CatMarcaEdit"
+					value="#{msg['catalogo.centrales.catalogo.marcas.modelos.editar']}"
+					update="MSG_DatosCentral :FORM_Marca:PNL_marcaContainer :MSG_Marca selMarca"
+					disabled="#{nuevaCentralBean.isEditar()}"
+					action="#{nuevaCentralBean.editarMarcaModelo()}"
+					oncomplete="PF('MDL_Marca').show()">
+				</p:commandButton>
+				
+				<p:commandButton style="height:40px; width:96px; margin-left:15px"
+					id="BTN_CatMarcaCrea"
+					value="#{msg['catalogo.centrales.catalogo.marcas.modelos.crear']}"
+					update="MSG_DatosCentral :FORM_Marca:PNL_marcaContainer :MSG_Marca selMarca"
+					action="#{nuevaCentralBean.crearMarcaModelo()}"
+					oncomplete="PF('MDL_Marca').show()">
+				</p:commandButton>
+
+				<p:outputLabel for="selModelo"
+					value="#{msg['catalogo.marcaModelo.modelo']}"
+					style="margin-left: 20px;" />
+				<p:selectOneMenu id="selModelo"
+					value="#{nuevaCentralBean.central.modelo.id}" style="width:144px;">
+					<p:ajax event="change"
+						listener="#{nuevaCentralBean.compruebaModelo()}"
+						update="MSG_DatosCentral selModelo selMarca">
+					</p:ajax>
+					<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+					<f:selectItems value="#{nuevaCentralBean.listaModelos}"
+						var="modelosel" itemLabel="#{modelosel.tipoModelo}"
+						itemValue="#{modelosel.id}">
+					</f:selectItems>
+				</p:selectOneMenu>
+
+			</h:panelGrid>
+
+
+			<p:commandButton style="height:30px; width:96px;" id="BTN_Salvar"
+				value="#{msg['manual.generales.btn.guardar']}" icon="ui-icon-disk"
+				process="FRM_nuevaCentral" update="PNL_nuevaCentralContainer MSG_DatosCentral"
+				actionListener="#{nuevaCentralBean.guardarCentral}">
+			</p:commandButton>
+
+		</p:tab>
+	</p:wizard>
+</p:panel>
+</h:form>
+
+
+
+<!-- <p:ajaxStatus id="triggerblockuiNuevaCentral"
+	onstart="PF('nuevaCentral_bui').show()"
+	onsuccess="PF('nuevaCentral_bui').hide()">
+
+</p:ajaxStatus>
+
+<p:blockUI block="FRM_nuevaCentral" widgetVar="nuevaCentral_bui">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI> -->
+</html>

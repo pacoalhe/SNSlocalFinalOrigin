@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro" >
+		
+		<p:messages id="MSG_SincronizacionABD" showDetail="true" autoUpdate="false" closable="true" showIcon="false"/>
+			
+		<p:fieldset id="sincabd" legend="#{msg['mainMenu.Portabilidad']}/#{msg['portabilidad.sync']}" >
+		        
+        <h:form  id="sync-abd" enctype="multipart/form-data">
+				
+		<h:panelGrid id="tipoarchivo" columns="2" cellpadding="3" cellspacing="3" style="float:left">		
+			<h:outputLabel for="tipoconsulta" value="Tipo de Archivo" />
+			<p:selectOneMenu
+							id="tipoconsulta" autoWidth="false"
+							value="#{syncABDBean.tipoFichero}" 
+							converter="#{tipoFicheroPortConverter}"	>
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems 
+								value="#{syncABDBean.listaTiposFichero}"
+								var="tipoconsulta" 
+								itemLabel="#{tipoconsulta.descripcion}"
+								itemValue="#{tipoconsulta}">
+							</f:selectItems>
+							
+							
+			</p:selectOneMenu>
+					</h:panelGrid>
+					
+			<h:panelGrid id="panel0"   columns="2" style="width: 100%">
+		
+				<p:fieldset legend="Archivo">
+	
+ 				<p:panelGrid id="panel1" columns="1" >
+				<p:fileUpload id="uploadedFileArrendatario"  
+				 	sizeLimit="#{syncABDBean.fileSizeLimit}" 
+				 	mode="advanced" allowTypes="/(\.|\/)(xml)$/"
+					value="#{syncABDBean.uploadedFile}"
+					fileUploadListener="#{syncABDBean.uploadFichero}"
+					uploadLabel="#{msg['automatica.Subir']}"
+					cancelLabel="#{msg['automatica.Cancelar']}"
+					label="Examinar"
+					fileLimitMessage="#{msg['automatica.Limite']}"
+					invalidFileMessage="#{msg['automatica.Archivo.Invalido']}"
+					invalidSizeMessage="#{msg['automatica.Archivo.Tamaño']}"
+					update="fileArrendatario,BTN_validar_ficheros" />
+				
+			
+			
+				<h:outputLabel id="fileArrendatario" value="#{syncABDBean.fileName}" />
+			</p:panelGrid>
+		</p:fieldset>  
+   </h:panelGrid>
+   
+  	<p:panel styleClass="alaDcha">
+			<p:commandButton id="BTN_validar_ficheros"	
+					value="Cargar y Procesar" 
+					actionListener="#{syncABDBean.validarFichero}"
+					update=":MSG_SincronizacionABD"	disabled="#{syncABDBean.disableBotonValidar}"/>
+					
+					
+	</p:panel>
+							
+		
+				
+	</h:form>
+		
+		
+		<p:ajaxStatus id="sin_BUI" onstart="PF('statusSincronizacionDialog').show()" onsuccess="PF('statusSincronizacionDialog').hide()"/>
+		<p:dialog widgetVar="statusSincronizacionDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+    <ui:include src="/componentes/loader.xhtml"/>
+</p:dialog>
+		<!-- <p:blockUI block="sincabd" widgetVar="bui">
+		 	<ui:include src="/componentes/loader.xhtml"/>
+ 		</p:blockUI> -->
+</p:fieldset>		
+
+	</ui:define>
+</ui:composition>
+</html>

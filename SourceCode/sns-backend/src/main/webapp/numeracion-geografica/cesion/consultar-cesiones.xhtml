@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+<div id="topCesiones"></div>
+		<p:messages id="MSG_ConsultarCesiones" showDetail="false"
+			showSummary="true" autoUpdate="false" closable="true" escape="false"
+			showIcon="false" />
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['mainMenu.NumeracionGeografica']}/#{msg['mainMenu.Cesion']}</legend>
+
+			<h:form id="FRM_ConsultarCesiones">
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['buscador.solicitud']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda" columns="8" style="float:left"
+						cellpadding="3" cellspacing="3">
+						<h:outputLabel value="#{msg['consultar.Consecutivo']}" />
+						<p:inputText id="TXT_Consecutivo" required="false" maxlength="9"
+							mask="9" value="#{consultarCesionesNgBean.consecutivo}"
+							label="#{msg['consultar.Consecutivo']}" style="width: 150px;">
+						</p:inputText>
+
+						<h:outputLabel for="selproveedor"
+							value="#{msg['cesion.pst.cedente']}" />
+						<p:selectOneMenu id="selproveedor" autoWidth="false" style="width:150px;"
+							value="#{consultarCesionesNgBean.proveedorSeleccionado}"
+							converter="#{proveedorConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarCesionesNgBean.listaProveedores}"
+								var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel for="SOM_PstCesionario"
+							value="#{msg['cesion.pst.cesionario']}" />
+						<p:selectOneMenu id="SOM_PstCesionario" autoWidth="false" style="width:150px;"
+							value="#{consultarCesionesNgBean.pstCesionario}"
+							converter="#{proveedorConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems
+								value="#{consultarCesionesNgBean.listaProveedores}"
+								var="proveedorsel" itemLabel="#{proveedorsel.nombre}"
+								itemValue="#{proveedorsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['consultar.Numero_oficio']}" />
+						<p:inputText id="TXT_Oficio" required="false" maxlength="51"
+							value="#{consultarCesionesNgBean.oficioPstSolicitante}"
+							label="#{msg['consultar.Numero_oficio']}" style="width: 150px;">
+						</p:inputText>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}" />
+						<p:calendar id="fAsignacionDesde" required="false" locale="mx_MX"
+							value="#{consultarCesionesNgBean.fechaDesdeAsignacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaDesde}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" global="false"
+								update="fAsignacionHasta"
+								listener="#{consultarCesionesNgBean.habilitarFechaHastaAsignacion}">
+							</p:ajax>
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}" />
+						<p:calendar id="fAsignacionHasta" required="false" locale="mx_MX"
+							value="#{consultarCesionesNgBean.fechaHastaAsignacion}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_solicitud']} #{msg.fechaHasta}"
+							disabled="#{!consultarCesionesNgBean.fechaHastaAsignacionHabilitada}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_implementacion']} #{msg.fechaDesde}" />
+						<p:calendar id="fImplementacionDesde" required="false"
+							locale="mx_MX" value="#{consultarCesionesNgBean.fechaDesdeImpl}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_implementacion']} #{msg.fechaDesde}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="dateSelect" global="false"
+								update="fImplementacionHasta"
+								listener="#{consultarCesionesNgBean.habilitarFechaHastaImplementacion}">
+							</p:ajax>
+						</p:calendar>
+
+						<h:outputLabel
+							value="#{msg['consultar.Fecha_implementacion']} #{msg.fechaHasta}" />
+						<p:calendar id="fImplementacionHasta" required="false"
+							locale="mx_MX" value="#{consultarCesionesNgBean.fechaHastaImpl}"
+							pattern="dd/MM/yyyy" mask="true" style="width:150px"
+							label="#{msg['consultar.Fecha_implementacion']} #{msg.fechaHasta}"
+							disabled="#{!consultarCesionesNgBean.fechaHastaImplHabilitada}"
+							navigator="true" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<h:outputLabel for="TXT_Nir" value="#{msg['cesion.NIR']}" />
+						<p:inputText id="TXT_Nir" required="false" maxlength="3"
+							value="#{consultarCesionesNgBean.cdgNir}"
+							label="#{msg['cesion.NIR']}" style="width: 150px;"
+							validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+						</p:inputText>
+
+						<h:outputLabel for="TXT_Serie" value="#{msg['cesion.serie']}" />
+						<p:inputText id="TXT_Serie" required="false" maxlength="5"
+							value="#{consultarCesionesNgBean.sna}"
+							label="#{msg['cesion.serie']}" style="width: 150px;"
+							validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+						</p:inputText>
+
+						<h:outputLabel for="selestado" value="#{msg['consultar.Estatus']}" />
+						<p:selectOneMenu id="selestado" style="width:150px;"
+							value="#{consultarCesionesNgBean.estadoSeleccionado}"
+							converter="#{estatusSolicitudConverter}">
+							<f:selectItem itemLabel="Seleccionar" />
+							<f:selectItems value="#{consultarCesionesNgBean.listaEstados}"
+								var="estados1" itemLabel="#{estados1.descripcion}"
+								itemValue="#{estados1}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarCesionesNgBean.realizarBusqueda}"
+						update=":MSG_ConsultarCesiones TBL_SolicitudesCesion"
+						style="height:30px; width:82px;">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarCesionesNgBean.limpiarBusqueda}"
+						update=":MSG_ConsultarCesiones PNL_Busqueda TBL_SolicitudesCesion"
+						style="height:30px; width:82px; margin-right:20px;"
+						process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['cesion.consulta']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton 
+								value="#{msg['cesion.nueva']}" title="Editar"
+								icon="ui-icon-pencil" update=":MDL_Cesiones"
+								action="#{solicitudCesionNgBean.nuevaSolicitud}"
+								oncomplete="PF('MDL_Cesiones').show();">
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_SolicitudesCesion" widgetVar="tabla"
+						var="consultar"
+						value="#{consultarCesionesNgBean.solicitudesCesionModel}"
+						lazy="true" paginator="true" paginatorPosition="bottom"
+						rows="#{consultarCesionesNgBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column headerText="#{msg['consultar.Consecutivo']}">
+							<h:outputText value="#{consultar.consecutivo}" />
+						</p:column>
+
+						<p:column headerText="#{msg['cesion.pst.cedente']}">
+							<h:outputText value="#{consultar.cedente}" />
+						</p:column>
+
+						<p:column headerText="#{msg['cesion.pst.cesionario']}">
+							<h:outputText value="#{consultar.cesionario}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Fecha_solicitud']}" style="text-align:center;">
+							<h:outputText value="#{consultar.fechaSolicitud}" />
+						</p:column>
+
+						<p:column headerText="#{msg['cesion.fecha.implementacion']}" style="text-align:center;">
+							<h:outputText value="#{consultar.fechaImplementacion}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Numero_oficio']}">
+							<h:outputText value="#{consultar.numOficio}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Estatus']}" style="text-align:center;">
+							<h:outputText value="#{consultar.estatus}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Operaciones']}" style="text-align:center;">
+							<p:commandButton title="#{msg['consultas.generales.detalle']}"
+								icon="ui-icon-pencil"
+								action="#{consultarCesionesNgBean.editarSolicitud}"
+								update=":MDL_Cesiones"
+								oncomplete="PF('MDL_Cesiones').show();">
+								<f:setPropertyActionListener value="#{consultar}"
+									target="#{consultarCesionesNgBean.registroSeleccionado}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+
+							<p:commandButton 
+								title="#{msg['consultas.generales.cancelar']}"
+								icon="ui-icon-circle-close"
+								disabled="#{!consultar.cancelarDisponible}"
+								onclick="PF('DLG_Cancelar').show()" global="false">
+								<f:setPropertyActionListener 
+									value="#{consultar}"
+									target="#{consultarCesionesNgBean.registroSeleccionado}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+
+					</p:dataTable>
+				</fieldset>
+			</h:form>
+
+			<!-- Modal de Cesión-->
+			<p:dialog id="MDL_Cesiones" widgetVar="MDL_Cesiones" modal="true"
+				header="#{msg['mainMenu.NumeracionGeografica']}/#{msg['mainMenu.Cesion']}"
+				appendTo="@(body)" closable="false" scrollable="true"
+				resizable="true" width="90%" height="500">
+				<ui:include
+					src="/numeracion-geografica/cesion/solicitud-cesion.xhtml">
+				</ui:include>
+				<p:commandButton id="BTN_Salir_Solicitud_Cesion"
+					styleClass="customCloseModal" value="X"
+					onclick="PF('DLG_Salir_Solicitud_Cesion').show()" global="false">
+					<p:resetInput target=":#{p:component('FORM_SolicitudCesion')}" />
+				</p:commandButton>
+			</p:dialog>
+
+			<!-- Confirmación al salir solicitud sesion-->
+			<p:dialog id="DLG_Salir_Solicitud_Cesion" modal="true"
+				widgetVar="DLG_Salir_Solicitud_Cesion" global="false"
+				closeOnEscape="true" closable="false" resizable="false"
+				header="Salir" severity="alert" appendTo="@(body)" width="250"
+				height="115">
+				<sns:exit-custom-dialog
+					confirmActionListener="#{solicitudCesionNgBean.resetTabs}"
+					message="#{msg['cerrarDialogo.mensaje']}"
+					onCompleteExit="PF('DLG_Salir_Solicitud_Cesion').hide();PF('MDL_Cesiones').hide();"
+					onCompleteCancel="PF('DLG_Salir_Solicitud_Cesion').hide();"
+					updateComponentId=":FRM_ConsultarCesiones:TBL_SolicitudesCesion"
+					blockUIWidgetVar="salirSolicitudCesión_BUI" resetValues="true">
+				</sns:exit-custom-dialog>
+			</p:dialog>
+
+			<!-- Modal para cancelar la solicitud -->
+			<p:dialog id="DLG_Cancelar" widgetVar="DLG_Cancelar" modal="true"
+				closeOnEscape="true" closable="false" resizable="false"
+				header="#{msg['cancelar.registro']}" severity="alert"
+				appendTo="@(body)" width="250" height="50">
+				<sns:confirm-custom-dialog message="#{msg['dialog.confirmacion']}"
+					blockUIWidgetVar="cancelarSolicitud_BUI"
+					confirmActionListener="#{consultarCesionesNgBean.eliminarSolicitud}"
+					dialogWidgetVar="DLG_Cancelar"
+					updateComponentId=":FRM_ConsultarCesiones:TBL_SolicitudesCesion :MSG_ConsultarCesiones">
+				</sns:confirm-custom-dialog>
+			</p:dialog>
+<!-- Loader -->
+			<p:ajaxStatus id="FRM_ConsultarCesiones_AS"
+				onstart="PF('statusCesionDialog').show()"
+				onsuccess="PF('statusCesionDialog').hide()">
+			</p:ajaxStatus>
+			
+	<p:dialog widgetVar="statusCesionDialog" 
+		modal="true" 
+		draggable="false" 
+		closable="false" 
+		resizable="false" 
+		showHeader="false">
+    <ui:include src="/componentes/loader.xhtml"/>
+</p:dialog>
+
+		</fieldset>
+	</ui:define>
+</ui:composition>
+</html>

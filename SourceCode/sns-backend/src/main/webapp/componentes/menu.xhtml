@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:p="http://primefaces.org/ui">
+
+
+<f:subview id="menuSuperiorView" locale="#{facesContext.externalContext.requestLocale}">
+
+	 	<ui:composition>
+			<h:form>
+
+				<p:menubar style="border-left: 1px solid #989898">
+					<p:submenu label="#{msg['mainMenu.NumeracionGeografica']}" icon="ico-geog" >
+			            <p:menuitem value="#{msg.asignacion}" ajax="false" action="/numeracion-geografica/asignacion/consultar-asignaciones.xhtml?faces-redirect=true" />	
+			            <p:menuitem value="#{msg.cesion}" ajax="false" action="/numeracion-geografica/cesion/consultar-cesiones.xhtml?faces-redirect=true"/>
+			            <p:menuitem value="#{msg.liberacion}" ajax="false" action="/numeracion-geografica/liberacion/consultar-liberaciones.xhtml?faces-redirect=true" />   
+			            <p:menuitem value="#{msg.redistribucion}" ajax="false" action="/numeracion-geografica/redistribucion/consultar-redistribuciones.xhtml?faces-redirect=true" />
+			            <p:menuitem value="#{msg.consolidacion}" ajax="false" action="/numeracion-geografica/consolidacion/consultar-consolidaciones.xhtml?faces-redirect=true" />
+			            <p:menuitem value="#{msg.consultas}" ajax="false" action="/numeracion-geografica/consulta-generica/consulta-generica.xhtml?faces-redirect=true" />
+			            <p:menuitem value="#{msg.lineasActivas}" ajax="false" action="/numeracion-geografica/lineas-activas/consultar-lineas-activas.xhtml?faces-redirect=true"/>
+			            <p:menuitem value="Generación Plan Numeración ABD" ajax="false"  action="/numeracion-geografica/pnn-abd/generacion-plan-numeracion-abd.xhtml?faces-redirect=true"  />
+			            <p:menuitem value="#{msg.historico}" ajax="false" action="/numeracion-geografica/historico-series/consultar-historico.xhtml?faces-redirect=true"  />
+			        </p:submenu>
+			      
+			        <p:submenu label="#{msg['mainMenu.NumeracionNoGeografica']}" icon="ico-nogeog">
+			         	<p:menuitem value="#{msg.asignacion}" ajax="false" action="/numeracion-no-geografica/asignacion/consultar-asignaciones-nng.xhtml?faces-redirect=true"/>
+			            <p:menuitem value="#{msg.cesion}" ajax="false" action="/numeracion-no-geografica/cesion/consultar-cesiones-nng.xhtml?faces-redirect=true"/>
+			            <p:menuitem value="#{msg.liberacion}" ajax="false" action="/numeracion-no-geografica/liberacion/consultar-liberaciones-nng.xhtml?faces-redirect=true" />
+			            <p:menuitem value="#{msg.redistribucion}" ajax="false" action="/numeracion-no-geografica/redistribuciones/consultar-redistribuciones-nng.xhtml?faces-redirect=true" />
+			            <p:menuitem value="#{msg.consultas}" ajax="false" action="/numeracion-no-geografica/consulta-generica/consulta-generica-nng.xhtml?faces-redirect=true"/>
+			            <p:menuitem value="#{msg.lineasActivas}" ajax="false" action="/numeracion-no-geografica/lineas-activas/consultar-lineas-activas-nng.xhtml?faces-redirect=true"/>
+			            <p:menuitem value="#{msg.historico}" ajax="false" action="/numeracion-no-geografica/historico-series/consultar-historico-nng.xhtml?faces-redirect=true" />
+			        </p:submenu>
+					
+			        <p:submenu label="#{msg['mainMenu.CPSN']}" icon="ico-cpsn">
+			        	<p:menuitem value="#{msg.asignacion}" ajax="false" action="/cpsn/asignacion/consultar-asignaciones-cpsn.xhtml?faces-redirect=true"/>
+						<p:menuitem value="#{msg.cesion}" ajax="false" action="/cpsn/cesion/consultar-cesiones-cpsn.xhtml?faces-redirect=true"/>
+			        	<p:menuitem value="#{msg.liberacion}" ajax="false" action="/cpsn/liberacion/consultar-liberaciones-cpsn.xhtml?faces-redirect=true"/>
+			        	<p:menuitem value="#{msg.consultas}" ajax="false" action="/cpsn/consulta-generica/consulta-generica.xhtml?faces-redirect=true" />
+			        </p:submenu>
+			       
+			        <p:submenu label="#{msg['mainMenu.CPSI']}" icon="ico-cpsi" disabled="true">	
+						<p:menuitem value="#{msg.asignacion}" ajax="false" action="/cpsi/asignacion/consultar-asignaciones-cpsi.xhtml?faces-redirect=true"/>
+						<p:menuitem value="#{msg.cesion}" ajax="false" action="/cpsi/cesion/consultar-cesiones-cpsi.xhtml?faces-redirect=true"/>
+			        	<p:menuitem value="#{msg.liberacion}" ajax="false" action="/cpsi/liberacion/consultar-liberaciones-cpsi.xhtml?faces-redirect=true"/>
+			        	<p:menuitem value="#{msg['solicitud.uit']}" ajax="false" action="/cpsi/solicitud/consultar-solicitud-cpsi-uit.xhtml?faces-redirect=true" />
+			        	<p:menuitem value="#{msg.consultas}" ajax="false" action="/cpsi/consulta-generica/consulta-generica.xhtml?faces-redirect=true" />
+			        </p:submenu>
+			       
+			        <p:submenu label="#{msg['mainMenu.Reporteador']}" icon="ico-repor">
+			        	<p:menuitem value="#{msg['reporteador.ng']}" ajax="false"  action="/reporteador/ngactual.xhtml?faces-redirect=true?faces-redirect=true" />
+			        	<p:menuitem value="#{msg['reporteador.cng']}" ajax="false" action="/reporteador/ngporfechas.xhtml?faces-redirect=true?faces-redirect=true" />
+			        	<p:menuitem value="#{msg['reporteador.tng']}" ajax="false" action="/reporteador/ngtramites.xhtml?faces-redirect=true?faces-redirect=true" />
+			        	<p:menuitem value="#{msg['reporteador.nng']}" ajax="false" action="/reporteador/nng.xhtml?faces-redirect=true?faces-redirect=true" />
+			        	<p:menuitem value="#{msg['reporteador.cpl']}" ajax="false" action="/reporteador/centrales.xhtml?faces-redirect=true?faces-redirect=true" />
+			        </p:submenu>
+			        
+			        <p:submenu label="#{msg['mainMenu.Bitacora']}" icon="bitacora"  >
+			        	<p:menuitem value="Bitacora CSPN" ajax="false" disabled="true" rendered="false"/>
+				        <p:menuitem value="Bitacora CSPI" ajax="false" disabled="true" rendered="false"/>
+				        <p:menuitem value="Bitacora Catalogos" ajax="false" disabled="true" rendered="false"/>
+			         	<p:menuitem value="#{msg['mainMenu.Bitacora']}" ajax="false" action="/bitacora/bitacora.xhtml?faces-redirect=true"/>
+			        </p:submenu>
+			        
+			         <p:submenu label="#{msg['mainMenu.Portabilidad']}" icon="port" disabled="true">
+			     	   <p:menuitem value="#{msg['portabilidad.sync']}" ajax="false" action="/portabilidad/sincronizacion-abd.xhtml?faces-redirect=true" />
+			        </p:submenu>
+			        
+			        <p:submenu label="#{msg['mainMenu.AdministracionCatalogos']}" icon="ico-catal">
+			        	<p:menuitem value="#{msg['catalogos.abn']}" ajax="false" action="/admin-catalogos/abn/consultar-abns.xhtml?faces-redirect=true" />	
+			            <p:menuitem value="#{msg['catalogos.pst']}" ajax="false" action="/admin-catalogos/proveedor/consultar-proveedores.xhtml?faces-redirect=true"/>
+			            <p:menuitem value="#{msg['catalogos.estados']}" ajax="false" action="/admin-catalogos/estado/consultar-estados.xhtml?faces-redirect=true" />   
+			            <p:menuitem value="#{msg['catalogos.municipios']}" ajax="false" action="/admin-catalogos/municipio/consultar-municipios.xhtml?faces-redirect=true" />
+			            <p:menuitem value="#{msg['catalogos.poblaciones']}" ajax="false" action="/admin-catalogos/poblacion/consultar-poblaciones.xhtml?faces-redirect=true" />
+			            <p:menuitem value="#{msg['catalogos.centrales']}" ajax="false" action="/admin-catalogos/central/consultar-centrales.xhtml?faces-redirect=true" />
+			            <p:menuitem value="#{msg['catalogos.oficios']}" ajax="false" action="/admin-catalogos/oficios/consultar-plantillas.xhtml?faces-redirect=true"/>
+			            <p:menuitem value="#{msg['catalogos.marcas']}" ajax="false"  action="/admin-catalogos/marcamodelo/consultar-marcamodelo.xhtml?faces-redirect=true"  />
+			            <p:menuitem value="#{msg['catalogos.series']}" ajax="false"  action="/admin-catalogos/series/consultar-series.xhtml?faces-redirect=true"  />
+			            <p:menuitem value="#{msg['catalogos.claveServicio']}" ajax="false"  action="/admin-catalogos/clave-servicio/consultar-clave-servicio.xhtml?faces-redirect=true"  />
+			            <p:menuitem value="#{msg['cpsn.equiposSenalizacion']}" ajax="false" action="/cpsn/consultar-equipos-senalizacion.xhtml?faces-redirect=true" />	
+			        	<p:menuitem value="#{msg['cpsn.codigos.CPSN']}" ajax="false" action="/cpsn/consultar-codigos-cpsn.xhtml?faces-redirect=true" />
+			        	<p:menuitem value="#{msg['cpsi.equiposSenalizacion']}" ajax="false" action="/cpsi/consultar-equipos-senalizacion-cpsi.xhtml?faces-redirect=true" />	
+			        	<p:menuitem value="#{msg['cpsi.codigos.CPSI']}" ajax="false" action="/cpsi/consultar-codigos-cpsi.xhtml?faces-redirect=true" />
+						<p:menuitem value="Test" ajax="false" action="/portabilidad/test.xhtml?faces-redirect=true" rendered="#{app.devMode}"/>
+			        </p:submenu>
+	    		</p:menubar>
+			</h:form>
+		</ui:composition>
+	
+</f:subview>
+</html>

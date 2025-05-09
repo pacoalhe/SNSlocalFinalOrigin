@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+
+<composite:interface>
+	<composite:attribute name="confirmActionListener"
+		method-signature="java.lang.String action()" required="true"></composite:attribute>
+	<composite:attribute name="dialogWidgetVar" required="true"></composite:attribute>
+	<composite:attribute name="updateComponentId" required="true"></composite:attribute>
+<!-- 	<composite:attribute name="blockUIWidgetVar" required="true"></composite:attribute> -->
+	<composite:attribute name="onCompleteSuccess" required="false"></composite:attribute>
+
+</composite:interface>
+<composite:implementation>
+	<h:form id="FRM_customConfirmDialog">
+		<p:separator style="border-color:#7AC142;" />
+		<div class="ui-grid">
+			<div class="ui-grid-row">
+				<div class="ui-grid-col-1">
+					<br></br>
+				</div>
+				<div class="ui-grid-col-5">
+					<p:commandButton 
+						value="Sí" 
+						icon="ui-icon-check"
+						oncomplete="PF('#{cc.attrs.dialogWidgetVar}').hide();">
+						<p:ajax 
+							event="click" 
+							listener="#{cc.attrs.confirmActionListener}"
+							update="#{cc.attrs.updateComponentId}"
+							oncomplete="#{cc.attrs.onCompleteSuccess}">
+						</p:ajax>
+					</p:commandButton>
+				</div>
+				<div class="ui-grid-col-5">
+				<p:commandButton type="button" value="No" icon="ui-icon-close"
+					style="background: #D4D4D4;"
+					onclick="PF('#{cc.attrs.dialogWidgetVar}').hide();">
+				</p:commandButton>
+				</div>
+			</div>
+		</div>
+	</h:form>
+
+</composite:implementation>
+</html>

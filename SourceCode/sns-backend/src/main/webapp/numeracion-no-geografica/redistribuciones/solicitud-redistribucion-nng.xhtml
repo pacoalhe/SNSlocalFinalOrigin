@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<h:form id="FORM_SolicitudRedistribucionNNG">
+		<p:messages id="MSG_Wizard_SolicitudRedistribucionNNG" showDetail="true" autoUpdate="false" closable="true" showIcon="false"/>
+		<p:wizard 
+			widgetVar="WIZ_SolicitudRedistribucionNNG" id="WIZ_SolicitudRedistribucionNNG"
+			flowListener="#{solicitudRedistribucionNngBean.siguientePaso}"
+			showNavBar="true" nextLabel="#{msg['manual.tab.siguiente']}"
+			backLabel="#{msg['manual.tab.anterior']}" 
+			style="min-width:1000px">
+	
+			<p:tab id="WIZ_SolicitudRedist_TAB_Proveedor" title="#{msg['redistribucion.generales']}">
+				<sns:generalesRedistribuciones
+					id="TAB_Generales_RedistNNG"
+					nameBean="#{solicitudRedistribucionNngBean.tabGenerales}">
+				</sns:generalesRedistribuciones>
+			</p:tab>
+	
+			<p:tab id="WIZ_SolicitudRedist_TAB_Datos" title="#{msg.redistribucion}">
+				<sns:redistribucionNumeracionNng nameBean="#{solicitudRedistribucionNngBean.tabRedistribucion}" />
+			</p:tab>
+	
+			<p:tab id="WIZ_SolicitudRedist_TAB_Oficios" title="#{msg.oficio}">
+				<sns:generarOficio nameBean="#{solicitudRedistribucionNngBean.tabGenerarOficio}" />
+			</p:tab>
+	
+		</p:wizard>
+	</h:form>
+
+	<!-- Modal de Edición de Proveedores. -->
+	<p:dialog
+		id="MDL_Proveedores" widgetVar="MDL_Proveedores"
+		modal="true" appendTo="@(body)" closable="false"
+		header="#{msg['catalogo.proveedores.edicion.cabecera']}" 
+		scrollable="true" resizable="true" height="500">
+		<p:ajax 
+			event="close"
+			listener="#{solicitudRedistribucionNngBean.tabGenerales.actualizarEdicionProveedor}"
+			update="FORM_SolicitudRedistribucionNNG:TAB_Generales_RedistNNG">
+		</p:ajax>
+		<p:commandButton
+			id="BTN_Salir" global="false"
+			styleClass="customCloseModal"
+			value="X" closable="false"
+			onclick="PF('MDL_Proveedores').hide()">
+			<p:resetInput target="FORM_GestionProveedor" />	
+		</p:commandButton>
+		<ui:include src="/admin-catalogos/proveedor/edicion-proveedoresV2.xhtml"/>
+	</p:dialog>
+
+	<!-- <p:ajaxStatus 
+		id="FORM_SolicitudRedistribucion_AS"
+		onstart="PF('FORM_SolicitudRedistribucionNNG_BUI').show()"
+		onsuccess="PF('FORM_SolicitudRedistribucionNNG_BUI').hide()">
+	</p:ajaxStatus>
+	
+	<p:blockUI block="FORM_SolicitudRedistribucionNNG" widgetVar="FORM_SolicitudRedistribucionNNG_BUI">
+		<ui:include src="/componentes/loader.xhtml" />
+	</p:blockUI> -->
+
+</html>

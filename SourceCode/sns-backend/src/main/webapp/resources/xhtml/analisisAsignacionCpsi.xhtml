@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"/>
+	</composite:interface>
+	
+	<composite:implementation>
+	
+		<style type="text/css">
+			.colored {
+				font-weight: bold;
+				color: #0A8302;
+			}
+		</style>
+		
+		<p:messages id="MSG_AnalisisCPSI" showDetail="false" showSummary="true" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		
+		<p:fieldset>
+			<h:panelGrid columns="4">
+				<p:outputLabel for="TXT_Cantidad" value="#{msg['analisis.cantSolicitada']}"/>
+				<p:inputText
+					id="TXT_Cantidad" label="#{msg['analisis.cantSolicitada']}"
+					required="true"
+					maxlength="10"
+					value="#{cc.attrs.nameBean.codigosSolicitados}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					style="width:100px; margin-left:5px;"
+					validator="#{clientSideFieldValidatorBean.checkEnteroPositivoMayorCero}">
+				</p:inputText>
+				
+				<p:commandButton
+					id="BTN_Generar"
+					value="#{msg['asignacion.cpsi.tab.analisis.generar']}"
+					action="#{cc.attrs.nameBean.generarAnalisis}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					update="MSG_AnalisisCPSI TBL_ResumenAsignacion TBL_CodigosCPSI"
+					style="height:30px; width:150px">
+					<p:resetInput target="TXT_Cantidad"/>
+				</p:commandButton>
+
+				<p:commandButton
+					id="BTN_Catalogo"
+					value="#{msg['asignacion.cpsi.tab.analisis.catalogo']}"
+					icon="ui-icon-plus"
+					action="#{cc.attrs.nameBean.abrirCatalogo}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					update="MSG_AnalisisCPSI :#{p:component('MDL_CatalogoCpsiPst')}"
+					process="BTN_Catalogo"
+					style="height:30px; width:150px">
+					<p:resetInput target="TXT_Cantidad"/>
+				</p:commandButton>
+			</h:panelGrid>
+		</p:fieldset>
+
+		<h:panelGrid columns="1" cellpadding="3" cellspacing="5">
+			<p:dataTable 
+				id="TBL_ResumenAsignacion" widgetVar="TBL_ResumenAsignacion"
+				var="detalle" value="#{cc.attrs.nameBean.listadoDetalleAnalisisPst}"
+				paginator="false" resizableColumns="true"
+				style="width:100%;" scrollable="true"
+				emptyMessage="#{msg['buscador.noresultados']}">
+				
+				<f:facet name="header">#{msg['asignacion.cpsi.tab.analisis.resumen.asignacion']}</f:facet>
+				
+				<p:column 
+			    	resizable="true"
+			    	headerText="#{msg.proveedor}" width="150"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{detalle.nombreProveedor}"
+			        	title="#{detalle.nombreProveedor}">
+			        </h:outputText>
+			    </p:column>
+	
+			    <p:column 
+			    	resizable="true"
+			    	headerText="#{msg['asignacion.cpsi.tab.analisis.asignados']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{detalle.totalAsignados}"
+			        	title="#{detalle.totalAsignados}">
+			        </h:outputText>
+			    </p:column>
+			    
+				<p:column 
+			    	resizable="true"
+			    	headerText="#{msg['asignacion.cpsi.tab.analisis.activos']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{detalle.totalActivos}"
+			        	title="#{detalle.totalActivos}">
+			        </h:outputText>
+			    </p:column>
+			    
+				<p:column 
+			    	resizable="true"
+			    	headerText="#{msg['asignacion.cpsi.tab.analisis.uso']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{detalle.utilizacion}"
+			        	title="#{detalle.utilizacion}">
+			        </h:outputText>
+			    </p:column>
+			</p:dataTable>
+	
+			<p:fieldset>
+				<p:dataTable 
+					id="TBL_CodigosCPSI" widgetVar="TBL_CodigosCPSI"		
+					var="codigo" value="#{cc.attrs.nameBean.listadoCodigos}"
+					selection="#{cc.attrs.nameBean.codigosSeleccionados}"
+					rowKey="#{codigo.id}" selectionMode="multiple"
+					resizableColumns="true" paginator="false"
+					style="width:100%;" scrollable="true" scrollHeight="200"
+					emptyMessage="#{msg['buscador.noresultados']}"
+					rowStyleClass="#{codigo.estatus.id eq 'L' ? 'colored' : null}">
+					
+					<f:facet name="header">#{msg['asignacion.cpsi.tab.analisis.seleccion.cpsi']}</f:facet>
+					
+					<p:ajax 
+						event="rowSelect" global="false"
+						listener="#{cc.attrs.nameBean.seleccionarCodigo}"
+						update=":#{p:component('BTN_Seleccionar')} :#{p:component('MSG_AnalisisCPSI')} :#{p:component('TXT_CantidadSeleccionado')}">
+					</p:ajax>
+					
+		       		<p:ajax 
+		       			event="rowUnselect" global="false"
+						listener="#{cc.attrs.nameBean.seleccionarCodigo}"		       				
+						update=":#{p:component('BTN_Seleccionar')} :#{p:component('MSG_AnalisisCPSI')} :#{p:component('TXT_CantidadSeleccionado')}">
+					</p:ajax>
+
+				    <p:column 
+				    	resizable="true" width="75"
+				    	headerText="#{msg['cpsi.codigos.CPSI.resultados.binario']}"
+				    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText
+				        	value="#{codigo.binario}"
+				        	title="#{codigo.binario}">
+				        </h:outputText>
+				    </p:column>
+				    
+				    <p:column 
+				    	resizable="true" width="75" 
+				    	headerText="#{msg['cpsi.codigos.CPSI.resultados.decimalTotal']}"
+				    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText 
+				        	value="#{codigo.id}" 
+				        	title="#{codigo.id}">
+				        </h:outputText>
+				    </p:column>
+				    
+					<p:column
+						resizable="true" width="75"
+						headerText="#{msg['cpsi.codigos.CPSI.resultados.formatoDecimal']}"
+						style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText
+				        	value="#{codigo.formatoDecimal}"
+				        	title="#{codigo.formatoDecimal}">
+				        </h:outputText>
+				    </p:column>
+		
+				    <p:column
+				    	resizable="true" width="75"
+				    	headerText="#{msg['cpsi.codigos.CPSI.resultados.estatus']}"
+						style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText
+				        	value="#{codigo.estatus.descripcion}"
+				        	title="#{codigo.estatus.descripcion}">
+				        </h:outputText>
+				    </p:column>  
+				    
+				    <p:column
+				    	resizable="true" width="150"
+				    	headerText="#{msg.proveedor}"
+						style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+				        <h:outputText
+				        	value="#{codigo.proveedor.nombre}"
+				        	title="#{codigo.proveedor.nombre}">
+				        </h:outputText>
+				    </p:column>
+			    
+				</p:dataTable>
+				
+				<h:panelGrid id="PNL_Agregar" columns="1" style="text-align:center; margin-bottom:15px; margin-top:15px" width="100%">
+					<h:panelGroup style="display:block; text-align:center">
+						<p:outputLabel for="TXT_CantidadSeleccionado" value="#{msg['analisis.cantidad']}"/>
+						<p:inputText
+							id="TXT_CantidadSeleccionado"
+							value="#{cc.attrs.nameBean.cantidadSeleccionada}"
+							disabled="true"
+							style="width:30px; margin-left:5px;">
+						</p:inputText>
+						<p:commandButton
+							id="BTN_Seleccionar"
+							value="#{msg['asignacion.cpsi.tab.analisis.seleccionar']}"
+							action="#{cc.attrs.nameBean.seleccionCodigos}"
+							disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.seleccionarHabilitado)}"
+							update="MSG_AnalisisCPSI TBL_Asignaciones btnSalvar"
+							style="height:30px; width:100px; margin-left:5px;">
+						</p:commandButton>
+					</h:panelGroup>
+				</h:panelGrid>
+			</p:fieldset>
+			
+			<p:dataTable 
+				id="TBL_Asignaciones" 
+				var="asignacion" value="#{cc.attrs.nameBean.listaAsignaciones}"
+				paginator="true" paginatorPosition="bottom" 
+				rows="5" resizableColumns="true"
+				scrollable="true" emptyMessage="#{msg['buscador.noresultados']}">
+				
+				<f:facet name="header">#{msg['asignacion.cpsi.tab.analisis.cpsi.asignacion']}</f:facet>
+				
+				<p:column headerText="#{msg['consultar.Operaciones']}" width="100" style="font-size:12px;">
+					<p:commandButton
+						title="#{msg.eliminar}" 
+						icon="ui-icon-circle-close"
+						disabled="#{!(cc.attrs.nameBean.tabHabilitado and asignacion.estatus.codigo != 'X')}"
+						onclick="PF('DLG_EliminarCPSI').show()">
+						<f:setPropertyActionListener 
+							value="#{asignacion}" 
+							target="#{cc.attrs.nameBean.cpsiAsignadoSelecciondo}" >
+						</f:setPropertyActionListener>
+					</p:commandButton>
+				</p:column>
+				
+				<p:column 
+			    	resizable="true" width="75"
+			    	headerText="#{msg['cpsi.codigos.CPSI.resultados.binario']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{asignacion.binario}"
+			        	title="#{asignacion.binario}">
+			        </h:outputText>
+			    </p:column>
+			    
+			    <p:column 
+			    	resizable="true" width="75" 
+			    	headerText="#{msg['cpsi.codigos.CPSI.resultados.decimalTotal']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText 
+			        	value="#{asignacion.idCpsi}" 
+			        	title="#{asignacion.idCpsi}">
+			        </h:outputText>
+			    </p:column>
+			    
+				<p:column
+					resizable="true" width="75"
+					headerText="#{msg['cpsi.codigos.CPSI.resultados.formatoDecimal']}"
+					style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{asignacion.formatoDecimal}"
+			        	title="#{asignacion.formatoDecimal}">
+			        </h:outputText>
+			    </p:column>
+	
+			    <p:column
+			    	resizable="true" width="75"
+			    	headerText="#{msg['cpsi.codigos.CPSI.resultados.estatus']}"
+					style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{asignacion.estatus.descripcion}"
+			        	title="#{asignacion.estatus.descripcion}">
+			        </h:outputText>
+			    </p:column>
+	
+			    <p:column
+			    	resizable="true" width="150"
+			    	headerText="#{msg.proveedor}"
+					style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{asignacion.solicitudAsignacion.proveedorSolicitante.nombre}"
+			        	title="#{asignacion.solicitudAsignacion.proveedorSolicitante.nombre}">
+			        </h:outputText>
+			    </p:column>
+			</p:dataTable>
+		</h:panelGrid>
+		
+		<p:panel styleClass="botonera alaDcha">
+			<p:commandButton 
+				id="btnSalvar" 
+				value="#{msg['manual.generales.btn.guardar']}"
+				icon="ui-icon-disk" 
+				actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.salvarHabilitado)}"
+				update="MSG_AnalisisCPSI"
+				style="height:30px;  width:96px">
+			</p:commandButton>
+		</p:panel>
+		
+		<p:confirmDialog 
+			id="DLG_EliminarCPSI" widgetVar="DLG_EliminarCPSI"
+			global="false" closeOnEscape="true" closable="false"
+			message="#{msg['eliminar.registro.confirmar']}"
+			header="#{msg['eliminar.registro']}"
+			severity="alert" appendTo="@(body)">
+			<p:commandButton
+				value="Sí" icon="ui-icon-check"
+				oncomplete="PF('DLG_EliminarCPSI').hide();"
+				style="height:30px; width:82px">
+				<p:ajax
+					event="click" global="false"
+					listener="#{cc.attrs.nameBean.eliminarAsignacion}"
+					update="btnSalvar TBL_Asignaciones MSG_AnalisisCPSI">
+				</p:ajax>
+			</p:commandButton>
+			<p:commandButton
+				type="button" value="No" icon="ui-icon-close"
+				onclick="PF('DLG_EliminarCPSI').hide();"
+				style="height:30px; width:82px">
+			</p:commandButton>
+		</p:confirmDialog>
+
+	</composite:implementation>
+</html>

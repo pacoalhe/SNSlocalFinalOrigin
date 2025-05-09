@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<h:form id="FORM_SolicitudCesionNNG">
+		<p:messages id="MSG_Wizard_SolicitudCesionNNG" showDetail="false" showSummary="true" autoUpdate="false" closable="true" showIcon="false"/>
+		<p:wizard 
+			id="WIZ_SolicitudCesion"  
+			widgetVar="WIZ_SolicitudCesion"
+			flowListener="#{solicitudCesionNngBean.siguientePaso}"
+			showNavBar="true"
+			nextLabel="#{msg['manual.tab.siguiente']}" 
+			backLabel="#{msg['manual.tab.anterior']}"
+			style="min-width:1050px">
+
+ 			<p:tab id="WIZ_SolicitudCesion_TAB_Proveedor" title="#{msg['cesion.generalesTitle']}">
+				<sns:generalesCesiones nameBean="#{solicitudCesionNngBean.tabGeneralesCesion}"/>
+			</p:tab>
+			
+			<p:tab id="WIZ_SolicitudCesion_TAB_Derechos" title="#{msg['cesion.proveedoresTitle']}">
+				<sns:cesionDerechosNumeracion 
+					id="TAB_Cesion_NumeracionNNG"
+					nameBean="#{solicitudCesionNngBean.tabCesionDerechos}">
+				</sns:cesionDerechosNumeracion>
+			</p:tab>
+			
+			<p:tab id="WIZ_SolicitudCesion_TAB_Numeracion" title="#{msg['cesion.numeracionesTitle']}">
+				<sns:cesionNumeracionNng nameBean="#{solicitudCesionNngBean.tabCesionNumeracion}"/>
+			</p:tab>
+			
+			<p:tab id="WIZ_SolicitudCesion_TAB_Oficios" title="#{msg['cesion.notificacionTitle']}">
+				<sns:generarOficio nameBean="#{solicitudCesionNngBean.tabGenerarOficio}"/>
+			</p:tab>
+		</p:wizard>
+	</h:form>
+	
+	<!-- Modal de Edición de Proveedores. -->
+	<p:dialog
+		id="MDL_Proveedores" widgetVar="MDL_Proveedores"
+		modal="true" appendTo="@(body)" closable="false"
+		header="#{msg['catalogo.proveedores.edicion.cabecera']}" 
+		scrollable="true" resizable="true" height="500">
+		<p:ajax 
+			event="close"
+			listener="#{solicitudCesionNngBean.tabCesionDerechos.actualizarEdicionProveedor}"
+			update="FORM_SolicitudCesionNNG:TAB_Cesion_NumeracionNNG">
+		</p:ajax>
+		<p:commandButton
+			id="BTN_Salir" global="false"
+			styleClass="customCloseModal"
+			value="X" closable="false"
+			onclick="PF('MDL_Proveedores').hide()">
+			<p:resetInput target="FORM_GestionProveedor" />	
+		</p:commandButton>
+		<ui:include src="/admin-catalogos/proveedor/edicion-proveedoresV2.xhtml"/>
+	</p:dialog>
+	
+<!-- 	<p:ajaxStatus
+		id="FORM_SolicitudCesionNNG_AS"
+		onstart="PF('FORM_SolicitudCesionNNG_BUI').show()"
+		onsuccess="PF('FORM_SolicitudCesionNNG_BUI').hide()">
+	</p:ajaxStatus>
+	
+	<p:blockUI block="FORM_SolicitudCesionNNG" widgetVar="FORM_SolicitudCesionNNG_BUI">
+		<ui:include src="/componentes/loader.xhtml"/>
+	</p:blockUI> -->
+	
+</html>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	<div id="topSolicitudCesion"></div>
+<h:form id="FORM_SolicitudCesionCPSI">
+	<p:messages id="MSG_Wizard_SolicitudCesionCPSI" showDetail="false"
+		autoUpdate="false" closable="true" showIcon="false" />
+	<p:wizard widgetVar="WIZ_SolicitudCesion" id="WIZ_SolicitudCesion"
+		flowListener="#{solicitudCesionCpsiBean.siguientePaso}"
+		showNavBar="true" nextLabel="#{msg['manual.tab.siguiente']}"
+		backLabel="#{msg['manual.tab.anterior']}"
+		style="min-width: 1050px">
+
+		<p:tab id="WIZ_SolicitudCesion_TAB_Proveedor"
+			title="#{msg['cesion.generalesTitle']}">
+			<sns:generalesCesiones
+				nameBean="#{solicitudCesionCpsiBean.tabGeneralesCesion}" />
+		</p:tab>
+
+		<p:tab id="WIZ_SolicitudCesion_TAB_Derechos"
+			title="#{msg['cesion.proveedoresTitle']}">
+			<sns:cesionDerechosNumeracion id="TAB_CesionCPSI"
+				nameBean="#{solicitudCesionCpsiBean.tabCesionDerechos}">
+			</sns:cesionDerechosNumeracion>
+		</p:tab>
+
+		<p:tab id="WIZ_SolicitudCesion_TAB_Cesion"
+			title="#{msg['cpsi.cesion.title']}">
+			<sns:cesionCpsi nameBean="#{solicitudCesionCpsiBean.tabCesion}" />
+		</p:tab>
+
+		<p:tab id="WIZ_SolicitudCesion_TAB_Oficios" title="#{msg.oficio}">
+			<sns:generarOficio
+				nameBean="#{solicitudCesionCpsiBean.tabGenerarOficio}" />
+		</p:tab>
+
+	</p:wizard>
+</h:form>
+
+<!-- Modal de Edición de Proveedores. -->
+<p:dialog id="MDL_Proveedores" widgetVar="MDL_Proveedores" modal="true"
+	appendTo="@(body)" closable="false"
+	header="#{msg['catalogo.proveedores.edicion.cabecera']}"
+	scrollable="true" resizable="true" width="1280" height="500">
+	<p:ajax event="close"
+		listener="#{solicitudCesionCpsiBean.tabCesionDerechos.actualizarEdicionProveedor}"
+		update="FORM_SolicitudCesionCPSI:TAB_CesionCPSI">
+	</p:ajax>
+	<p:commandButton id="BTN_Salir" global="false"
+		styleClass="customCloseModal" value="X" closable="false"
+		onclick="PF('MDL_Proveedores').hide()">
+		<p:resetInput target="FORM_GestionProveedor" />
+	</p:commandButton>
+	<ui:include
+		src="/admin-catalogos/proveedor/edicion-proveedoresV2.xhtml" />
+</p:dialog>
+
+<!-- <p:ajaxStatus id="FORM_SolicitudCesionCPSI_AS"
+	onstart="PF('FORM_SolicitudCesionCPSI_BUI').show()"
+	onsuccess="PF('FORM_SolicitudCesionCPSI_BUI').hide()">
+</p:ajaxStatus>
+
+<p:blockUI widgetVar="FORM_SolicitudCesionCPSI_BUI"
+	block="FORM_SolicitudCesionCPSI">
+	<ui:include src="/componentes/loader.xhtml" />
+</p:blockUI> -->
+
+</html>

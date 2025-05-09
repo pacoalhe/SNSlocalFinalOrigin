@@ -1,0 +1,405 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+	<h:form id="FRM_EdicionABN">
+		<p:messages id="MSG_EdicionABN" showSummary="true" showDetail="false" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+
+		<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<h:panelGrid id="PNL_ABN" columns="6" style="float:left" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="TXT_Abn" value="#{msg['ubicacion.abn']}"/>
+				<p:inputText 
+					id="TXT_Abn"
+					value="#{edicionAbnBean.codigoAbn}"
+					maxlength="3" required="true"
+					style="width: 100px;"
+					disabled="#{edicionAbnBean.abnEdicion != null}"
+					validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+					<p:ajax 
+						event="change" global="false"
+						update="BTN_Guardar_Edicion BTN_Guardar MSG_EdicionABN TXT_Abn"
+						listener="#{edicionAbnBean.actualizarGuardar}">
+					</p:ajax>
+				</p:inputText>
+				
+				<p:outputLabel for="SEL_Estado" value="#{msg['ubicacion.estado']}"/>
+				<p:selectOneMenu 
+					id="SEL_Estado" 
+					value="#{edicionAbnBean.estado}" 
+				 	converter="#{estadoConverter}"
+				 	style="width:300px;">
+				 	<p:ajax
+				 		event="change" global="false"
+				 		listener="#{edicionAbnBean.seleccionEstado}"
+				 		update="PNL_Poblaciones MSG_EdicionABN"
+				 		oncomplete="PF('TBL_Municipio').clearFilters()">
+				 	</p:ajax>
+				 	<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+					<f:selectItems
+						value="#{edicionAbnBean.listaEstados}"
+						var="estado"
+						itemLabel="#{estado.nombre}"
+						itemValue="#{estado}">
+					</f:selectItems>
+				</p:selectOneMenu>
+				
+				<p:outputLabel for="CHK_Presuscripcion" value="#{msg['consolidacion.presuscripcion']}"/>
+				<p:selectBooleanCheckbox
+					id="CHK_Presuscripcion"
+					value="#{edicionAbnBean.presuscripcion}">
+				</p:selectBooleanCheckbox>
+			</h:panelGrid>
+		
+			<h:panelGrid id="PNL_Poblaciones" columns="2"  styleClass="tablaInterfaz" style="float:left" cellpadding="3" cellspacing="3">
+				<p:dataTable 
+					id="TBL_Municipio" widgetVar="TBL_Municipio"
+					var="municipio" value="#{edicionAbnBean.listaMunicipios}"
+					selectionMode="single" selection="#{edicionAbnBean.municipio}" rowKey="#{municipio.cdgMunicipio}"
+					paginator="true" paginatorPosition="bottom" lazy="false"
+					rows="10" resizableColumns="true" editable="false"
+					scrollable="false" emptyMessage="#{msg['buscador.noresultados']}">
+					
+					<f:facet name="header">#{msg['catalogos.municipios']}</f:facet>
+					
+					<p:ajax 
+						event="rowSelect"
+						listener="#{edicionAbnBean.seleccionMunicipio}" 
+						update=":FRM_EdicionABN:PNL_Poblaciones :FRM_EdicionABN:MSG_EdicionABN"
+						oncomplete="PF('TBL_Poblaciones').clearFilters()">
+					</p:ajax>
+					
+		       		<p:ajax 
+		       			event="rowUnselect"
+		       			listener="#{edicionAbnBean.deSeleccionMunicipio}" 
+		       			update=":FRM_EdicionABN:PNL_Poblaciones :FRM_EdicionABN:MSG_EdicionABN">
+		       		</p:ajax>
+		
+				    <p:column
+				    	headerText="#{msg['catalogo.estados.municipios.codigo']}"
+				    	width="15" style="font-size:12px;">
+				    	<p:selectBooleanCheckbox
+			    			id="CHK_SeleccionaMunicipio"
+			    			value="#{municipio.seleccionado}"
+			    			disabled="#{!municipio.seleccionable}">
+			    			<p:ajax
+								event="change"
+								update=":FRM_EdicionABN:PNL_ContadorPoblaciones :FRM_EdicionABN:PNL_Poblaciones :FRM_EdicionABN:MSG_EdicionABN"
+								listener="#{edicionAbnBean.seleccionCheckMunicipio(municipio)}"
+								oncomplete="PF('TBL_Poblaciones').clearFilters()">
+							</p:ajax>
+			    		</p:selectBooleanCheckbox>
+				        <h:outputText value="#{municipio.cdgMunicipio}" />
+				    </p:column>
+				    
+				    <p:column
+				    	headerText="#{msg['catalogo.estados.municipios.nombre']}"
+				    	width="100" style="font-size:12px;"
+				    	filterBy="#{municipio.nombre}">
+				        <h:outputText value="#{municipio.nombre}" />
+				    </p:column>
+				    
+				    <p:column
+				    	headerText="#{msg['catalogo.abn.seleccion.poblacion']}"
+				    	width="50" style="font-size:12px;text-align:center;">
+				        <h:outputText value="#{municipio.ocupacion}" />
+				    </p:column>
+				    
+				</p:dataTable>
+				
+				<p:dataTable 
+					id="TBL_Poblaciones" widgetVar="TBL_Poblaciones"
+					var="poblacion" value="#{edicionAbnBean.listaPoblaciones}"
+					paginator="true" paginatorPosition="bottom" lazy="false"
+					rows="10" resizableColumns="true"
+					scrollable="false" emptyMessage="#{msg['buscador.noresultados']}">
+					
+					<f:facet name="header">#{msg['catalogos.poblaciones']}</f:facet>
+					
+				    <p:column
+				    	headerText="#{msg['catalogo.poblaciones.codigo']}"
+				    	width="20" style="font-size:12px;">
+				    	<p:selectBooleanCheckbox
+			    			id="CHK_SeleccionaPoblacion"
+			    			value="#{poblacion.seleccionada}"
+			    			disabled="#{!poblacion.seleccionable}">
+			    			<p:ajax
+								event="change" global="false"
+								update=":FRM_EdicionABN:PNL_ContadorPoblaciones :FRM_EdicionABN:TBL_Municipio"
+								listener="#{edicionAbnBean.seleccionCheckPoblacion(poblacion)}">
+							</p:ajax>
+			    		</p:selectBooleanCheckbox>
+				        <h:outputText value=" #{poblacion.cdgPoblacion}" />
+				    </p:column>
+				    
+					<p:column
+				    	headerText="#{msg['catalogo.poblaciones.abn']}"
+				    	width="50" style="font-size:12px;text-align:center">
+				        <h:outputText value="#{poblacion.abn}" />
+				    </p:column>
+				    
+				    <p:column
+				    	headerText="#{msg['catalogo.poblaciones.nombre']}"
+				    	width="100" style="font-size:12px;"
+				    	filterBy="#{poblacion.nombre}">
+				        <h:outputText value="#{poblacion.nombre}" />
+				    </p:column>
+				    
+				    <p:column
+				    	headerText="#{msg['catalogo.poblaciones.municipio']}"
+				    	width="100" style="font-size:12px;">
+				        <h:outputText value="#{poblacion.municipio}" />
+				    </p:column>
+				    
+					<p:column
+				    	headerText="#{msg['catalogo.abn.ancla']}"
+						width="15" style="font-size:12px;">
+				        <p:selectBooleanCheckbox
+			    			id="CHK_PoblacionAncla"
+			    			value="#{poblacion.poblacionAncla}"
+			    			disabled="#{!poblacion.seleccionable}">
+			    			<p:ajax
+								event="change" 
+								update="TBL_Poblaciones :FRM_EdicionABN:PNL_ContadorPoblaciones :FRM_EdicionABN:TBL_Municipio :FRM_EdicionABN:MSG_EdicionABN"
+								listener="#{edicionAbnBean.seleccionPoblacionAncla(poblacion)}">
+							</p:ajax>
+			    		</p:selectBooleanCheckbox>
+				    </p:column>
+				    
+				</p:dataTable>
+			</h:panelGrid>
+			
+			<h:panelGrid id="PNL_ContadorPoblaciones" columns="4" style="float:left" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="TXT_Counter" value="#{msg['catalogo.abn.contador']}"/>
+				<p:inputText
+					id="TXT_Counter" size="5"
+					value="#{edicionAbnBean.contadorPoblaciones}"
+					disabled="true">
+				</p:inputText>
+				<p:outputLabel for="TXT_PobAncla" value="#{msg['catalogo.abn.poblacion.ancla']}"/>
+				<p:inputText
+					id="TXT_PobAncla" size="50"
+					value="#{edicionAbnBean.poblacionAncla.nombre}"
+					disabled="true">
+				</p:inputText>
+			</h:panelGrid>
+			
+		</fieldset>
+		
+		<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<h:panelGrid id="PNL_Nir" columns="5" style="float:left" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="TXT_Nir" value="#{msg['catalogo.abn.codNir']}"/>
+				<p:inputText 
+					id="TXT_Nir"
+					value="#{edicionAbnBean.codNir}"
+					disabled="#{edicionAbnBean.nirValidado}"
+					maxlength="3"
+					style="width: 100px;"
+					validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+				</p:inputText>
+				
+				<p:commandButton
+					id="BTN_ValidarNir"
+					value="#{msg['catalogo.abn.nir.validar']}"
+					action="#{edicionAbnBean.validarNir}"
+					disabled="#{edicionAbnBean.nirValidado}"
+					update="PNL_Nir MSG_EdicionABN"
+					style="height:30px; width:85px">
+				</p:commandButton>
+				
+				<p:commandButton
+					id="BTN_AgregarNir"
+					value="#{msg['manual.numeracion.agregar']}"
+					action="#{edicionAbnBean.agregarNir}"
+					disabled="#{!edicionAbnBean.nirValidado}"
+					update="PNL_Series PNL_Nir MSG_EdicionABN"
+					style="height:30px; width:85px">
+				</p:commandButton>
+				
+				<p:commandButton
+					id="BTN_CancelAgregarNir"
+					value="#{msg.cancelar}"
+					action="#{edicionAbnBean.cancelarAgregarNir}"
+					disabled="#{!edicionAbnBean.nirValidado}"
+					update="PNL_Nir"
+					style="height:30px; width:85px">
+				</p:commandButton>
+			</h:panelGrid>
+		
+			<h:panelGrid id="PNL_Series" columns="2" styleClass="tablaInterfaz" style="float:left" cellpadding="3" cellspacing="3">
+				<p:dataTable 
+					id="TBL_Nir" widgetVar="TBL_Nir"
+					var="nir" value="#{edicionAbnBean.listaCodigosNir}"
+					selectionMode="single" selection="#{edicionAbnBean.codNirSeleccionado}" rowKey="#{nir}"
+					paginator="true" paginatorPosition="bottom" lazy="false"
+					rows="10" resizableColumns="true"
+					scrollable="false" emptyMessage="#{msg['buscador.noresultados']}">
+					
+					<f:facet name="header">#{msg['cesion.NIR']}</f:facet>
+					
+					<p:ajax 
+						event="rowSelect"
+						listener="#{edicionAbnBean.seleccionNir}" 
+						update=":FRM_EdicionABN:TBL_SeriesNir :FRM_EdicionABN:MSG_EdicionABN" >
+					</p:ajax>
+					
+		       		<p:ajax 
+		       			event="rowUnselect"
+		       			listener="#{edicionAbnBean.deSeleccionNir}" 
+		       			update=":FRM_EdicionABN:TBL_SeriesNir :FRM_EdicionABN:MSG_EdicionABN" >
+		       		</p:ajax>
+		       		
+		       		<p:column 
+		       			headerText="#{msg['consultar.Operaciones']}" 
+		       			width="50">
+						<p:commandButton
+							title="#{msg['catalogo.abn.desasociar']}" 
+							icon="ui-icon-circle-close"
+							onclick="PF('DLG_DesasociarNir').show()">
+							<f:setPropertyActionListener 
+       							value="#{nir}" 
+       							target="#{edicionAbnBean.codNirEliminar}" >
+       						</f:setPropertyActionListener>
+						</p:commandButton>
+    				</p:column>
+		
+				    <p:column
+				    	headerText="#{msg['catalogo.abn.codNir']}"
+				    	style="font-size:12px; text-align:center"
+				    	width="50">
+				        <h:outputText value="#{nir}" />
+				    </p:column>
+
+				</p:dataTable>
+				
+				<p:dataTable 
+					id="TBL_SeriesNir" widgetVar="TBL_SeriesNir"
+					var="serie" value="#{edicionAbnBean.listaSeries}"
+					paginator="true" paginatorPosition="bottom" lazy="false"
+					rows="10" resizableColumns="true"
+					scrollable="false" emptyMessage="#{msg['buscador.noresultados']}">
+					
+					<f:facet name="header">#{msg['catalogos.series']}</f:facet>
+					
+					<p:column
+				    	headerText="#{msg['catalogo.abn.serie.disponible']}"
+				    	width="20" style="font-size:12px;">
+				    	<p:selectBooleanCheckbox
+			    			id="CHK_SeleccionaSerie"
+			    			value="#{serie.seleccionada}"
+			    			disabled="#{!serie.seleccionable}">
+			    		</p:selectBooleanCheckbox>
+				    </p:column>
+	
+				    <p:column
+				    	headerText="#{msg['catalogo.abn.codNir']}"
+				    	width="15" style="font-size:12px;text-align:center">
+				        <h:outputText value="#{serie.cdgNir}" />
+				    </p:column>
+				    
+				    <p:column
+				    	headerText="#{msg['cesion.rangos.inicial']}"
+				    	width="50" style="font-size:12px;text-align:center">
+				    	<h:outputText value="#{serie.inicioSeries}" />
+				    </p:column>
+				    
+					<p:column
+				    	headerText="#{msg['cesion.rangos.final']}"
+				    	width="50" style="font-size:12px;text-align:center">
+				    	<h:outputText value="#{serie.finalSeries}" />
+				    </p:column>
+				</p:dataTable>
+			</h:panelGrid>
+		</fieldset>
+		
+		<h:panelGrid id="PNL_Guardar" columns="3" style="float:left" cellpadding="3" cellspacing="3">
+			<p:outputLabel for="DTE_FechaConsolidacion" value="#{msg['consolidacion.Fecha_Consolidacion']}" />
+			<p:calendar 
+				id="DTE_FechaConsolidacion" style="width:90px" locale="mx_MX"
+				value="#{edicionAbnBean.fechaConsolidacion}" navigator="true" yearRange="1995:c+10"
+				pattern="dd/MM/yyyy" mask="true"
+				disabled="true">
+			</p:calendar>
+			
+			<p:commandButton
+				id="BTN_Guardar"
+				value="#{msg['manual.generales.btn.guardar']}"
+				action="#{edicionAbnBean.guardar}"
+				update="FRM_EdicionABN"
+				disabled="#{!edicionAbnBean.guardarHabilitado}"
+				rendered="#{edicionAbnBean.abnEdicion == null}"
+				style="height:30px; width:85px">
+			</p:commandButton>
+			
+			<p:commandButton
+				id="BTN_Guardar_Edicion" global="false"
+				value="#{msg['manual.generales.btn.guardar']}"
+				disabled="#{!edicionAbnBean.guardarHabilitado}"
+				onclick="PF('DLG_Guardar').show()"
+				rendered="#{edicionAbnBean.abnEdicion != null}"
+				style="height:30px; width:85px">
+			</p:commandButton>
+
+		</h:panelGrid>
+		
+		<p:confirmDialog 
+			id="DLG_DesasociarNir" widgetVar="DLG_DesasociarNir"
+			global="false" closeOnEscape="true" closable="false"
+			message="#{msg['dialog.confirmacion']}"
+			header="#{msg['catalogo.abn.desasociar.nir']}" 
+			severity="alert"
+			appendTo="@(body)">
+			<p:commandButton
+				value="Sí" icon="ui-icon-check"
+				oncomplete="PF('DLG_DesasociarNir').hide();">
+				<p:ajax
+					event="click"
+					listener="#{edicionAbnBean.eliminarNir}"
+					update="PNL_Series MSG_EdicionABN BTN_Guardar">
+				</p:ajax>
+			</p:commandButton>
+			<p:commandButton
+				type="button"
+				value="No" icon="ui-icon-close"
+				onclick="PF('DLG_DesasociarNir').hide();">
+			</p:commandButton>
+		</p:confirmDialog>
+		
+		<p:confirmDialog  
+			id="DLG_Guardar" widgetVar="DLG_Guardar"
+			global="false" closeOnEscape="true" closable="false"
+			message="#{msg['dialog.confirmacion']}"
+			header="#{msg['catalogo.abn.editar.abn']}" 
+			severity="alert"
+			appendTo="@(body)">
+			<p:commandButton
+				value="Sí" icon="ui-icon-check"
+				oncomplete="PF('DLG_Guardar').hide();">
+				<p:ajax
+					event="click" global="false"
+					update="FRM_EdicionABN"
+					listener="#{edicionAbnBean.guardar}">
+				</p:ajax>
+			</p:commandButton>
+			<p:commandButton
+				type="button"
+				value="No" icon="ui-icon-close"
+				onclick="PF('DLG_Guardar').hide();">
+			</p:commandButton>
+		</p:confirmDialog>
+	
+	</h:form>
+	
+	<!-- <p:ajaxStatus id="FRM_EdicionABN_AS"
+		onstart="PF('FRM_EdicionABN_BUI').show()"
+		onsuccess="PF('FRM_EdicionABN_BUI').hide()">
+	</p:ajaxStatus>
+	
+	<p:blockUI block="FRM_EdicionABN" widgetVar="FRM_EdicionABN_BUI">
+		<ui:include src="/componentes/loader.xhtml"/>
+	</p:blockUI> -->
+
+</html>

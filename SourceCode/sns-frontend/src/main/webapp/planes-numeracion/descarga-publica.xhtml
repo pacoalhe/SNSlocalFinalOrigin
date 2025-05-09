@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+<ui:composition template="/WEB-INF/templates/plantillaFront.xhtml">
+	<ui:define name="centro">
+		<p:messages id="MSG_ConsultaFront" showDetail="true" autoUpdate="false" closable="true" showIcon="false"></p:messages>
+		<h:form id="FORM_planes">
+			<div class="ui-grid ui-grid-responsive">
+				<div class="ui-grid-col-2">
+					<br></br>
+				</div>
+				<div class="ui-grid-col-8">
+					<p:panelGrid id="PG_desP" styleClass="mycustomgrid" columns="1"
+						layout="grid">
+						<f:facet name="header">
+							<p:row>
+								<p:column colspan="7">
+		            Descarga de Planes de Numeración
+		            </p:column>
+							</p:row>
+
+						</f:facet>
+
+						<p:row>
+							<p:column>
+								<br></br>
+								<p:outputLabel style="font-size:13px; margin-top:20px">Pulse "descargar" para iniciar la descarga del Plan Nacional de Numeración</p:outputLabel>
+							</p:column>
+						</p:row>
+						<p:row>
+							<p:column>
+								<p:commandButton id="BTN_planPublico1" value="Descargar"
+									disabled="#{descargaPlanesBean.btnDescargaActivado}"
+									ajax="false" icon="ui-icon-arrowthickstop-1-s"
+									style="width: auto; height: auto; font-size: 13px; padding:0px; margin-top:20px;"
+									styleClass="sombreado">
+									<p:fileDownload
+										value="#{descargaPlanesBean.descargarPlanPublico()}"></p:fileDownload>
+								</p:commandButton>
+								<br></br>
+								<h:outputText value="El archivo no se encuentra disponible"
+									rendered="#{descargaPlanesBean.btnDescargaActivado}"
+									style="font-size:13px; color: #cb410b" />
+							</p:column>
+						</p:row>
+						<p:row >
+							<p:column>
+								<h:outputText rendered="#{!descargaPlanesBean.btnDescargaActivado}"
+									value="Plan nacional de numerción generado el #{descargaPlanesBean.fechaPlanPublicoGenerado}"
+									style="font-size: 13px;"></h:outputText><br></br>
+
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+				</div>
+			</div>
+
+		</h:form>
+	</ui:define>
+</ui:composition>
+</html>

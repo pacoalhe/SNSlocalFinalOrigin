@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+	
+	<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+		<ui:define name="centro">
+			<p:messages id="MSG_ConsultarEquiposSenalizacion" showDetail="true" autoUpdate="false" closable="true" showIcon="false"/>
+
+	        <fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all" style="text-align:center;">
+				<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['menu.CPSN']}/#{msg['cpsn.equiposSenalizacion']}</legend>
+			
+				<h:form id="FRM_ConsultarEquiposSenalizacion" style="width:100%;">
+				
+					<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+						<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['cpsn.equiposSenalizacion.busqueda']}</legend>
+						
+						<h:panelGrid columns="5" cellpadding="3" cellspacing="3" style="text-align:center;">
+							<h:outputText></h:outputText>
+							<h:outputText></h:outputText>
+							<h:outputText></h:outputText>
+							<h:outputText value="#{msg['cpsn.equiposSenalizacion.consulta.binario']}" style="align:center; width:50px;"/>
+							<h:outputText value="#{msg['cpsn.equiposSenalizacion.consulta.decimal']}" style="align:center; width:200px;"/>
+							
+							<p:outputLabel value="#{msg['cpsn.equiposSenalizacion.consulta.pst']}" style="width:50px;"/>
+							<p:selectOneMenu autoWidth="false"
+								id="selProveedor" 
+								style="width: 150px;"
+								value="#{consultarEquiposSenalizacionBean.proveedorSeleccionado}" 
+								converter="#{proveedorConverter}"> 
+								<p:ajax 
+									event="change"
+									listener="#{consultarEquiposSenalizacionBean.proveedorChange}"
+									update="BTN_Izquierda">
+								</p:ajax>
+								<f:selectItem itemLabel="Seleccionar"/>
+								<f:selectItems 
+									value="#{consultarEquiposSenalizacionBean.listadoProveedores}" 
+									var="proveedorSel" 
+									itemLabel="#{proveedorSel.nombre}" 
+									itemValue="#{proveedorSel}">
+								</f:selectItems>
+							</p:selectOneMenu>
+							<h:outputLabel value="#{msg['cpsn.equiposSenalizacion.consulta.CPSN']}"/>
+							<p:inputText 
+								size="15"
+								maxlength="14"
+								id="TXT_Binario"
+								label="#{msg['cpsn.equiposSenalizacion.consulta.binario']}"
+								value="#{consultarEquiposSenalizacionBean.codBinario}"
+								onkeypress="return soloBinario(event);">
+				    	   </p:inputText>
+				    	   <p:inputText 
+								id="TXT_DecimalIndividual"
+								label="#{msg['cpsn.equiposSenalizacion.consulta.decimal']}"
+								maxlength="5"
+								size="5"
+								style="width:150px;"
+								value="#{consultarEquiposSenalizacionBean.decimalIndividual}"
+								onkeypress="return soloNumeros(event);">
+				    	   </p:inputText>
+						</h:panelGrid>
+					</fieldset>
+					
+					<p:panelGrid style="display:block;">
+						<p:commandButton
+							value="#{msg['consultar.Buscar']}"
+							action="#{consultarEquiposSenalizacionBean.realizarBusqueda}"
+							update=":MSG_ConsultarEquiposSenalizacion TBL_EquiposSenalizacion BTN_exportar">
+						</p:commandButton>
+						<p:commandButton value="#{msg['consultar.Limpiar']}"
+							actionListener="#{consultarEquiposSenalizacionBean.limpiarBusqueda}"
+							style="margin-right:20px;"
+							update="selProveedor TXT_Binario TXT_DecimalIndividual BTN_Izquierda :MSG_ConsultarEquiposSenalizacion TBL_EquiposSenalizacion BTN_exportar" > 
+						</p:commandButton>
+					</p:panelGrid>
+				
+					<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+						<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['cpsn.equiposSenalizacion']}</legend>
+						
+						<h:panelGrid columns="2" width="100%">
+							<h:panelGroup id="BTN_Izquierda" style="display:block; text-align:left">
+								<p:commandButton 
+									id="btn_estudio"
+									widgetVar="btn_estudio"
+									style="margin-right:20px; margin-bottom: 5px;"
+									value="#{msg['cpsn.equiposSenalizacion.estudio']}" 
+									rendered="#{consultarEquiposSenalizacionBean.activarEstudio}"
+									action="#{consultarEquiposSenalizacionBean.estudioEquipoCPSN}"
+									update=":MSG_ConsultarEquiposSenalizacion :MDL_EstudioEquipoCPSN"
+									oncomplete="PF('MDL_EstudioEquipoCPSN').show();">
+								</p:commandButton>
+								<p:commandButton 
+									style="margin-right:20px; margin-bottom: 5px;"
+									value="#{msg['cpsn.equiposSenalizacion.cargarExcel']}" 
+									update=":MDL_CargarEquipos"
+									oncomplete="PF('MDL_CargarEquipos').show();">
+								</p:commandButton>
+							</h:panelGroup>
+							<h:panelGroup style="display:block; text-align:right">
+								<p:commandButton 
+									id="BTN_exportar"
+									disabled="#{consultarEquiposSenalizacionBean.emptySearch}"
+									style="margin-right:20px; margin-bottom: 5px;"
+									value="#{msg.exportar}"
+									ajax="false" 
+									onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+									<p:fileDownload value="#{consultarEquiposSenalizacionBean.exportar}" />
+								</p:commandButton>
+								<p:commandButton 
+									title="#{msg['cpsn.equiposSenalizacion.nuevo']}"
+									value="#{msg['cpsn.equiposSenalizacion.nuevo']}"
+									icon="ui-icon-pencil"
+									update=":MDL_EditarEquipoSenal" 
+									oncomplete="PF('MDL_EditarEquipoSenal').show();">
+								</p:commandButton>
+							</h:panelGroup>
+						</h:panelGrid>
+						
+						<p:panel style="float:left; overflow-y: auto; width:100%;">
+							<p:dataTable 
+								id="TBL_EquiposSenalizacion" 
+								widgetVar="TBL_EquiposSenalizacion"		
+								var="equipo" 
+								value="#{consultarEquiposSenalizacionBean.listadoEquipos}"
+								paginator="false"
+								resizableColumns="true"
+								style="width:100%"  
+								scrollHeight="250"
+								scrollable="true" 
+								emptyMessage="#{msg['buscador.noresultados']}">
+							    <p:column resizable="true" headerText="#{msg['cpsn.equiposSenalizacion.resultados.nombreEquipo']}" width="75" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.nombre}" title="#{equipo.nombre}"/>
+							    </p:column>  
+							    
+							    <p:column resizable="true" width="75" headerText="#{msg['cpsn.equiposSenalizacion.resultados.claveEquipo']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.clave}" title="#{equipo.clave}"/>
+							    </p:column>
+							    
+							    <p:column resizable="true" width="75" headerText="#{msg['cpsn.equiposSenalizacion.resultados.tipoEquipo']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.tipo}" title="#{equipo.tipo}"/>
+							    </p:column>
+							    
+							    <p:column resizable="true" width="50" headerText="#{msg['cpsn.equiposSenalizacion.resultados.cpsBinario']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.cpsBinario}" title="#{equipo.cpsBinario}"/>
+							    </p:column>
+							    
+							    <p:column resizable="true" width="50" headerText="#{msg['cpsn.equiposSenalizacion.resultados.cps']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.cps}" title="#{equipo.cps}"/>
+							    </p:column>
+							    
+   								<p:column resizable="true" width="75" headerText="#{msg['cpsn.equiposSenalizacion.resultados.pst']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.proveedor.nombre}" title="#{equipo.proveedor.nombre}"/>
+							    </p:column>
+			 
+							    <p:column resizable="true" width="50" headerText="#{msg['cpsn.equiposSenalizacion.resultados.abn']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.abn.codigoAbn}" title="#{equipo.abn.codigoAbn}"/>
+							    </p:column>
+							    
+							    <p:column resizable="true" width="75" headerText="#{msg['cpsn.equiposSenalizacion.resultados.estado']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.poblacion.municipio.estado.nombre}" title="#{equipo.poblacion.municipio.estado.nombre}"/>
+							    </p:column>  
+							    
+							    <p:column resizable="true" width="75" headerText="#{msg['cpsn.equiposSenalizacion.resultados.municipio']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.poblacion.municipio.nombre}" title="#{equipo.poblacion.municipio.nombre}"/>
+							    </p:column>  
+							    
+							    <p:column resizable="true" width="75" headerText="#{msg['cpsn.equiposSenalizacion.resultados.poblacion']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.poblacion.nombre}" title="#{equipo.poblacion.nombre}"/>
+							    </p:column>  
+							    
+							    <p:column resizable="true" width="50" headerText="#{msg['cpsn.equiposSenalizacion.resultados.longitud']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.longitud}" title="#{equipo.longitud}"/>
+							    </p:column>
+							    
+							    <p:column resizable="true" width="50"  headerText="#{msg['cpsn.equiposSenalizacion.resultados.latitud']}" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+							        <h:outputText value="#{equipo.latitud}" title="#{equipo.latitud}"/>
+							    </p:column>  
+			    
+			     				<p:column headerText="Operaciones" width="75px;" style="text-align:center; font-size:12px;text-overflow:ellipsis;">
+									<p:commandButton 
+			       						title="#{msg['consultas.generales.detalle']}"
+			       						icon="ui-icon-pencil"
+			       						action="#{consultarEquiposSenalizacionBean.editarEquipoSenalCPSN}"
+			       						update=":MDL_EditarEquipoSenal TBL_EquiposSenalizacion :#{p:component('FRM_EdicionEquipoSenalizacion')}"
+			       						oncomplete="PF('MDL_EditarEquipoSenal').show();">
+			       						<f:setPropertyActionListener 
+											value="#{equipo}" 
+											target="#{consultarEquiposSenalizacionBean.equipoEdicion}">
+										</f:setPropertyActionListener>
+		       						</p:commandButton>
+		       						<p:commandButton
+										title="#{msg['consultas.generales.eliminar.equipo']}" 
+										icon="ui-icon-circle-close"
+										onclick="PF('DLG_Cancelar').show()" global="false">
+			       						<f:setPropertyActionListener 
+											value="#{equipo}" 
+											target="#{consultarEquiposSenalizacionBean.equipoEdicion}">
+										</f:setPropertyActionListener>
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</p:panel>
+
+					</fieldset>
+					<p:remoteCommand name="realizarBusqueda" global="false" update=":MSG_ConsultarEquiposSenalizacion TBL_EquiposSenalizacion" actionListener="#{consultarEquiposSenalizacionBean.realizarBusqueda}"/>
+					
+
+				</h:form>
+			</fieldset>
+			
+			<p:dialog 
+				id="MDL_EditarEquipoSenal" 
+				widgetVar="MDL_EditarEquipoSenal"
+				global="false"
+				modal="true" 
+				closable="false"
+				appendTo="@(body)"
+				header="#{msg['cpsn.equiposSenalizacion']}" 
+				scrollable="false" 
+				resizable="false" 
+				width="800" 
+				height="500">
+				<p:ajax 
+					event="close" 
+					global="false"
+					listener="#{consultarEquiposSenalizacionBean.edicionEquipoSenalizacionBean.resetValues}"
+					update=":#{p:component('FRM_EdicionEquipoSenalizacion')}"
+					oncomplete="realizarBusqueda();"/>
+				<p:commandButton id="BTN_Salir_EquipoSenalizacion" 
+					styleClass="customCloseModal" 
+					value="X"
+					onclick="PF('DLG_Salir_EquipoSenalizacion').show()" global="false">	
+					<p:resetInput target=":#{p:component('FRM_EdicionEquipoSenalizacion')}" />
+				</p:commandButton>
+	 			<ui:include src="/cpsn/editar-equipo-senalizacion.xhtml"/>
+			</p:dialog>
+			
+			<p:dialog 
+				id="DLG_Salir_EquipoSenalizacion"
+				widgetVar="DLG_Salir_EquipoSenalizacion" 
+				modal="true"
+				resizable="false" 
+				closeOnEscape="true" 
+				closable="false"
+				header="Salir" 
+				appendTo="@(body)" width="250"
+				height="115">
+						<sns:exit-custom-dialog-no-listener
+					message="#{msg['cerrarDialogo.mensaje']}"
+					onCompleteExit="PF('DLG_Salir_EquipoSenalizacion').hide();PF('MDL_EditarEquipoSenal').hide();"
+					onCompleteCancel="PF('DLG_Salir_EquipoSenalizacion').hide();"
+					blockUIWidgetVar="MDL_equiposSenalizacion_BUI" resetValues="true">
+				</sns:exit-custom-dialog-no-listener>
+			</p:dialog>
+			
+			<p:dialog 
+				id="MDL_EstudioEquipoCPSN" 
+				widgetVar="MDL_EstudioEquipoCPSN"
+				global="false"
+				modal="true" 
+				closable="true"
+				appendTo="@(body)"
+				header="#{msg['cpsn.equiposSenalizacion.CPSN.estudio']}" 
+				scrollable="false" 
+				resizable="false" 
+				width="800" 
+				height="200">
+				<ui:include src="estudio-equipos-cpsn.xhtml"/>
+			</p:dialog>
+			
+			<p:dialog 
+				id="MDL_CargarEquipos"
+				widgetVar="MDL_CargarEquipos"
+				header="#{msg['cpsn.equiposSenalizacion.cargarExcel']}" 
+				modal="true"
+				scrollable="true" 
+				resizable="true" 
+				appendTo="@(body)" 
+				width="80%" height="500" closeOnEscape="true">
+				<p:ajax 
+					event="close"
+					listener="#{consultarEquiposSenalizacionBean.cargarEquiposCpsnBean.resetValues}" 
+					update=":#{p:component('FORM_CargarEquipos')}"
+					oncomplete="realizarBusqueda();">
+					<p:resetInput target=":#{p:component('FORM_CargarEquipos')}" />
+				</p:ajax>
+				<ui:include src="/cpsn/cargar-equipos.xhtml" />
+			</p:dialog>
+			<p:dialog 
+						id="DLG_Cancelar" widgetVar="DLG_Cancelar"
+						closeOnEscape="true" closable="false"
+						modal="true" resizable="false"
+						header="#{msg['eliminar.registro']}"
+						appendTo="@(body)" width="250"
+				height="50">
+						<sns:confirm-custom-dialog-double-oncomplete
+							blockUIWidgetVar="ConfirmarCancelarEquipos_BUI"
+							confirmActionListener="#{consultarEquiposSenalizacionBean.eliminarEquipo}"
+							onCompleteExit="PF('DLG_Cancelar').hide();"
+							onCompleteCancel="PF('DLG_Cancelar').hide();"
+							updateComponentButton=":MSG_ConsultarEquiposSenalizacion"
+							onCompleteAjax="realizarBusqueda();"
+							resetValues="true">
+				</sns:confirm-custom-dialog-double-oncomplete>
+				
+					</p:dialog>	
+			<p:ajaxStatus
+				id="EquipoSenalizacion_AS"
+				onstart="PF('statusEquipoSenalizacionDialog').show()"
+				onsuccess="PF('statusEquipoSenalizacionDialog').hide()">
+			</p:ajaxStatus>
+			<p:dialog widgetVar="statusEquipoSenalizacionDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+    <ui:include src="/componentes/loader.xhtml"/>
+</p:dialog>
+		<!-- 	<p:blockUI block="FRM_ConsultarEquiposSenalizacion" widgetVar="EquipoSenalizacion_BUI">
+				<ui:include src="/componentes/loader.xhtml"/>
+			</p:blockUI> -->
+			
+		</ui:define>
+	</ui:composition>
+</html>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+	<h:form id="FORM_SolicitudCesionCPSN">
+		<p:messages id="MSG_Wizard_SolicitudCesionCPSN" showDetail="false" autoUpdate="false" closable="true" showIcon="false"/>
+		<p:wizard 
+			id="WIZ_SolicitudCesionCPSN" widgetVar="WIZ_SolicitudCesionCPSN"
+			flowListener="#{solicitudCesionCPSNBean.siguientePaso}"
+			showNavBar="true" nextLabel="#{msg['manual.tab.siguiente']}"
+			backLabel="#{msg['manual.tab.anterior']}"
+			style="min-width: 1050px">
+
+			<p:tab id="WIZ_SolicitudCesionCPSN_TAB_Proveedor" title="#{msg['cesion.generalesTitle']}">
+				<sns:generalesCesiones nameBean="#{solicitudCesionCPSNBean.tabGeneralesCesion}"/>
+			</p:tab>
+	
+			<p:tab id="WIZ_SolicitudCesion_TAB_Derechos" title="#{msg['cesion.proveedoresTitle']}">
+				<sns:cesionDerechosNumeracion
+					id="TAB_Generales_CesionCPSN"
+					nameBean="#{solicitudCesionCPSNBean.tabCesionDerechos}">
+				</sns:cesionDerechosNumeracion>
+			</p:tab>
+	
+			<p:tab id="WIZ_SolicitudCesionCPSN_TAB_CPS" title="#{msg['cesion.cpsnTitle']}">
+				<sns:cesionCPSN nameBean="#{solicitudCesionCPSNBean.tabCesionCPSN}" />
+			</p:tab>
+	
+			<p:tab id="WIZ_SolicitudLiberacion_TAB_Oficios" title="#{msg.oficio}">
+				<sns:generarOficio nameBean="#{solicitudCesionCPSNBean.tabGenerarOficio}" />
+			</p:tab>
+		</p:wizard>
+	</h:form>
+	
+	<!-- Modal de Edición de Proveedores. -->
+	<p:dialog
+		id="MDL_Proveedores" widgetVar="MDL_Proveedores"
+		modal="true" appendTo="@(body)" closable="false"
+		header="#{msg['catalogo.proveedores.edicion.cabecera']}" 
+		scrollable="true" resizable="true" height="500">
+		<p:ajax 
+			event="close"
+			listener="#{solicitudCesionCPSNBean.tabCesionDerechos.actualizarEdicionProveedor}"
+			update="FORM_SolicitudCesionCPSN:TAB_Generales_CesionCPSN">
+		</p:ajax>
+		<p:commandButton
+			id="BTN_Salir" global="false"
+			styleClass="customCloseModal"
+			value="X" closable="false"
+			onclick="PF('MDL_Proveedores').hide()">
+			<p:resetInput target="FORM_GestionProveedor" />	
+		</p:commandButton>
+		<ui:include src="/admin-catalogos/proveedor/edicion-proveedoresV2.xhtml"/>
+	</p:dialog>
+	
+	<!-- <p:ajaxStatus 
+		id="FORM_SolicitudCesionCPSN_AS"
+		onstart="PF('FORM_SolicitudCesionCPSN_BUI').show()"
+		onsuccess="PF('FORM_SolicitudCesionCPSN_BUI').hide()">
+	</p:ajaxStatus>
+	
+	<p:blockUI block="FORM_SolicitudCesionCPSN" widgetVar="FORM_SolicitudCesionCPSN_BUI">
+		<ui:include src="/componentes/loader.xhtml" />
+	</p:blockUI> -->
+
+</html>

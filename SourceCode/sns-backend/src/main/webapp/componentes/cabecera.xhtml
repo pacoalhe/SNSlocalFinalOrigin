@@ -1,0 +1,50 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:p="http://primefaces.org/ui">
+ <h:head>
+ 	<h:outputScript library="js" name="utilidades.js"></h:outputScript>
+	<style type="text/css">
+    	.icon-salir{
+    		background-image:url(#{request.contextPath}/img/ico_salir.png) !important;
+    	}
+    
+    </style>
+ </h:head>
+
+
+<f:subview id="cabeceraView" locale="#{facesContext.externalContext.requestLocale}">
+	<h:body onload="deshabilitarBackSpace();">
+	
+		<p:panel id="cablogo" styleClass="logo">
+			<p:graphicImage	value="/img/logoIFT.png" alt="Instituto Federal de Telecomunicaciones"/>
+		</p:panel>
+		
+		<p:panel id="cabtitulo" styleClass="tituloPagina">
+
+			<h1>SISTEMA DE NUMERACIÓN Y SEÑALIZACIÓN</h1>			
+		</p:panel>
+
+
+		<p:panel styleClass="zonaUsuario">
+		<p:panel id="cabusuario" style="text-align:right;display:table-cell; ">
+
+	           <h:form>
+	           	<p:poll global="false" interval="#{loginBean.intervaloChequeoSesion}" listener="#{loginBean.isSesionExpirada}"></p:poll>
+	                <p:panel style="vertical-align: middle; background-color:#BDED98;padding: 0px 0px; border: 1px solid #484848;">
+
+						 <span><p:graphicImage	value="/img/ico_usuario.png" style="margin-right:10px"/>#{loginBean.username}#{notBean.notPendientes}</span>
+			             <p:commandButton style="background-color:#BDED98;margin-left:5px;" action="#{loginBean.logout}" icon="icon-salir" ajax="false"/>		
+
+	                </p:panel>
+				</h:form>
+
+
+			</p:panel>
+		</p:panel>		
+	</h:body>
+</f:subview>
+</html>

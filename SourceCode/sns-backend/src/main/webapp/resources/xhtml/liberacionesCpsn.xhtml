@@ -1,0 +1,487 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+
+	<composite:interface>
+		<composite:attribute name="nameBean" required="true"></composite:attribute>
+	</composite:interface>
+
+	<composite:implementation>
+	
+		<p:messages id="MSG_LiberacionesCPSN" showDetail="false" showSummary="true" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		<p:fieldset id="PNL_BusquedaCPSN">
+			<h:panelGrid columns="2" cellspacing="3" cellpadding="3" style="margin-bottom: 10px;">
+				<p:outputLabel for="TXT_TipoBloque" value="#{msg['cpsn.codigos.CPSN.estudio.tipoBloque']}"/>
+				<p:selectOneMenu
+					id="TXT_TipoBloque" 
+					style="width: 150px;"
+					value="#{cc.attrs.nameBean.tipoBloqueSeleccionado}"
+					converter="#{tipoBloqueCPSNConverter}"> 
+					<f:selectItem itemLabel="Seleccionar"/>
+					<f:selectItems 
+						value="#{cc.attrs.nameBean.listadoTiposBloque}"
+						var="tipoBloqueCPSNSel" 
+						itemLabel="#{tipoBloqueCPSNSel.descripcion}" 
+						itemValue="#{tipoBloqueCPSNSel}">
+					</f:selectItems>
+				</p:selectOneMenu>
+			</h:panelGrid>
+			<p:panelGrid style="display:block;">
+				<p:commandButton
+					value="#{msg['consultar.Buscar']}"
+					action="#{cc.attrs.nameBean.realizarBusqueda}"
+					update="TBL_CodigosCPSN MSG_LiberacionesCPSN"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					style="height:30px; width:82px">
+				</p:commandButton>
+				<p:commandButton 
+					value="#{msg['consultar.Limpiar']}"
+					action="#{cc.attrs.nameBean.limpiarBusqueda}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					update="TXT_TipoBloque TBL_CodigosCPSN MSG_LiberacionesCPSN"
+					style="height:30px; width:82px"> 
+				</p:commandButton>
+			</p:panelGrid>
+			
+		</p:fieldset>
+		
+		<p:panel style="float:left; overflow-y: auto; width:100%;">
+			<p:dataTable 
+				id="TBL_CodigosCPSN" 
+				widgetVar="TBL_CodigosCPSN"		
+				var="codigo" 
+				value="#{cc.attrs.nameBean.listadoCodigosCPSN}"
+				paginator="false"
+				selection="#{cc.attrs.nameBean.codigosCPSNSeleccionados}"
+				rowKey="#{codigo.id}"
+				selectionMode="multiple"
+				resizableColumns="true"
+				style="width:100%;"
+				scrollable="true"
+				scrollHeight="150"
+				emptyMessage="#{msg['buscador.noresultados']}">
+				
+				<f:facet name="header">Resultados de la consulta</f:facet>
+				
+			    <p:column 
+			    	resizable="true" width="75" 
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.tipoBloque']}" 
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{codigo.tipoBloqueCPSN.descripcion}" 
+			        	title="#{codigo.tipoBloqueCPSN.descripcion}">
+			        </h:outputText>
+			    </p:column>  
+			    
+			    <p:column 
+			    	resizable="true" width="75"
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.binario']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{codigo.binario}"
+			        	title="#{codigo.binario}">
+			        </h:outputText>
+			    </p:column>
+			    
+			    <p:column 
+			    	resizable="true" width="75" 
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalRed']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText 
+			        	value="#{codigo.decimalRed}" 
+			        	title="#{codigo.decimalRed}">
+			        </h:outputText>
+			    </p:column>
+			    
+				<p:column
+					resizable="true" width="75" 
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalTotal']}"
+					style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{codigo.decimalTotal}"
+			        	title="#{codigo.decimalTotal}">
+			        </h:outputText>
+			    </p:column>
+			    
+			    <p:column 
+			    	resizable="true" width="50" 
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.decimaDesde']}" 
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{codigo.decimalDesde}"
+			        	title="#{codigo.decimalDesde}">
+			        </h:outputText>
+			    </p:column>
+
+			    <p:column 
+			    	resizable="true" width="50"
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalHasta']}" 
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{codigo.decimalHasta}"
+			        	title="#{codigo.decimalHasta}">
+			        </h:outputText>
+			    </p:column>
+			    
+			    <p:column
+			    	resizable="true" width="75"
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.estatus']}"
+					style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{codigo.estatusCPSN.descripcion}"
+			        	title="#{codigo.estatusCPSN.descripcion}">
+			        </h:outputText>
+			    </p:column>  
+
+			    <p:column 
+			    	resizable="true" width="75"
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.fechaFinCuarentena']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText 
+			        	value="#{codigo.fechaCuarentena}"
+			        	title="#{codigo.fechaCuarentena}">
+			        	<f:convertDateTime pattern="dd/MM/yyyy" />
+			        </h:outputText>
+			    </p:column>
+			</p:dataTable>
+		</p:panel>
+		
+		<p:fieldset id="PNL_Implementacion">
+			<h:panelGrid columns="6" cellspacing="3" cellpadding="3" style="display:block;">
+				<p:outputLabel for="CHK_Implementacion" value="#{msg['buscadorCesiones.fimplementacion']}"/>
+				<p:selectBooleanButton
+					id="CHK_Implementacion" 
+					onLabel="Inmediata" onIcon="ui-icon-check" 
+					offLabel="Programada" offIcon="ui-icon-close"
+					value="#{cc.attrs.nameBean.implementacionInmediata}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+					<p:ajax
+						event="change"
+						update="PNL_Implementacion PNL_Cuarentena"
+						listener="#{cc.attrs.nameBean.inicializarFechaImplementacion}">
+					</p:ajax>
+				</p:selectBooleanButton>
+				
+				<p:outputLabel for="TXT_TiempoImplementacion" value="#{msg['liberacion.periodo.implementacion']}"/>
+				<p:inputText
+					id="TXT_TiempoImplementacion" required="true" maxlength="3"
+					value="#{cc.attrs.nameBean.periodoImplementacion}" 
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado 
+								and !cc.attrs.nameBean.implementacionInmediata 
+								and !cc.attrs.nameBean.fechaImplCalendario)}"
+					style="width:30px"
+					validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+					<p:ajax
+						event="change"
+						update="DTE_Implementacion PNL_Cuarentena MSG_LiberacionesCPSN" 
+						listener="#{cc.attrs.nameBean.actualizarFechaImplementacion}">
+					</p:ajax>
+				</p:inputText>
+				
+				<p:selectOneRadio 
+					id="OPT_Implementacion" 
+					value="#{cc.attrs.nameBean.tipoPeriodoImplementacion}"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and !cc.attrs.nameBean.implementacionInmediata)}">
+					<f:selectItem itemLabel="Calendario" itemValue="2" />
+	            	<f:selectItem itemLabel="Días" itemValue="0" />
+	            	<f:selectItem itemLabel="Meses" itemValue="1" />
+	            	<p:ajax
+						event="change"
+						update="MSG_LiberacionesCPSN TXT_TiempoImplementacion DTE_Implementacion" 
+						listener="#{cc.attrs.nameBean.actualizarFechaImplementacion}">
+					</p:ajax>
+	        	</p:selectOneRadio>
+				
+				<p:calendar 
+					id="DTE_Implementacion"
+					value="#{cc.attrs.nameBean.fechaImplementacion}" locale="mx_MX"
+					pattern="dd/MM/yyyy" mask="true" required="true" navigator="true" yearRange="1995:c+10"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado 
+								and !cc.attrs.nameBean.implementacionInmediata 
+								and cc.attrs.nameBean.fechaImplCalendario)}">
+					<p:ajax 
+						event="dateSelect"
+						update="PNL_Cuarentena TXT_TiempoImplementacion MSG_LiberacionesCPSN"
+						listener="#{cc.attrs.nameBean.validarFechaImplementacion}">
+					</p:ajax>
+				</p:calendar>
+			</h:panelGrid>
+			
+			<h:panelGrid id="PNL_Cuarentena" columns="7" cellspacing="3" cellpadding="3" style="display:block;">
+				<p:outputLabel for="TXT_TiempoCuarentena" value="#{msg['liberacion.cuarentena.tiempo']}"/>
+				<p:inputText
+					id="TXT_TiempoCuarentena" required="true" maxlength="3"
+					value="#{cc.attrs.nameBean.periodoReserva}" 
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					style="width:30px"
+					validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+					<p:ajax
+						event="change"
+						update="TXT_FinCuarentena MSG_LiberacionesCPSN" 
+						listener="#{cc.attrs.nameBean.actualizarFechaFinReserva}">
+					</p:ajax>
+				</p:inputText>
+				
+				<p:selectOneRadio 
+					id="OPT_Cuarentena" 
+					value="#{cc.attrs.nameBean.tipoPeriodoReserva}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}">
+	            	<f:selectItem itemLabel="Días" itemValue="0" />
+	            	<f:selectItem itemLabel="Meses" itemValue="1" />
+	            	<p:ajax
+						event="change"
+						update="TXT_FinCuarentena" 
+						listener="#{cc.attrs.nameBean.actualizarFechaFinReserva}">
+					</p:ajax>
+	        	</p:selectOneRadio>
+	        	
+	        	<p:outputLabel for="TXT_InicioCuarentena" value="#{msg['liberacion.cuarentena.inicio']}"/>
+	       		<p:inputText
+	       			id="TXT_InicioCuarentena" disabled="true"
+	       			value="#{cc.attrs.nameBean.fechaImplementacion}">
+		        	<f:convertDateTime pattern="dd/MM/yyyy"/>
+		        </p:inputText>
+	        	
+	        	<p:outputLabel for="TXT_FinCuarentena" value="#{msg['liberacion.cuarentena.fin']}"/>
+				<p:inputText
+	       			id="TXT_FinCuarentena" disabled="true"
+	       			value="#{cc.attrs.nameBean.fechaFinReserva}">
+		        	<f:convertDateTime pattern="dd/MM/yyyy"/>
+		        </p:inputText>
+			</h:panelGrid>
+		</p:fieldset>
+		
+		<h:panelGrid id="PNL_Agregar" columns="1" style="text-align:center" width="100%">
+			<h:panelGroup style="display:block; text-align:center">
+				<p:commandButton
+					id="BTN_AgregarLiberacion"
+					value="#{msg['manual.numeracion.boton_agregar']}"
+					action="#{cc.attrs.nameBean.agregarLiberacion(true)}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					update="TBL_Liberaciones btnSalvar PNL_Implementacion PNL_Cuarentena MSG_LiberacionesCPSN"
+					style="height:30px; width:85px">
+				</p:commandButton>
+			</h:panelGroup>
+		</h:panelGrid>
+		
+		<p:dataTable 
+			id="TBL_Liberaciones" style="margin-top:20px;"
+			var="liberacion" value="#{cc.attrs.nameBean.listaLiberaciones}"
+			paginator="true" paginatorPosition="bottom" 
+			rows="3" resizableColumns="true"
+			scrollable="true" emptyMessage="#{msg['buscador.noresultados']}">
+			
+			<f:facet name="header">Resumen de Liberaciones</f:facet>
+			
+			<p:column headerText="#{msg['consultar.Operaciones']}" width="100" style="font-size:12px;">
+				<p:commandButton
+					title="#{msg.eliminar}" 
+					icon="ui-icon-circle-close"
+					update="TBL_Liberaciones"
+					disabled="#{!(cc.attrs.nameBean.tabHabilitado and liberacion.estatus.codigo != 'X')}"
+					onclick="PF('DLG_EliminarCpsn').show()">
+					<f:setPropertyActionListener 
+						value="#{liberacion}" 
+						target="#{cc.attrs.nameBean.libSolSeleccionada}" >
+					</f:setPropertyActionListener>
+				</p:commandButton>
+			</p:column>
+
+		     <p:column 
+			    	resizable="true" width="75" 
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.tipoBloque']}" 
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{liberacion.tipoBloqueCpsn.descripcion}" 
+			        	title="#{liberacion.tipoBloqueCpsn.descripcion}">
+			        </h:outputText>
+			    </p:column>  
+			    
+			    <p:column 
+			    	resizable="true" width="75"
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.binario']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{liberacion.binario}"
+			        	title="#{liberacion.binario}">
+			        </h:outputText>
+			    </p:column>
+			    
+			    <p:column 
+			    	resizable="true" width="75" 
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalRed']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText 
+			        	value="#{liberacion.decimalRed}" 
+			        	title="#{liberacion.decimalRed}">
+			        </h:outputText>
+			    </p:column>
+			    
+				<p:column
+					resizable="true" width="75" 
+					headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalTotal']}"
+					style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{liberacion.decimalTotal}"
+			        	title="#{liberacion.decimalTotal}">
+			        </h:outputText>
+			    </p:column>
+			    
+			    <p:column 
+			    	resizable="true" width="50" 
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.decimaDesde']}" 
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{liberacion.decimalDesde}"
+			        	title="#{liberacion.decimalDesde}">
+			        </h:outputText>
+			    </p:column>
+
+			    <p:column 
+			    	resizable="true" width="50"
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.decimalHasta']}" 
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{liberacion.decimalHasta}"
+			        	title="#{liberacion.decimalHasta}">
+			        </h:outputText>
+			    </p:column>
+			    
+			    <p:column
+			    	resizable="true" width="75"
+			    	headerText="#{msg['cpsn.codigos.CPSN.resultados.estatus']}"
+					style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{liberacion.estatus.descripcion}"
+			        	title="#{liberacion.estatus.descripcion}">
+			        </h:outputText>
+			    </p:column>
+			    
+				<p:column
+			    	resizable="true" width="75"
+			    	headerText="#{msg['liberacion.implementacion.tiempo']}"
+					style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{liberacion.periodoImplementacion}"
+			        	title="#{liberacion.periodoImplementacion}">
+			        </h:outputText>
+			    </p:column>
+			    
+				<p:column
+			    	resizable="true" width="75"
+			    	headerText="#{msg['liberacion.implementacion.fecha']}"
+					style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{liberacion.fechaImplementacion}"
+			        	title="#{liberacion.fechaImplementacion}">
+			        	<f:convertDateTime pattern="dd/MM/yyyy" />
+			        </h:outputText>
+			    </p:column>
+			    
+				<p:column
+			    	resizable="true" width="75"
+			    	headerText="#{msg['liberacion.cuarentena.tiempo']}"
+					style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText
+			        	value="#{liberacion.periodoCuarentena}"
+			        	title="#{liberacion.periodoCuarentena}">
+			        </h:outputText>
+			    </p:column>
+			    
+				<p:column 
+			    	resizable="true" width="75"
+			    	headerText="#{msg['liberacion.cuarentena.inicio']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText 
+			        	value="#{liberacion.fechaImplementacion}"
+			        	title="#{liberacion.fechaImplementacion}">
+			        	<f:convertDateTime pattern="dd/MM/yyyy" />
+			        </h:outputText>
+			    </p:column>
+			    
+			    <p:column 
+			    	resizable="true" width="75"
+			    	headerText="#{msg['liberacion.cuarentena.fin']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText 
+			        	value="#{liberacion.fechaFinCuarentena}"
+			        	title="#{liberacion.fechaFinCuarentena}">
+			        	<f:convertDateTime pattern="dd/MM/yyyy" />
+			        </h:outputText>
+			    </p:column>
+			    
+				<p:column 
+			    	resizable="true" width="100"
+			    	headerText="#{msg['proveedor.asignatario']}"
+			    	style="text-align:center; font-size:12px; text-overflow:ellipsis;">
+			        <h:outputText 
+			        	value="#{liberacion.solicitudLiberacion.proveedorSolicitante.nombre}"
+			        	title="#{liberacion.solicitudLiberacion.proveedorSolicitante.nombre}">
+			        </h:outputText>
+			    </p:column>
+		</p:dataTable>
+		
+		<p:panel styleClass="botonera alaDcha">
+			<p:commandButton 
+				id="btnSalvar" value="#{msg['manual.generales.btn.guardar']}"
+				icon="ui-icon-disk" 
+				actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.salvarHabilitado)}"
+				update="MSG_LiberacionesCPSN"
+				style="height:30px; width:95px">
+			</p:commandButton>
+		</p:panel>
+		
+		<p:confirmDialog 
+			id="DLG_EliminarCpsn" widgetVar="DLG_EliminarCpsn"
+			global="false" closeOnEscape="true" closable="false"
+			message="#{msg['eliminar.registro.confirmar']}"
+			header="#{msg['eliminar.registro']}"
+			severity="alert" appendTo="@(body)">
+			<p:commandButton
+				value="Sí" icon="ui-icon-check"
+				oncomplete="PF('DLG_EliminarCpsn').hide();"
+				style="height:30px; width:82px">
+				<p:ajax
+					event="click" global="false"
+					listener="#{cc.attrs.nameBean.eliminarLiberacion}"
+					update="TBL_Liberaciones MSG_LiberacionesCPSN">
+				</p:ajax>
+			</p:commandButton>
+			<p:commandButton
+				type="button" value="No" icon="ui-icon-close"
+				onclick="PF('DLG_EliminarCpsn').hide();"
+				style="height:30px; width:82px">
+			</p:commandButton>
+		</p:confirmDialog>
+		
+		<p:confirmDialog 
+			id="DLG_ConfirmCuarentena" widgetVar="DLG_ConfirmCuarentena"
+			global="false" closeOnEscape="true" closable="false"
+			header="#{msg['dialog.header.confirmacion']}"
+			message="#{msg['cpsn.liberacion.confirmar.cuarentena']}"
+			severity="alert" appendTo="@(body)">
+			<p:commandButton
+				value="Sí" icon="ui-icon-check" global="false"
+				oncomplete="PF('DLG_ConfirmCuarentena').hide();"
+				style="height:30px; width:82px">
+				<p:ajax
+					event="click"
+					listener="#{cc.attrs.nameBean.agregarLiberacion(false)}"
+					update="TBL_Liberaciones btnSalvar PNL_Implementacion PNL_Cuarentena MSG_LiberacionesCPSN">
+				</p:ajax>
+			</p:commandButton>
+			<p:commandButton
+				type="button" value="No" icon="ui-icon-close"
+				onclick="PF('DLG_ConfirmCuarentena').hide();"
+				style="height:30px; width:82px">
+			</p:commandButton>
+		</p:confirmDialog>
+		
+	</composite:implementation>
+</html>

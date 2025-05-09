@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusNgTramitesDialog').show();
+			}
+			function hideStatus() {
+				PF('statusNgTramitesDialog').hide();
+			}
+		</script>
+
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['reporteador.title']}/#{msg['reporteador.tng']}</legend>
+			<p:messages id="MSG_BuscadorNGTramites" showDetail="false"
+				showSummary="true" autoUpdate="false" closable="true"
+				showIcon="false" />
+
+			<h:form id="FORM_Buscador">
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['reporteador.tng.buscador']}</legend>
+
+					<h:panelGrid id="PNL_Buscador" columns="4"
+						style="margin-bottom:20px;float:left" cellpadding="3"
+						cellspacing="3">
+
+						<h:outputLabel value="#{msg['reporteador.tng.desde']}" />
+						<p:calendar id="fDesde" locale="mx_MX"
+							value="#{reporteadorNGTramitesBean.fchDesde}" pattern="MM/yyyy"
+							mask="true" style="width:150px"
+							label="#{msg['reporteador.tng.desde']}" navigator="true" size="9"
+							yearRange="1995:c+10">
+							<p:ajax event="dateSelect" update="fHasta" global="false" />
+						</p:calendar>
+
+						<h:outputLabel value="#{msg['reporteador.tng.hasta']}" />
+						<p:calendar id="fHasta" locale="mx_MX"
+							value="#{reporteadorNGTramitesBean.fchHasta}" pattern="MM/yyyy"
+							mask="true" label="#{msg['reporteador.tng.hasta']}"
+							disabled="#{reporteadorNGTramitesBean.fchDesde == null}"
+							navigator="true" size="9" yearRange="1995:c+10">
+							<p:ajax event="change" global="false" />
+							<p:ajax event="dateSelect" global="false" />
+						</p:calendar>
+
+						<p:outputLabel for="selPst" value="#{msg['reporteador.ng.pst']}" />
+						<p:selectOneMenu id="selPst" autoWidth="false"
+							value="#{reporteadorNGTramitesBean.pstSeleccionada}"
+							converter="#{proveedorConverter}" style="width:190px">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{reporteadorNGTramitesBean.listaPst}"
+								var="pstsel" itemLabel="#{pstsel.nombre}" itemValue="#{pstsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="PNL_Agrupacion"
+							value="#{msg['reporteador.tng.agrupar']}" />
+
+						<h:panelGrid id="PNL_Agrupacion" columns="4">
+							<p:selectBooleanCheckbox value="#{reporteadorNGTramitesBean.mes}"
+								id="mes">
+								<p:ajax update="anyo"
+									listener="#{reporteadorNGTramitesBean.checkMes()}" />
+							</p:selectBooleanCheckbox>
+							<h:outputText value="#{msg['reporteador.tng.meses']}" />
+
+							<p:selectBooleanCheckbox
+								value="#{reporteadorNGTramitesBean.anyo}" id="anyo">
+								<p:ajax update="mes"
+									listener="#{reporteadorNGTramitesBean.checkAnyo()}" />
+							</p:selectBooleanCheckbox>
+							<h:outputText value="#{msg['reporteador.tng.anyos']}" />
+						</h:panelGrid>
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						process="@this"
+						actionListener="#{reporteadorNGTramitesBean.resetPantalla}"
+						update="PNL_Buscador :MSG_BuscadorNGTramites"
+						style="height:30px; width:82px; margin-right:20px;">
+						<p:resetInput target="PNL_Buscador" />
+					</p:commandButton>
+					<p:commandButton value="#{msg.exportar}" ajax="false"
+						style="height:30px">
+						<p:fileDownload value="#{reporteadorNGTramitesBean.exportarDatos}" />
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+
+		</fieldset>
+		<p:ajaxStatus id="triggerblockuiCentral"
+			onstart="PF('statusNgTramitesDialog').show()"
+			onsuccess="PF('statusNgTramitesDialog').hide()"></p:ajaxStatus>
+		<p:dialog widgetVar="statusNgTramitesDialog" modal="true"
+			draggable="false" closable="false" resizable="false"
+			showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+		<!--  <p:blockUI block="FORM_Buscador" widgetVar="bui" >
+	        <ui:include src="/componentes/loader.xhtml"/>
+	     </p:blockUI> -->
+
+
+	</ui:define>
+</ui:composition>
+</html>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+	
+	<composite:interface>
+		<composite:attribute name="beanRef" required="true"></composite:attribute>
+		<composite:attribute name="provider" required="true"></composite:attribute>
+		<composite:attribute name="collapseAs" required="true"></composite:attribute>
+		<composite:attribute name="formProvider" required="true"></composite:attribute>
+	</composite:interface>
+
+	<composite:implementation>
+		<div id="#{cc.clientId}">
+			<p:fieldset 
+				id="PFL_DirProveedor"
+				legend="#{msg['proveedor.informacion']}"
+				toggleable="true"
+				collapsed="#{!cc.attrs.collapseAs}">
+				
+				<h:panelGrid columns="8" cellpadding="3" cellspacing="3">
+					<p:outputLabel value="#{msg['proveedor.ida']}" rendered="#{cc.attrs.beanRef.pstComercializadora}"/>
+					<p:inputText
+						value="#{cc.attrs.provider.ida}"  
+						rendered="#{cc.attrs.beanRef.pstComercializadora}"
+						disabled="true">
+					</p:inputText>
+					
+					<p:outputLabel value="#{msg['proveedor.ido']}" rendered="#{cc.attrs.beanRef.pstConcesionario}"/>
+					<p:inputText 
+						value="#{cc.attrs.provider.ido}" 
+						rendered="#{cc.attrs.beanRef.pstConcesionario}"
+						disabled="true">
+					</p:inputText>
+	
+					<p:outputLabel value="#{msg['proveedor.antesBcd']}" rendered="#{cc.attrs.beanRef.pstConcesionario}"/>
+					<p:inputText 
+						value="#{cc.attrs.provider.bcd}"
+						rendered="#{cc.attrs.beanRef.pstConcesionario}"
+						disabled="true">
+					</p:inputText>
+				</h:panelGrid>
+				
+				<h:panelGrid columns="8" cellpadding="3" cellspacing="3">
+					<p:outputLabel value="#{msg['proveedor.calle']}"/>
+					<p:inputText value="#{cc.attrs.provider.calle}" disabled="true" style="width:200px;"/>
+					
+					<p:outputLabel value="#{msg['proveedor.colonia']}"/>
+					<p:inputText value="#{cc.attrs.provider.colonia}" disabled="true" style="width:200px;"/>
+					
+					<p:outputLabel value="#{msg['proveedor.ciudad']}"/>
+					<p:inputText value="#{cc.attrs.provider.ciudad}" disabled="true" style="width:200px;"/>
+					
+					<p:outputLabel value="#{msg['proveedor.cp']}"/>
+					<p:inputText value="#{cc.attrs.provider.cp}" disabled="true" style="width:50px;"/>
+					
+					<p:outputLabel value="#{msg['proveedor.numExt']}"/>
+					<p:inputText value="#{cc.attrs.provider.numExt}" disabled="true" style="width:50px;"/>
+					
+					<p:outputLabel value="#{msg['proveedor.numInt']}"/>
+					<p:inputText value="#{cc.attrs.provider.numInt}" disabled="true" style="width:50px;"/>
+					
+					<p:outputLabel value="#{msg['proveedor.estado']}"/>
+					<p:inputText value="#{cc.attrs.provider.estado.abreviatura}" disabled="true" style="width:25px;"/>
+				</h:panelGrid>
+				
+				<p:panelGrid style="display:block;">
+					<p:commandButton 
+						id="BTN_ModificarDireccion" 
+						icon="ui-icon-pencil"
+						value="#{msg['manual.generales.pst.boton.modificar']}"
+						disabled="#{!cc.attrs.beanRef.tabHabilitado or (cc.attrs.provider == null)}">
+						<p:ajax
+							event="click"
+							listener="#{gestionProveedorBean.cargarProveedor(cc.attrs.provider)}"
+							oncomplete="PF('MDL_Proveedores').show();"
+							update="#{cc.attrs.formProvider}">
+						</p:ajax>
+						<p:tooltip for="BTN_ModificarDireccion" value="#{msg['manual.generales.pst.boton.modificar']}"/>
+					</p:commandButton>
+				</p:panelGrid>
+				
+			</p:fieldset>
+		</div>
+	</composite:implementation>
+</html>

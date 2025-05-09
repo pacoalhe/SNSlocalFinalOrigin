@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+	<ui:define name="centro">
+		<p:messages id="MSG_CatalogoPlantillas" showDetail="false"
+			showSummary="true" autoUpdate="false" closable="true" escape="false"
+			showIcon="false" />
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogos.title']}/#{msg['catalogos.oficios']}</legend>
+
+			<h:form id="FRM_CatalogoPlantillas">
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.plantillas.buscador']}</legend>
+
+					<h:panelGrid columns="1">
+						<h:panelGrid id="PNL_Busqueda" columns="4" style="float:center"
+							cellpadding="3" cellspacing="3">
+							<p:outputLabel for="SEL_Destinatario"
+								value="#{msg['oficios.Destinatario']}" />
+							<p:selectOneMenu id="SEL_Destinatario" autoWidth="false"
+								value="#{catalogoPlantillasBean.destinatarioSeleccionado}"
+								converter="#{tipoDestinatarioConverter}" style="width:300px;">
+								<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+								<f:selectItems
+									value="#{catalogoPlantillasBean.tiposDestinatario}"
+									var="destinatario" itemLabel="#{destinatario.descripcion}"
+									itemValue="#{destinatario}">
+								</f:selectItems>
+							</p:selectOneMenu>
+
+							<p:outputLabel for="SEL_Tramite"
+								value="#{msg['catalogo.plantillas.tramite']}" />
+							<p:selectOneMenu id="SEL_Tramite" autoWidth="false"
+								value="#{catalogoPlantillasBean.tramiteSeleccionado}"
+								converter="#{tipoSolicitudConverter}" style="width:300px;">
+								<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+								<f:selectItems value="#{catalogoPlantillasBean.tiposSolicitud}"
+									var="solicitud" itemLabel="#{solicitud.descripcion}"
+									itemValue="#{solicitud}">
+								</f:selectItems>
+							</p:selectOneMenu>
+						</h:panelGrid>
+
+						<h:panelGrid columns="2" style="float:center">
+							<p:commandButton value="#{msg['consultar.Buscar']}"
+								action="#{catalogoPlantillasBean.realizarBusqueda}"
+								update=":MSG_CatalogoPlantillas TBL_ConsultaPlantillas BTN_exportarPlantillas BTN_exportarPlantillas"
+								style="height:30px; width:90px">
+							</p:commandButton>
+							<p:commandButton value="#{msg['consultar.Limpiar']}"
+								action="#{catalogoPlantillasBean.limpiarBusqueda}"
+								update=":MSG_CatalogoPlantillas PNL_Busqueda TBL_ConsultaPlantillas BTN_exportarPlantillas BTN_exportarPlantillas"
+								style="height:30px; width:90px">
+							</p:commandButton>
+						</h:panelGrid>
+					</h:panelGrid>
+
+				</fieldset>
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.plantillas.consulta']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton value="#{msg['catalogo.plantillas.nueva']}"
+								title="#{msg['catalogo.plantillas.nueva']}"
+								icon="ui-icon-pencil" update=":MDL_EdicionPlantilla"
+								oncomplete="PF('MDL_EdicionPlantilla').show();">
+							</p:commandButton>
+							<p:commandButton id="BTN_exportarPlantillas"
+								value="#{msg.exportar}" title="#{msg.exportar}"
+								disabled="#{catalogoPlantillasBean.emptySearch}" ajax="false">
+								<p:fileDownload
+									value="#{catalogoPlantillasBean.exportarConsultaPlantillas}" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<p:dataTable id="TBL_ConsultaPlantillas"
+						widgetVar="TBL_ConsultaPlantillas" var="plantilla"
+						value="#{catalogoPlantillasBean.plantillasModel}" lazy="true"
+						paginator="true" paginatorPosition="bottom"
+						rows="#{catalogoPlantillasBean.registroPorPagina}"
+						resizableColumns="true"
+						emptyMessage="#{msg['buscador.noresultados']}">
+
+						<p:column headerText="#{msg['catalogo.plantillas.oficio']}">
+							<h:outputText value="#{plantilla.descripcion}" />
+						</p:column>
+
+						<p:column headerText="#{msg['catalogo.plantillas.destinatario']}">
+							<h:outputText value="#{plantilla.tipoDestinatario.descripcion}" />
+						</p:column>
+
+						<p:column headerText="#{msg['catalogo.plantillas.tramite']}">
+							<h:outputText value="#{plantilla.tipoSolicitud.descripcion}" />
+						</p:column>
+
+						<p:column headerText="#{msg['consultar.Operaciones']}" width="100" style="text-align:center;">
+							<p:commandButton title="#{msg['detalleEditar']}"
+								icon="ui-icon-pencil"
+								oncomplete="PF('DLG_ConfirmarEditar').show();" global="false">
+								<f:setPropertyActionListener value="#{plantilla}"
+									target="#{catalogoPlantillasBean.plantillaSeleccionada}">
+								</f:setPropertyActionListener>
+							</p:commandButton>
+						</p:column>
+
+					</p:dataTable>
+				</fieldset>
+
+
+			</h:form>
+
+			<p:dialog id="MDL_EdicionPlantilla" widgetVar="MDL_EdicionPlantilla"
+				modal="true" appendTo="@(body)"
+				header="#{msg['catalogo.plantillas.edición']}" closable="false"
+				scrollable="true" resizable="true" width="60%" height="400">
+				<ui:include src="/admin-catalogos/oficios/editar-plantilla.xhtml" />
+				<p:commandButton id="BTN_ExitModal" value="X" global="false"
+					styleClass="customCloseModal" closable="false"
+					onclick="PF('DLG_ExitModal').show()">
+					<p:resetInput target=":#{p:component('FRM_CatalogoPlantillas')}" />
+				</p:commandButton>
+			</p:dialog>
+			<!-- Diálogo de confirmar salir de editar plantilla -->
+			<p:dialog id="DLG_ExitModal" widgetVar="DLG_ExitModal" modal="true"
+				resizable="false" closable="false" header="#{msg.salir}"
+				appendTo="@(body)" width="250"
+				height="115">
+				<sns:exit-custom-dialog
+					confirmActionListener="#{edicionPlantillaBean.resetValues}"
+					message="#{msg['cerrarDialogo.mensaje']}"
+					onCompleteExit="PF('DLG_ExitModal').hide(); PF('MDL_EdicionPlantilla').hide();"
+					onCompleteCancel="PF('DLG_ExitModal').hide();"
+					updateComponentId=":FRM_CatalogoPlantillas:TBL_ConsultaPlantillas"
+					blockUIWidgetVar="MDL_Edicion_Plantilla_BUI" 
+					resetValues="true">
+				</sns:exit-custom-dialog>
+			</p:dialog>
+			<!-- Diálogo de confirmar editar plantilla -->
+			<p:dialog id="DLG_ConfirmarEditar" 
+				widgetVar="DLG_ConfirmarEditar"
+				modal="true" 
+				resizable="false" 
+				closeOnEscape="true" 
+				closable="false"
+				width="250"
+				height="115"
+				header="#{msg['catalogo.plantillas.editar']}" appendTo="@(body)">
+				<sns:confirm-custom-dialog-double-oncomplete
+							message="#{msg['dialog.confirmacion']}"
+					blockUIWidgetVar="confirmarEditarPlantilla_BUI"
+					confirmActionListener="#{catalogoPlantillasBean.editarPlantilla}"
+					onCompleteExit="PF('DLG_ConfirmarEditar').hide(); PF('MDL_EdicionPlantilla').show();"
+					onCompleteCancel="PF('DLG_ConfirmarEditar').hide();"
+					updateComponentId=":MSG_CatalogoPlantillas :MDL_EdicionPlantilla :FRM_CatalogoPlantillas:TBL_ConsultaPlantillas"
+					resetValues="true">
+				</sns:confirm-custom-dialog-double-oncomplete>
+			</p:dialog>
+			<p:ajaxStatus id="FRM_CatalogoPlantilla_AS"
+				onstart="PF('statusPlantillaDialog').show()"
+				onsuccess="PF('statusPlantillaDialog').hide()">
+			</p:ajaxStatus>
+				<p:dialog widgetVar="statusPlantillaDialog" 
+				modal="true" draggable="false" 
+				closable="false" resizable="false" 
+				showHeader="false">
+    <ui:include src="/componentes/loader.xhtml"/>
+</p:dialog>
+			<!-- <p:blockUI block="FRM_CatalogoPlantillas"
+				widgetVar="FRM_CatalogoPlantilla_BUI">
+				<ui:include src="/componentes/loader.xhtml" />
+			</p:blockUI> -->
+
+		</fieldset>
+
+	</ui:define>
+</ui:composition>
+</html>

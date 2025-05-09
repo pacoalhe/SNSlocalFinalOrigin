@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+	<h:form id="FRM_EdicionPlantilla">
+		<p:messages id="MSG_EdicionPlantilla" showSummary="true" showDetail="false" autoUpdate="false" closable="true" escape="false" showIcon="false"/>
+		
+		<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<h:panelGrid id="PNL_Busqueda" columns="2" style="float:left" cellpadding="3" cellspacing="3">
+				<p:outputLabel for="TXT_Nombre" value="#{msg['catalogo.plantillas.oficio']}"/>
+				<p:inputText
+					id="TXT_Nombre"
+					value="#{edicionPlantillaBean.plantilla.descripcion}"
+					style="width: 500px;">
+				</p:inputText>
+				
+				<p:outputLabel for="SEL_Destinatario" value="#{msg['catalogo.plantillas.destinatario']}"/>
+				<p:selectOneMenu 
+					id="SEL_Destinatario" 
+					value="#{edicionPlantillaBean.plantilla.tipoDestinatario}" 
+				 	converter="#{tipoDestinatarioConverter}"
+				 	disabled="#{edicionPlantillaBean.modoEdicion}"
+				 	style="width:300px;">
+				 	<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+					<f:selectItems
+						value="#{catalogoPlantillasBean.tiposDestinatario}"
+						var="destinatario"
+						itemLabel="#{destinatario.descripcion}"
+						itemValue="#{destinatario}">
+					</f:selectItems>
+				</p:selectOneMenu>
+				
+				<p:outputLabel for="SEL_Tramite" value="#{msg['catalogo.plantillas.tramite']}"/>
+				<p:selectOneMenu 
+					id="SEL_Tramite" 
+					value="#{edicionPlantillaBean.plantilla.tipoSolicitud}" 
+				 	converter="#{tipoSolicitudConverter}"
+				 	disabled="#{edicionPlantillaBean.modoEdicion}"
+				 	style="width:300px;">
+				 	<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}"/>
+					<f:selectItems
+						value="#{catalogoPlantillasBean.tiposSolicitud}"
+						var="solicitud"
+						itemLabel="#{solicitud.descripcion}"
+						itemValue="#{solicitud}">
+					</f:selectItems>
+				</p:selectOneMenu>
+			</h:panelGrid>
+		</fieldset>
+		
+		<p:panelGrid style="display:block;" id="PNL_Acciones">
+			<p:commandButton
+				id="BTN_DescargarPlantilla"
+				value="#{msg['catalogo.plantillas.descargar']}"
+				title="#{msg['catalogo.plantillas.descargar']}"
+				ajax="false"
+				disabled="#{!edicionPlantillaBean.descargaDisponible}"
+				style="height:30px; width:150px">
+				<p:fileDownload value="#{edicionPlantillaBean.descargarPlantilla}" />
+			</p:commandButton>
+			<p:commandButton
+				id="BTN_ActualizarPlantilla"
+				value="#{msg['catalogo.plantillas.actualizar']}" 
+				action="#{edicionPlantillaBean.actualizarPlantilla}" 
+				disabled="#{!edicionPlantillaBean.actualizacionDisponible}"
+				update="MSG_EdicionPlantilla FUP_ActualizarPlantilla BTN_ActualizarPlantilla TXT_FilePath"
+				style="height:30px; width:150px">
+			</p:commandButton>
+		</p:panelGrid>
+		
+		<fieldset class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<p:fileUpload
+				id="FUP_ActualizarPlantilla"
+				mode="advanced" auto="true" multiple="false" fileLimit="1"
+				label="#{msg['automatica.Elegir']}"
+				fileUploadListener="#{edicionPlantillaBean.cargarFichero}"
+				disabled="#{edicionPlantillaBean.actualizacionDisponible}"
+				allowTypes="/(\.|\/)(docx)$/"
+				sizeLimit="#{edicionPlantillaBean.plantillaMaxSize}"
+				update="MSG_EdicionPlantilla BTN_ActualizarPlantilla TXT_FilePath FUP_ActualizarPlantilla"
+				fileLimitMessage="Solo es posible cargar 1 fichero"
+				invalidFileMessage="Tipo de plantilla no soportado"
+				invalidSizeMessage="Tamaño excesivo. Máximo permitido: #{edicionPlantillaBean.plantillaMaxSize}">
+			</p:fileUpload>
+			
+			<p:outputLabel for="TXT_FilePath" value="Fichero seleccionado:"/>
+			<p:inputText
+				id="TXT_FilePath"
+				value="#{edicionPlantillaBean.pathFichero}"
+				style="width: 500px;">
+			</p:inputText>
+		</fieldset>
+
+		<p:panelGrid style="display:block;">
+			<p:commandButton
+				id="BTN_Guardar"
+				value="#{msg['manual.generales.btn.guardar']}"
+				action="#{edicionPlantillaBean.guardar}"
+				update="MSG_EdicionPlantilla BTN_DescargarPlantilla FUP_ActualizarPlantilla BTN_ActualizarPlantilla
+				 SEL_Destinatario SEL_Tramite TXT_FilePath"
+				style="height:30px; width:85px">
+			</p:commandButton>
+		</p:panelGrid>
+		
+	</h:form>
+	
+	<!-- <p:ajaxStatus id="FRM_EdicionPlantilla_AS"
+		onstart="PF('FRM_EdicionPlantilla_BUI').show()"
+		onsuccess="PF('FRM_EdicionPlantilla_BUI').hide()">
+	</p:ajaxStatus> -->
+
+	<!-- <p:blockUI block="FRM_EdicionPlantilla" widgetVar="FRM_EdicionPlantilla_BUI">
+		<ui:include src="/componentes/loader.xhtml"/>
+	</p:blockUI> -->
+
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<ui:composition template="/WEB-INF/templates/plantilla3.xhtml">
+
+	<ui:define name="centro">
+		<script type="text/javascript">
+			function showStatus() {
+				PF('statusPoblacionDialog').show();
+			}
+			function hideStatus() {
+				PF('statusPoblacionDialog').hide();
+			}
+		</script>
+
+		<p:messages id="MSG_ConsultarPoblaciones" showDetail="true"
+			showSummary="true" autoUpdate="false" closable="true"
+			showIcon="false" />
+		<fieldset
+			class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+			<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogos.title']}/#{msg['catalogo.poblaciones']}</legend>
+
+			<h:form id="FRM_ConsultarPoblaciones">
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.poblaciones.busqueda']}</legend>
+
+					<h:panelGrid id="PNL_Busqueda" columns="8" style="float:left"
+						cellpadding="3" cellspacing="3">
+						<h:outputLabel for="selestado"
+							value="#{msg['catalogo.estados.estado']}" />
+						<p:selectOneMenu id="selestado" autoWidth="false"
+							value="#{consultarPoblacionesBean.estadoSeleccionado}"
+							converter="#{estadoConverter}" style="width:250px;">
+							<p:ajax event="change"
+								listener="#{consultarPoblacionesBean.seleccionEstado}"
+								update=":MSG_ConsultarPoblaciones selMunicipio selPoblacion">
+							</p:ajax>
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems value="#{consultarPoblacionesBean.listaEstados}"
+								var="estadosel" itemLabel="#{estadosel.nombre}"
+								itemValue="#{estadosel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="selMunicipio"
+							value="#{msg['catalogo.poblaciones.municipio']}" />
+						<p:selectOneMenu id="selMunicipio" autoWidth="false"
+							value="#{consultarPoblacionesBean.municipioSeleccionado}"
+							converter="#{municipioConverter}" style="width:250px;">
+							<p:ajax event="change"
+								listener="#{consultarPoblacionesBean.seleccionMunicipio}"
+								update=":MSG_ConsultarPoblaciones selPoblacion">
+							</p:ajax>
+
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{consultarPoblacionesBean.listaMunicipios}"
+								var="municipiosel" itemLabel="#{municipiosel.nombre}"
+								itemValue="#{municipiosel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+						<h:outputLabel value="#{msg['catalogo.poblaciones.abn']}" />
+						<p:inputText id="TXT_Abn" required="false" minValue="3"
+							maxlength="3" mask="3"
+							value="#{consultarPoblacionesBean.abnSeleccionado}"
+							label="#{msg['catalogo.poblaciones.abn']}" style="width: 41px;">
+						</p:inputText>
+
+						<p:outputLabel for="selPoblacion"
+							value="#{msg['catalogo.poblaciones.poblacion']}" />
+						<p:selectOneMenu id="selPoblacion" autoWidth="false"
+							value="#{consultarPoblacionesBean.poblacionSeleccionada}"
+							converter="#{poblacionConverter}" style="width:250px;">
+							<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+							<f:selectItems
+								value="#{consultarPoblacionesBean.listaPoblaciones}"
+								var="poblacionsel" itemLabel="#{poblacionsel.nombre}"
+								itemValue="#{poblacionsel}">
+							</f:selectItems>
+						</p:selectOneMenu>
+
+					</h:panelGrid>
+				</fieldset>
+
+				<p:panelGrid style="display:block;">
+					<p:commandButton value="#{msg['consultar.Buscar']}"
+						action="#{consultarPoblacionesBean.realizarBusqueda}"
+						update=":MSG_ConsultarPoblaciones TBL_Poblaciones PNL_Tabla BTN_generaListado"
+						style="height:30px;  width:82px;">
+					</p:commandButton>
+					<p:commandButton value="#{msg['consultar.Limpiar']}"
+						actionListener="#{consultarPoblacionesBean.limpiarBusqueda}"
+						update=":MSG_ConsultarPoblaciones PNL_Busqueda TBL_Poblaciones PNL_Tabla BTN_generaListado"
+						style="height:30px; width:82px; margin-right:20px;"
+						process="@this">
+						<p:resetInput target="PNL_Busqueda" />
+					</p:commandButton>
+				</p:panelGrid>
+
+
+				<fieldset
+					class="ui-fieldset ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-fieldset-legend ui-corner-all ui-state-default">#{msg['catalogo.poblaciones']}</legend>
+
+					<h:panelGrid width="100%">
+						<h:panelGroup style="display:block; text-align:right">
+							<p:commandButton title="#{msg['catalogo.poblacion.nueva']}"
+								value="#{msg['catalogo.poblacion.nueva']}"
+								update=":MSG_ConsultarPoblaciones"
+								oncomplete="PF('MDL_nuevaPoblacion').show();">
+							</p:commandButton>
+							<p:commandButton
+								disabled="#{consultarPoblacionesBean.emptySearch}"
+								value="#{msg.exportar}" id="BTN_generaListado" ajax="false"
+								onclick="PrimeFaces.monitorDownload(showStatus,hideStatus)">
+								<p:fileDownload
+									value="#{consultarPoblacionesBean.exportConsultaPoblaciones}" />
+							</p:commandButton>
+						</h:panelGroup>
+					</h:panelGrid>
+
+					<h:panelGrid id="PNL_Tabla" columns="1">
+						<p:dataTable id="TBL_Poblaciones" widgetVar="TBL_Poblaciones"
+							var="detalle"
+							value="#{consultarPoblacionesBean.poblacionesModel}" lazy="true"
+							paginator="true" paginatorPosition="bottom"
+							rows="#{consultarPoblacionesBean.registroPorPagina}"
+							resizableColumns="true"
+							emptyMessage="#{msg['buscador.noresultados']}">
+
+							<p:column headerText="#{msg['catalogo.estados.clave']}" style="text-align:center;">
+								<h:outputText
+									value="#{detalle.poblacion.municipio.id.codEstado}" />
+							</p:column>
+
+							<p:column headerText="#{msg['catalogo.estados.nombre']}">
+								<h:outputText
+									value="#{detalle.poblacion.municipio.estado.nombre}" />
+							</p:column>
+
+							<p:column headerText="#{msg['catalogo.municipio.clave']}" style="text-align:center;">
+								<h:outputText
+									value="#{detalle.poblacion.municipio.id.codMunicipio}" />
+							</p:column>
+
+							<p:column headerText="#{msg['catalogo.municipio.nombre']}">
+								<h:outputText value="#{detalle.poblacion.municipio.nombre}" />
+							</p:column>
+
+							<p:column headerText="#{msg['catalogo.poblaciones.codigo']}" style="text-align:center;">
+								<h:outputText value="#{detalle.poblacion.cdgPoblacion}" />
+							</p:column>
+
+							<p:column headerText="#{msg['catalogo.poblaciones.nombre']}">
+								<h:outputText value="#{detalle.poblacion.nombre}" />
+							</p:column>
+
+							<p:column headerText="#{msg['catalogo.poblaciones.abn']}" style="text-align:center;">
+								<h:outputText value="#{detalle.poblacion.abn.codigoAbn}" />
+							</p:column>
+
+							<p:column
+								headerText="#{msg['catalogo.poblaciones.num.asignada']}" style="text-align:center;">
+								<h:outputText value="#{detalle.numeracionAsignada}" />
+							</p:column>
+
+							<p:column
+								headerText="#{msg['catalogo.poblaciones.presuscripcion']}" style="text-align:center;">
+								<h:outputText value="#{detalle.poblacion.abn.presuscripcion}" />
+							</p:column>
+
+							<p:column
+								headerText="#{msg['catalogo.poblaciones.region.celular']}">
+								<h:outputText
+									value="#{detalle.poblacion.municipio.regionCelular.descripcion}" />
+							</p:column>
+
+							<p:column headerText="#{msg['catalogo.poblaciones.region.pcs']}">
+								<h:outputText
+									value="#{detalle.poblacion.municipio.regionPcs.descripcion}" />
+							</p:column>
+
+							<p:column
+								headerText="#{msg['catalogo.poblaciones.fecha.migracion']}" style="text-align:center;">
+								<h:outputText value="#{detalle.poblacion.fechaMigracion}">
+									<f:convertDateTime pattern="dd.MM.yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{msg['consultar.Operaciones']}" style="text-align:center;"
+								exportable="false">
+
+								<p:commandButton title="#{msg['detalleEditar']}"
+									icon="ui-icon-pencil" update=":FRM_editarPoblacion"
+									action="#{consultarPoblacionesBean.editarPoblacion}"
+									oncomplete="PF('MDL_editarPoblacion').show()" global="false">
+									<f:setPropertyActionListener value="#{detalle}"
+										target="#{consultarPoblacionesBean.poblacionSeleccionadaEdicion}">
+									</f:setPropertyActionListener>
+								</p:commandButton>
+
+								<p:commandButton title="#{msg['darBaja']}"
+									disabled="#{detalle.poblacion.estatus.cdg eq '2'}"
+									icon="ui-icon-circle-close" update="TBL_Poblaciones"
+									onclick="PF('DLG_Eliminar').show()" global="false">
+									<f:setPropertyActionListener value="#{detalle}"
+										target="#{consultarPoblacionesBean.poblacionSeleccionadaEdicion}">
+									</f:setPropertyActionListener>
+								</p:commandButton>
+
+							</p:column>
+						</p:dataTable>
+					</h:panelGrid>
+				</fieldset>
+			</h:form>
+
+			<p:dialog id="MDL_nuevaPoblacion" 
+				widgetVar="MDL_nuevaPoblacion"
+				header="#{msg['catalogos.poblaciones']}" 
+				modal="true"
+				scrollable="true" 
+				resizable="true" 
+				closable="false"
+				appendTo="@(body)" 
+				width="80%" 
+				height="400">
+				<p:commandButton id="BTN_Salir_Poblacion"
+					styleClass="customCloseModal" value="X"
+					onclick="PF('DLG_Salir_Poblacion').show()" global="false">
+				</p:commandButton>
+
+				<ui:include src="/admin-catalogos/poblacion/nueva-poblacion.xhtml" />
+			</p:dialog>
+			<!-- Confirmación al salir -->
+			<p:dialog id="DLG_Salir_Poblacion" 
+				widgetVar="DLG_Salir_Poblacion"
+				closeOnEscape="true" 
+				closable="false" 
+				resizable="false" 
+				modal="true"
+				header="Salir" 
+				appendTo="@(body)" 
+				width="250"
+				height="115">
+				<sns:exit-custom-dialog message="#{msg['cerrarDialogo.mensaje']}"
+					blockUIWidgetVar="salirPoblacion_BUI"
+					confirmActionListener="#{expansionSeriesBean.resetTab}"
+					onCompleteExit="PF('DLG_Salir_Poblacion').hide();PF('MDL_nuevaPoblacion').hide();PF('MDL_editarPoblacion').hide();"
+					onCompleteCancel="PF('DLG_Salir_Poblacion').hide();"
+					updateComponentId=":FRM_nuevaPoblacion :FRM_ConsultarPoblaciones:TBL_Poblaciones :MSG_ConsultarPoblaciones"
+					resetValues="true">
+				</sns:exit-custom-dialog>
+
+			</p:dialog>
+			<p:dialog id="MDL_editarPoblacion" 
+				widgetVar="MDL_editarPoblacion"
+				modal="true" 
+				appendTo="@(body)"
+				header="#{msg['catalogo.poblaciones.poblacion']}" 
+				scrollable="false"
+				resizable="false" 
+				closable="false" 
+				width="60%" 
+				height="300">
+
+				<p:commandButton id="BTN_Salir_Editar_Poblacion"
+					styleClass="customCloseModal" 
+					value="X"
+					onclick="PF('DLG_Salir_Poblacion').show()" 
+					global="false">
+				</p:commandButton>
+
+				<ui:include src="/admin-catalogos/poblacion/editar-poblacion.xhtml" />
+			</p:dialog>
+			<!-- Modal confirmar dar de baja población -->
+			<p:dialog id="DLG_Eliminar" 
+				widgetVar="DLG_Eliminar" 
+				modal="true"
+				resizable="false" 
+				closeOnEscape="true" 
+				closable="false"
+				header="#{msg['catalogo.poblaciones.confirmar.baja']}" 
+				appendTo="@(body)" 
+				width="250"
+				height="50">
+				<sns:confirm-custom-dialog
+					blockUIWidgetVar="ConfirmarCancelarPoblacion_BUI"
+					confirmActionListener="#{consultarPoblacionesBean.bajaPoblacion()}"
+					dialogWidgetVar="DLG_Eliminar"
+					updateComponentId=":FRM_ConsultarPoblaciones:TBL_Poblaciones :MSG_ConsultarPoblaciones">
+				</sns:confirm-custom-dialog>
+			</p:dialog>
+		</fieldset>
+
+		<p:ajaxStatus id="triggerblockuiPoblacion"
+			onstart="PF('statusPoblacionDialog').show()"
+			onsuccess="PF('statusPoblacionDialog').hide()"></p:ajaxStatus>
+		<p:dialog widgetVar="statusPoblacionDialog" 
+			modal="true"
+			draggable="false" 
+			closable="false" 
+			resizable="false"
+			showHeader="false">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:dialog>
+		<!-- <p:blockUI block="FRM_ConsultarPoblaciones" widgetVar="bui">
+			<ui:include src="/componentes/loader.xhtml" />
+		</p:blockUI> -->
+
+	</ui:define>
+</ui:composition>
+</html>

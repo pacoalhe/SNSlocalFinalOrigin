@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:sns="http://java.sun.com/jsf/composite/xhtml">
+
+<h:form id="FRM_expandirSerie">
+
+	<p:wizard widgetVar="wizard_central" id="wizard_central"
+		showNavBar="false" style="min-width: 1050px">
+		<p:tab id="tab_expandir_serie"
+			title="#{msg['catalogo.series.consulta.expansion']}">
+			<p:messages id="MSG_ExpandirSerie" showDetail="false"
+				showSummary="true" autoUpdate="false" closable="true"
+				showIcon="false" />
+			<p:panel id="PNL_container_busqueda" style="background:transparent">
+				<h:panelGrid id="PNL_Serie" columns="6">
+					<h:outputLabel for="TXT_Abn"
+						value="#{msg['catalogo.series.consulta.abn']}" style="width:50px;" />
+					<p:inputText id="TXT_Abn" required="false" size="3" maxlength="3"
+						value="#{expansionSeriesBean.abn}"
+						label="#{msg['catalogo.series.consulta.abn']}"
+						style="margin-left:10px; width: 50px;">
+						<p:ajax event="change" global="false"
+							update="SEL_Nir :MSG_ConsultarSeries TBL_Nirs TBL_Resumen BTN_Expandir BTN_Guardar SEL_Accion"
+							listener="#{expansionSeriesBean.cargarNirs}">
+						</p:ajax>
+					</p:inputText>
+					<h:outputLabel value="#{msg['catalogo.series.consulta.nir']}"
+						style="margin-left:20px; width:50px;" />
+					<p:selectOneMenu id="SEL_Nir"
+						style="margin-left:10px; width: 100px;"
+						value="#{expansionSeriesBean.nir}" converter="#{nirConverter}">
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+						<f:selectItems value="#{expansionSeriesBean.listadoNir}"
+							var="nirSel" itemLabel="#{nirSel.codigo}" itemValue="#{nirSel}">
+						</f:selectItems>
+						<p:ajax event="change" global="false" update="SEL_Accion"
+							listener="#{expansionSeriesBean.cargarListaAcciones}">
+						</p:ajax>
+					</p:selectOneMenu>
+
+					<h:outputLabel value="#{msg['catalogo.series.expandir.opciones']}"
+						style="margin-left:20px; width:50px;" />
+					<p:selectOneMenu id="SEL_Accion"
+						style="margin-left:10px; width: 300px;" required="false"
+						value="#{expansionSeriesBean.accionSeleccionada}">
+						<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+						<f:selectItems value="#{expansionSeriesBean.listaAccion}"
+							var="accionSel" itemLabel="#{accionSel}" itemValue="#{accionSel}">
+						</f:selectItems>
+						<p:ajax event="change" global="false"
+							update="PNL_container_Nirs MSG_ExpandirSerie"
+							listener="#{expansionSeriesBean.compruebaAccion}"></p:ajax>
+					</p:selectOneMenu>
+				</h:panelGrid>
+			</p:panel>
+			<p:panelGrid style="display:block;">
+				<p:commandButton value="#{msg['consultar.Buscar']}"
+					action="#{expansionSeriesBean.compruebaDatos}"
+					update="MSG_ExpandirSerie PNL_Nirs PNL_Serie SEL_Nir BTN_Guardar SEL_Accion"
+					style="margin-top:20px; height:30px; width:82px;">
+				</p:commandButton>
+			</p:panelGrid>
+			<p:panel id="PNL_container_Nirs" style="background:transparent">
+				<p:panel id="PNL_Nirs"  style="margin-top:20px;"
+					rendered="#{expansionSeriesBean.muestraPanel eq true}">
+
+					<div class="ui-grid">
+						<div class="ui-grid-row">
+							<div class="ui-grid-col-5">
+								<p:dataTable id="TBL_Nirs" var="nir"
+									value="#{expansionSeriesBean.listaCodigosNirs}"
+									selectionMode="multiple"
+									selection="#{expansionSeriesBean.listaNirsSeleccionados}"
+									rowKey="#{nir}" paginator="true" paginatorPosition="bottom"
+									rows="10" resizableColumns="true">
+									<f:facet name="header">#{msg['catalogo.series.nir.libres']}</f:facet>
+									<p:ajax event="rowSelect"
+										update=":FRM_expandirSerie:BTN_Expandir :FRM_expandirSerie:MSG_ExpandirSerie"
+										listener="#{expansionSeriesBean.habilitarBoton}" />
+									<p:ajax event="rowUnselect"
+										update=":FRM_expandirSerie:BTN_Expandir :FRM_expandirSerie:MSG_ExpandirSerie"
+										listener="#{expansionSeriesBean.habilitarBoton}" />
+
+									<p:column headerText="#{msg['catalogo.series.consulta.nir']}"
+										style="text-align:center;">
+										<h:outputText value="#{nir}" />
+									</p:column>
+
+									<p:column
+										headerText="#{msg['catalogo.series.nir.sna.inicial']}"
+										style="text-align:center;">
+										<h:outputText value="#{expansionSeriesBean.nuevoSnaInicial}" />
+									</p:column>
+
+									<p:column headerText="#{msg['catalogo.series.nir.sna.final']}"
+										style="text-align:center;">
+										<h:outputText value="#{expansionSeriesBean.nuevoSnaFinal}" />
+									</p:column>
+
+								</p:dataTable>
+							</div>
+							<div class="ui-grid-col-2" style="padding-top:40px">
+								<p:commandButton id="BTN_Expandir"
+									value="#{msg['catalogo.series.expandir']}"
+									disabled="#{!expansionSeriesBean.btnExpandir}"
+									action="#{expansionSeriesBean.expandirSerie}"
+									update="MSG_ExpandirSerie TBL_Resumen BTN_Guardar BTN_Expandir"
+									style="height:30px;  width:82px;">
+								</p:commandButton>
+							</div>
+							<div class="ui-grid-col-5">
+								<p:dataTable id="TBL_Resumen"
+									
+									value="#{expansionSeriesBean.listaDetalle}" var="detalle"
+									paginator="false" rows="10" resizableColumns="true">
+									<f:facet name="header">#{msg['catalogo.series.resumen.expansion']}</f:facet>
+
+									<p:column headerText="#{msg['catalogo.series.consulta.nir']}"
+										style="text-align:center;">
+										<h:outputText value="#{detalle.nir}" />
+									</p:column>
+
+									<p:column
+										headerText="#{msg['catalogo.series.nir.sna.inicial']}"
+										style="text-align:center;">
+										<h:outputText value="#{detalle.snaInicial}" />
+									</p:column>
+
+									<p:column headerText="#{msg['catalogo.series.nir.sna.final']}"
+										style="text-align:center;">
+										<h:outputText value="#{detalle.snaFinal}" />
+									</p:column>
+
+								</p:dataTable>
+							</div>
+
+						</div>
+					</div>
+
+
+
+
+				</p:panel>
+			</p:panel>
+			<p:panelGrid style="display:block;">
+				<p:commandButton id="BTN_Guardar"
+					value="#{msg['manual.generales.btn.guardar']}"
+					onclick="PF('DLG_ConfirmarExpansion').show()"
+					disabled="#{!expansionSeriesBean.btnGuardar}"
+					update="MSG_ExpandirSerie PNL_Nirs BTN_Guardar SEL_Accion SEL_Nir TBL_Nirs"
+					style="margin-top:20px; height:30px; width:82px;">
+				</p:commandButton>
+			</p:panelGrid>
+
+		</p:tab>
+	</p:wizard>
+
+</h:form>
+
+</html>

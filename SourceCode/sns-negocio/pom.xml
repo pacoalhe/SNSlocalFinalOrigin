@@ -1,0 +1,312 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>mx.ift.sns</groupId>
+		<artifactId>sns-parent</artifactId>
+		<version>0.4.3</version>
+	</parent>
+
+	<artifactId>sns-negocio</artifactId>
+	<name>sns-negocio</name>
+	<packaging>ejb</packaging>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-ejb-plugin</artifactId>
+				<version>2.5</version>
+				<configuration>
+					<ejbVersion>3.1</ejbVersion>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+						</manifest>
+					</archive>
+					<generateClient>false</generateClient>
+					<clientIncludes>
+						<clientInclude>**/I*</clientInclude>
+					</clientIncludes>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18.1</version>
+				<configuration>
+					<systemPropertyVariables>
+						<openejb.logger.external>true</openejb.logger.external>
+					</systemPropertyVariables>
+
+					<forkCount>0</forkCount>
+					<!-- <reuseForks>true</reuseForks> -->
+					<printSummary>true</printSummary>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.openejb.maven</groupId>
+				<artifactId>tomee-maven-plugin</artifactId>
+				<version>1.7.1</version>
+				<configuration>
+					<tomeeVersion>1.7.1</tomeeVersion>
+					<tomeeClassifier>plus</tomeeClassifier>
+				</configuration>
+			</plugin>
+
+			<plugin>
+            	<groupId>org.apache.maven.plugins</groupId>
+            	<artifactId>maven-resources-plugin</artifactId>
+            	<version>2.7</version>
+            	<executions>
+                	<execution>
+	                    <id>log4j</id>
+    	                <phase>process-resources</phase>
+        	            <goals>
+            	            <goal>copy-resources</goal>
+                    	</goals>
+                    	<configuration>
+                        	<outputDirectory>${basedir}/target/classes</outputDirectory>
+                              	<resources>
+                              	<resource>
+                              	 <directory>${config.dir}</directory>
+      						  <filtering>true</filtering>
+                        	 	    </resource>
+                        	</resources>                  
+                    	</configuration>
+                	</execution>
+            	</executions>
+        	</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>mx.ift.sns</groupId>
+			<artifactId>sns-modelo</artifactId>
+			<version>0.4.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>mx.ift.sns</groupId>
+			<artifactId>sns-negocio-api</artifactId>
+			<version>0.4.3</version>
+		</dependency>
+
+		<!-- Servidor emebebido Apache TOMEE para pruebas JUnit. Es necesario declarar 
+			la dependencia antes de 'javaee-api' ya que contiene la implementación del 
+			EJBContainer. En 'javaee-api' solamente se encuentra la definición y en tiempo 
+			de ejecución no encontraría como resolver la clase si se pusiera 'javaee-api' 
+			primero. -->
+		<dependency>
+			<groupId>org.apache.openejb</groupId>
+			<artifactId>tomee-embedded</artifactId>
+			<version>1.0.0</version>
+
+			<exclusions>
+				<exclusion>  <!-- declare the exclusion here -->
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-jdk14</artifactId>
+				</exclusion>
+
+			</exclusions>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>8.0.1</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.10</version>
+
+
+
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.10</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>1.7.10</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.16</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>mx.ift.sns</groupId>
+			<artifactId>sns-dao</artifactId>
+			<version>0.4.3</version>
+			<!-- <type>ejb</type> -->
+			<type>jar</type>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.enterprise</groupId>
+			<artifactId>cdi-api</artifactId>
+			<version>1.2</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.11</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Oracle JDBC Driver: Instalación manual en el repositorio -->
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc6</artifactId>
+			<version>11.2.0.4</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.persistence</groupId>
+			<artifactId>eclipselink</artifactId>
+			<version>2.4.2</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>net.sourceforge.javacsv</groupId>
+			<artifactId>javacsv</artifactId>
+			<version>2.0</version>
+		</dependency>
+		
+		<!-- Only for process number portability files -->
+		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>3.7</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>3.11</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml-schemas</artifactId>
+			<version>3.11</version>
+		</dependency>
+
+		<dependency>
+			<groupId>stax</groupId>
+			<artifactId>stax-api</artifactId>
+			<version>1.0.1</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.xmlbeans</groupId>
+			<artifactId>xmlbeans</artifactId>
+			<version>2.6.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.8</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-vfs2</artifactId>
+			<version>2.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.jcraft</groupId>
+			<artifactId>jsch</artifactId>
+			<version>0.1.53</version>
+		</dependency>
+
+		<dependency>
+			<groupId>mx.ift.sns</groupId>
+			<artifactId>sns-utils</artifactId>
+			<version>0.4.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.10</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.7</version>
+		</dependency>
+
+	</dependencies>
+	
+	<profiles>
+    	<profile>
+	        <id>dev</id>
+    	    <activation>
+            	<activeByDefault>true</activeByDefault>
+        	</activation>
+        	<properties>
+	            <config.dir>${basedir}/config/dev</config.dir>
+        	</properties>
+    	</profile>
+
+    	<profile>
+	        <id>qa</id>
+        	<properties>
+	            <config.dir>${basedir}/config/qa</config.dir>
+        	</properties>
+    	</profile>
+    	
+    	<profile>
+	        <id>prod</id>
+        	<properties>            
+	            <config.dir>${basedir}/config/prod</config.dir>
+        	</properties>
+    	</profile>
+	</profiles>
+</project>

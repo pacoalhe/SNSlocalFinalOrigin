@@ -1,0 +1,714 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+
+<composite:interface>
+	<composite:attribute name="nameBean" required="true"></composite:attribute>
+</composite:interface>
+
+<composite:implementation>
+	<p:messages id="MSG_RedistribucionesNNG" showDetail="false"
+		showSummary="true" autoUpdate="false" closable="true" escape="false"
+		showIcon="false" />
+	<p:fieldset id="PNL_Busqueda">
+		<h:panelGrid columns="4" cellspacing="3" cellpadding="3">
+			<p:outputLabel for="SOM_ClaveServicio"
+				value="#{msg['catalogo.clave.servicio']}" />
+			<p:selectOneMenu id="SOM_ClaveServicio"
+				value="#{cc.attrs.nameBean.claveServicio}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.busquedaHabilitada)}">
+					style="width: 140px;">
+					<f:selectItem itemLabel="Seleccionar" />
+				<f:selectItems value="#{cc.attrs.nameBean.listaClavesServicio}"
+					var="claveServicioSel" itemLabel="#{claveServicioSel.codigo}"
+					itemValue="#{claveServicioSel.codigo}">
+				</f:selectItems>
+			</p:selectOneMenu>
+
+			<p:outputLabel value="#{msg['cesion.rangos.sna']}" />
+			<p:inputText id="TXT_Sna" value="#{cc.attrs.nameBean.sna}"
+				label="Identificador de Serie (SNA)" style="width:100px;"
+				maxlength="3"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.busquedaHabilitada)}"
+				validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+			</p:inputText>
+		</h:panelGrid>
+
+		<p:panelGrid id="PL_Busqueda" style="display:block;">
+			<p:commandButton value="#{msg['consultar.Buscar']}"
+				action="#{cc.attrs.nameBean.realizarBusqueda}"
+				update="TBL_Series MSG_RedistribucionesNNG MSG_RedistribucionesNNG"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.busquedaHabilitada)}"
+				style="height:30px; width:82px">
+			</p:commandButton>
+			<p:commandButton value="#{msg['consultar.Limpiar']}"
+				action="#{cc.attrs.nameBean.limpiarBusqueda}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.busquedaHabilitada)}"
+				update="PNL_Busqueda TBL_Series PNL_EdicionSerie MSG_RedistribucionesNNG"
+				style="height:30px; width:82px"
+				onclick="PF('TBL_Series').clearFilters()" process="@this">
+				<p:resetInput target="PNL_Busqueda" />
+			</p:commandButton>
+		</p:panelGrid>
+	</p:fieldset>
+
+	<p:dataTable id="TBL_Series" widgetVar="TBL_Series" var="rango"
+		value="#{cc.attrs.nameBean.rangoSerieModel}" lazy="true"
+		rowSelectMode="checkbox"
+		selection="#{cc.attrs.nameBean.multiSelectionManager.seleccionTabla}"
+		rowKey="#{rango.id.id}" paginator="true" paginatorPosition="bottom"
+		rows="5" resizableColumns="true" scrollable="true"
+		emptyMessage="#{msg['buscador.noresultados']}"
+		disabledSelection="#{!cc.attrs.nameBean.busquedaHabilitada}"
+		disabledTextSelection="#{!cc.attrs.nameBean.busquedaHabilitada}">
+
+		<f:facet name="header">#{msg['catalogos.series']}</f:facet>
+
+		<p:ajax event="toggleSelect"
+			listener="#{cc.attrs.nameBean.seleccionPagina}"
+			update=":#{p:component('PNL_EdicionSerie')} :#{p:component('PNL_Acciones')} :#{p:component('PNL_Agregar')}">
+		</p:ajax>
+
+		<p:ajax event="rowSelectCheckbox"
+			listener="#{cc.attrs.nameBean.seleccionRango}"
+			update=":#{p:component('PNL_EdicionSerie')} :#{p:component('PNL_Acciones')} :#{p:component('PNL_Agregar')}">
+		</p:ajax>
+
+		<p:ajax event="rowUnselectCheckbox"
+			listener="#{cc.attrs.nameBean.deSeleccionRango}"
+			update=":#{p:component('PNL_EdicionSerie')} :#{p:component('PNL_Acciones')} :#{p:component('PNL_Agregar')}">
+		</p:ajax>
+
+		<p:column selectionMode="multiple" headerText="" width="75"
+			style="font-size:12px;">
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.claveServicio']}" width="75"
+			style="text-align:center; font-size:12px;"
+			filterBy="#{rango.claveServicio.codigo}"
+			filterMaxLength="3">
+			<h:outputText value="#{rango.claveServicio.codigo}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.rangos.sna']}" width="75"
+			style="text-align:center; font-size:12px;"
+			filterBy="#{rango.serie.id.sna}"
+			filterMaxLength="3">
+			<h:outputText value="#{rango.serie.id.sna}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.rangos.inicial']}" width="100"
+			style="text-align:center; font-size:12px;"
+			filterBy="#{rango.numInicio}"
+			filterMaxLength="4">
+			<h:outputText value="#{rango.numInicio}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.rangos.final']}" width="100"
+			style="text-align:center; font-size:12px;"
+			filterBy="#{rango.numFinal}"
+			filterMaxLength="4">
+			<h:outputText value="#{rango.numFinal}" />
+		</p:column>
+
+		<p:column headerText="#{msg['proveedor.antesBcd']}" width="120"
+			style="text-align:center; font-size:12px;" filterBy="#{rango.bcd}"
+			filterMaxLength="4">
+			<h:outputText value="#{rango.bcd}" />
+		</p:column>
+		
+		<p:column headerText="#{msg['proveedor.ida']}" width="120"
+			style="text-align:center; font-size:12px;" filterBy="#{rango.asignatario.ida}"
+			filterMaxLength="4">
+			<h:outputText value="#{rango.asignatario.ida}" />
+		</p:column>
+
+		<p:column headerText="#{msg['asignacion.nng.cliente']}" width="75"
+			style="font-size:12px;" filterBy="#{rango.cliente}">
+			<h:outputText value="#{rango.cliente}" />
+		</p:column>
+
+		<p:column
+			headerText="#{msg['cesion.rangos.consecutivo']} #{msg.asignacion}"
+			width="100" style="font-size:12px;"
+			filterBy="#{rango.consecutivoAsignacion}">
+			<h:outputText value="#{rango.consecutivoAsignacion}" />
+		</p:column>
+
+		<p:column headerText="#{msg['redistribucion.estatus']}" width="115"
+			style="text-align:center; font-size:12px;"
+			filterBy="#{rango.estatus.descripcion}">
+			<h:outputText value="#{rango.estatus.descripcion}" />
+		</p:column>
+
+		<p:column headerText="#{msg['analisis.concesionario']}" width="120"
+			style="font-size:12px;" filterBy="#{rango.concesionario.nombre}">
+			<h:outputText value="#{rango.concesionario.nombre}" />
+		</p:column>
+
+		<p:column headerText="#{msg['analisis.pstArrendatario']}" width="120"
+			style="font-size:12px;" filterBy="#{rango.arrendatario.nombre}">
+			<h:outputText value="#{rango.arrendatario.nombre}" />
+		</p:column>
+	</p:dataTable>
+
+	<p:fieldset id="PNL_EdicionSerie">
+		<h:panelGrid id="PNL_OtrosFiltros_Ed" columns="6" cellpadding="3"
+			cellspacing="3" >
+			<p:outputLabel for="TXT_Cliente"
+				value="#{msg['asignacion.nng.cliente']}" />
+			<p:inputText id="TXT_Cliente" value="#{cc.attrs.nameBean.cliente}"
+				disabled="#{!cc.attrs.nameBean.edicionHabilitada}" style="width:200px">
+				<p:ajax event="change" global="false" update="CHK_ResetCliente"
+					listener="#{cc.attrs.nameBean.actualizarCheckBoxesEliminar}">
+				</p:ajax>
+			</p:inputText>
+
+			<p:outputLabel for="SOM_Concesionario"
+				value="#{msg['analisis.concesionario']}" />
+			<p:selectOneMenu id="SOM_Concesionario" 
+				style="width:250px" autoWidth="false"
+				value="#{cc.attrs.nameBean.pstConcesionarioSeleccionado}"
+				converter="#{proveedorConverter}"
+				disabled="#{!cc.attrs.nameBean.edicionHabilitada}">
+				<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+				<f:selectItems value="#{cc.attrs.nameBean.listaConcesionarios}"
+					var="pstArrendatarioSel"
+					itemLabel="#{pstArrendatarioSel.nombre}"
+					itemValue="#{pstArrendatarioSel}">
+				</f:selectItems>
+				<p:ajax event="change" global="false"
+					update="CHK_ResetConcesionario"
+					listener="#{cc.attrs.nameBean.actualizarCheckBoxesEliminar}">
+				</p:ajax>
+			</p:selectOneMenu>
+
+			<p:outputLabel for="SOM_Arrendatario"
+				value="#{msg['manual.numeracion.arredar']}" />
+			<p:selectOneMenu id="SOM_Arrendatario"
+				style="width:250px" autoWidth="false"
+				value="#{cc.attrs.nameBean.pstArrendatarioSeleccionado}"
+				converter="#{proveedorConverter}"
+				disabled="#{!cc.attrs.nameBean.edicionHabilitada}">
+				<f:selectItem itemLabel="#{msg['manual.generales.seleccionar']}" />
+				<f:selectItems value="#{cc.attrs.nameBean.listaArrendatarios}"
+					var="pstArrendatarioSel"
+					itemLabel="#{pstArrendatarioSel.nombre}"
+					itemValue="#{pstArrendatarioSel}">
+				</f:selectItems>
+				<p:ajax event="change" global="false"
+					update="CHK_ResetArrendatario"
+					listener="#{cc.attrs.nameBean.actualizarCheckBoxesEliminar}">
+				</p:ajax>
+			</p:selectOneMenu>
+
+			<p:outputLabel for="CHK_ResetCliente"
+				value="#{msg['redistribucion.eliminar']}" />
+			<p:selectBooleanButton id="CHK_ResetCliente" onLabel="Sí"
+				onIcon="ui-icon-check" offLabel="No" offIcon="ui-icon-close"
+				value="#{cc.attrs.nameBean.eliminarCliente}"
+				disabled="#{!(cc.attrs.nameBean.edicionHabilitada and (cc.attrs.nameBean.cliente == null or cc.attrs.nameBean.cliente eq ''))}">
+			</p:selectBooleanButton>
+
+			<p:outputLabel for="CHK_ResetConcesionario"
+				value="#{msg['redistribucion.eliminar']}" />
+			<p:selectBooleanButton id="CHK_ResetConcesionario" onLabel="Sí"
+				onIcon="ui-icon-check" offLabel="No" offIcon="ui-icon-close"
+				value="#{cc.attrs.nameBean.eliminarConcesionario}"
+				disabled="#{!(cc.attrs.nameBean.edicionHabilitada and cc.attrs.nameBean.pstConcesionarioSeleccionado == null)}">
+			</p:selectBooleanButton>
+
+			<p:outputLabel for="CHK_ResetArrendatario"
+				value="#{msg['redistribucion.eliminar']}" />
+			<p:selectBooleanButton id="CHK_ResetArrendatario" onLabel="Sí"
+				onIcon="ui-icon-check" offLabel="No" offIcon="ui-icon-close"
+				value="#{cc.attrs.nameBean.eliminarArrendatario}"
+				disabled="#{!(cc.attrs.nameBean.edicionHabilitada and cc.attrs.nameBean.pstArrendatarioSeleccionado == null)}">
+			</p:selectBooleanButton>
+		</h:panelGrid>
+
+		<h:panelGrid id="PNL_EdicionRegistro" columns="2"
+			style="margin: 0 auto;"
+			rendered="#{cc.attrs.nameBean.edicionRegistro}">
+			<p:commandButton value="#{msg['manual.numeracion.editar']}"
+				icon="ui-icon-check"
+				action="#{cc.attrs.nameBean.guardarEdicionRegistro}"
+				update="TBL_Redistribuciones PNL_EdicionSerie PNL_Busqueda TBL_Series MSG_RedistribucionesNNG"
+				style="height:30px; width:150px">
+			</p:commandButton>
+
+			<p:commandButton value="#{msg['automatica.Cancelar']}"
+				icon="ui-icon-close"
+				action="#{cc.attrs.nameBean.cancelarEdicionRegistro}"
+				update="TBL_Redistribuciones PNL_EdicionSerie PNL_Busqueda TBL_Series"
+				style="height:30px; width:92px">
+			</p:commandButton>
+		</h:panelGrid>
+	</p:fieldset>
+
+	<h:panelGrid id="PNL_DatosFraccion" columns="1" cellspacing="3"
+		cellpadding="3">
+		<h:panelGrid id="PNL_Acciones" columns="3" cellspacing="3"
+			cellpadding="3">
+			<p:outputLabel for="CHK_Fraccionar"
+				value="#{msg['cesion.rangos.fraccionamiento']}" />
+			<p:selectBooleanButton id="CHK_Fraccionar" onLabel="Sí"
+				onIcon="ui-icon-check" offLabel="No" offIcon="ui-icon-close"
+				value="#{cc.attrs.nameBean.usarFraccionamiento}"
+				disabled="#{!(cc.attrs.nameBean.edicionHabilitada and cc.attrs.nameBean.fraccionarHabilitado)}"
+				update="PNL_DatosFraccion">
+				<p:ajax event="change" update="PNL_DatosFraccion"
+					listener="#{cc.attrs.nameBean.seleccionUsarFraccionamiento}">
+				</p:ajax>
+			</p:selectBooleanButton>
+
+			<p:commandButton id="BTN_AgregarFracc"
+				value="#{msg['manual.numeracion.boton_agregar']}"
+				rendered="#{(cc.attrs.nameBean.usarFraccionamiento and cc.attrs.beanRef.solicitud.estadoSolicitud.codigo != 'T')}"
+				action="#{cc.attrs.nameBean.agregarFraccionamiento}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.fraccionarHabilitado)}"
+				update="TBL_SerieAFraccionar MSG_RedistribucionesNNG"
+				style="height:30px; width:80px">
+			</p:commandButton>
+
+			<p:commandButton id="BTN_AgregarFracc_SolTerminada"
+				value="#{msg['manual.numeracion.boton_agregar']}"
+				rendered="#{(cc.attrs.nameBean.usarFraccionamiento and cc.attrs.beanRef.solicitud.estadoSolicitud.codigo == 'T')}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.fraccionarHabilitado)}"
+				onclick="PF('DLG_AgregarFraccion_SolTerminada').show()"
+				style="height:30px; width:80px">
+			</p:commandButton>
+		</h:panelGrid>
+
+		<p:fieldset legend="#{msg['liberacion.serieRangoFraccionar']}"
+			rendered="#{cc.attrs.nameBean.usarFraccionamiento}">
+			<p:dataTable id="TBL_SerieAFraccionar" var="rango"
+				value="#{cc.attrs.nameBean.listaRangosAFraccionar}" paginator="true"
+				paginatorPosition="bottom" selectionMode="single"
+				selection="#{cc.attrs.nameBean.rangoAFraccionar}"
+				rowKey="#{rango.id.id}" rows="3" resizableColumns="true"
+				disabledSelection="#{!cc.attrs.nameBean.tabHabilitado}"
+				disabledTextSelection="#{!cc.attrs.nameBean.tabHabilitado}"
+				emptyMessage="#{msg['buscador.noresultados']}">
+
+				<p:ajax event="rowSelect" global="false"
+					listener="#{cc.attrs.nameBean.seleccionRangoAFraccionar}"
+					update=":#{p:component('TBL_RangosFraccionados')} :#{p:component('MSG_RedistribucionesNNG')}">
+				</p:ajax>
+
+				<p:column headerText="#{msg['consultar.Operaciones']}"
+					style="text-align:center;">
+					<p:commandButton title="#{msg.eliminar}"
+						icon="ui-icon-circle-close" update="TBL_SerieAFraccionar"
+						disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+						onclick="PF('DLG_Eliminar_Rango_Fraccion').show()">
+						<f:setPropertyActionListener value="#{rango}"
+							target="#{cc.attrs.nameBean.rangoAFraccionar}">
+						</f:setPropertyActionListener>
+					</p:commandButton>
+				</p:column>
+
+				<p:column headerText="#{msg['cesion.claveServicio']}"
+					style="text-align:center;">
+					<h:outputText value="#{rango.claveServicio.codigo}" />
+				</p:column>
+
+				<p:column headerText="#{msg['cesion.rangos.sna']}"
+					style="text-align:center;">
+					<h:outputText value="#{rango.id.sna}" />
+				</p:column>
+
+				<p:column headerText="#{msg['cesion.rangos.inicial']}"
+					style="text-align:center;">
+					<h:outputText value="#{rango.numInicio}" />
+				</p:column>
+
+				<p:column headerText="#{msg['cesion.rangos.final']}"
+					style="text-align:center;">
+					<h:outputText value="#{rango.numFinal}" />
+				</p:column>
+
+			</p:dataTable>
+		</p:fieldset>
+
+		<h:panelGrid columns="2"
+			rendered="#{cc.attrs.nameBean.usarFraccionamiento}">
+			<h:panelGrid columns="6" cellspacing="3" cellpadding="3">
+				<p:outputLabel for="TXT_Cantidad"
+					value="#{msg['cesion.rangos.cantidad']}" />
+				<p:inputText id="TXT_Cantidad" required="true"
+					value="#{cc.attrs.nameBean.cantidad}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					validator="#{clientSideFieldValidatorBean.checkEnteroPositivoMayorCero}">
+					<p:ajax event="change" global="false"
+						listener="#{cc.attrs.nameBean.calcularFinalRango}"
+						update="TXT_NumInicial TXT_NumFinal MSG_RedistribucionesNNG">
+					</p:ajax>
+				</p:inputText>
+
+				<p:outputLabel for="TXT_NumInicial"
+					value="#{msg['cesion.rangos.inicial']}" />
+				<p:inputText id="TXT_NumInicial" required="true"
+					value="#{cc.attrs.nameBean.numInicial}"
+					disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+					validator="#{clientSideFieldValidatorBean.checkEnteroPositivo}">
+					<p:ajax event="change" global="false"
+						listener="#{cc.attrs.nameBean.calcularFinalRango}"
+						update="TXT_NumFinal MSG_RedistribucionesNNG">
+					</p:ajax>
+				</p:inputText>
+
+				<p:outputLabel for="TXT_NumFinal"
+					value="#{msg['cesion.rangos.final']}" />
+				<p:inputText id="TXT_NumFinal" value="#{cc.attrs.nameBean.numFinal}"
+					disabled="true" />
+			</h:panelGrid>
+
+			<p:commandButton value="#{msg['liberacion.fraccionar']}"
+				action="#{cc.attrs.nameBean.aplicarFraccionamiento}"
+				disabled="#{!cc.attrs.nameBean.tabHabilitado}"
+				update="TBL_SerieAFraccionar TBL_RangosFraccionados MSG_RedistribucionesNNG"
+				style="height:30px; width:92px">
+			</p:commandButton>
+		</h:panelGrid>
+
+		<p:fieldset legend="#{msg['liberacion.serieRangoFraccionado']}"
+			rendered="#{cc.attrs.nameBean.usarFraccionamiento}">
+			<p:dataTable id="TBL_RangosFraccionados" var="rango"
+				value="#{cc.attrs.nameBean.listaRangoFraccionados}" paginator="true"
+				paginatorPosition="bottom" selectionMode="single"
+				selection="#{cc.attrs.nameBean.rangoFraccionado}"
+				rowKey="#{rango.id.id}" rows="3" resizableColumns="true"
+				disabledSelection="#{!cc.attrs.nameBean.tabHabilitado}"
+				disabledTextSelection="#{!cc.attrs.nameBean.tabHabilitado}"
+				emptyMessage="#{msg['buscador.noresultados']}">
+
+				<p:column headerText="#{msg['cesion.claveServicio']}"
+					style="text-align:center;">
+					<h:outputText value="#{rango.claveServicio.codigo}" />
+				</p:column>
+
+				<p:column headerText="#{msg['cesion.rangos.sna']}"
+					style="text-align:center;">
+					<h:outputText value="#{rango.id.sna}" />
+				</p:column>
+
+				<p:column headerText="#{msg['cesion.rangos.inicial']}"
+					style="text-align:center;">
+					<h:outputText value="#{rango.numInicio}" />
+				</p:column>
+
+				<p:column headerText="#{msg['cesion.rangos.final']}"
+					style="text-align:center;">
+					<h:outputText value="#{rango.numFinal}" />
+				</p:column>
+
+				<p:column headerText="#{msg['buscadorCesiones.status']}"
+					style="text-align:center;">
+					<h:outputText value="#{rango.estatus.descripcion}" />
+				</p:column>
+
+			</p:dataTable>
+		</p:fieldset>
+	</h:panelGrid>
+
+	<h:panelGrid id="PNL_Agregar" columns="1" style="text-align:center"
+		width="100%">
+		<h:panelGroup style="display:block; text-align:center">
+			<p:commandButton id="BTN_AgregarRedist"
+				value="#{msg['manual.numeracion.boton_agregar']}"
+				action="#{cc.attrs.nameBean.agregarRedistribucion(true)}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.edicionHabilitada)}"
+				rendered="#{((!cc.attrs.nameBean.edicionRegistro) and cc.attrs.nameBean.solicitud.estadoSolicitud.codigo != 'T')}"
+				update="TBL_Redistribuciones TBL_EstadoActual MSG_RedistribucionesNNG btnSalvar PNL_EdicionSerie 
+							TBL_Series PNL_Agregar PNL_Acciones DLG_ArrendatarioRedNng"
+				style="height:30px; width:92px">
+			</p:commandButton>
+
+			<p:commandButton id="BTN_AgregarRedist_SolTeminada"
+				value="#{msg['manual.numeracion.boton_agregar']}"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.edicionHabilitada)}"
+				rendered="#{((!cc.attrs.nameBean.edicionRegistro) and cc.attrs.nameBean.solicitud.estadoSolicitud.codigo == 'T')}"
+				onclick="PF('DLG_Agregar_SolTerminada').show()"
+				style="height:30px; width:92px">
+			</p:commandButton>
+		</h:panelGroup>
+	</h:panelGrid>
+
+	<p:dataTable id="TBL_EstadoActual" var="rango"
+		value="#{cc.attrs.nameBean.listaRangosEstadoActual}" paginator="true"
+		paginatorPosition="bottom" rows="3" resizableColumns="true"
+		scrollable="true" emptyMessage="#{msg['buscador.noresultados']}">
+
+		<f:facet name="header">#{msg['redistribucion.Actual']}</f:facet>
+
+		<p:column headerText="#{msg['cesion.rangos.consecutivo']}" width="75"
+			style="font-size:12px;">
+			<h:outputText value="#{rango.solicitud.id}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.claveServicio']}" width="75"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{rango.claveServicio.codigo}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.rangos.sna']}" width="75"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{rango.id.sna}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.rangos.inicial']}" width="100"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{rango.numInicio}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.rangos.final']}" width="100"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{rango.numFinal}" />
+		</p:column>
+
+		<p:column headerText="#{msg['asignacion.nng.cliente']}" width="75"
+			style="font-size:12px;">
+			<h:outputText value="#{rango.cliente}" />
+		</p:column>
+
+		<p:column headerText="#{msg['proveedor.antesBcd']}" width="120"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{rango.bcd}" />
+		</p:column>
+
+		<p:column headerText="#{msg['proveedor.ida']}" width="120"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{rango.asignatario.ida}" />
+		</p:column>
+
+		<p:column headerText="#{msg['analisis.concesionario']}" width="120"
+			style="font-size:12px;">
+			<h:outputText value="#{rango.concesionario.nombre}" />
+		</p:column>
+
+		<p:column headerText="#{msg['catalogo.proveedores.edicion.BcdRed']}"
+			width="75" style="text-align:center; font-size:12px;">
+			<h:outputText value="#{rango.concesionario.bcd}" />
+		</p:column>
+
+		<p:column headerText="#{msg['analisis.pstArrendatario']}" width="120"
+			style="font-size:12px;">
+			<h:outputText value="#{rango.arrendatario.nombre}" />
+		</p:column>
+
+		<p:column headerText="#{msg['redistribucion.estatus']}" width="115"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{rango.estatus.descripcion}" />
+		</p:column>
+	</p:dataTable>
+
+	<p:dataTable id="TBL_Redistribuciones" var="redist"
+		value="#{cc.attrs.nameBean.listaRedistSol}" paginator="true"
+		paginatorPosition="bottom" rows="3" resizableColumns="true"
+		scrollable="true" emptyMessage="#{msg['buscador.noresultados']}">
+
+		<f:facet name="header">#{msg['redistribucion.Actualizado']}</f:facet>
+
+		<p:column headerText="#{msg['consultar.Operaciones']}" width="100"
+			style="text-align:center; font-size:12px;">
+			<p:commandButton title="#{msg.editar}" icon="ui-icon-pencil"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and (!cc.attrs.nameBean.edicionRegistro) and (redist.estatus.codigo == 'P'))}"
+				action="#{cc.attrs.nameBean.editarRedistribucion}"
+				update="TBL_Redistribuciones :#{p:component('PNL_Busqueda')} :#{p:component('TBL_Series')} 
+						:#{p:component('PNL_EdicionSerie')} :#{p:component('BTN_AgregarRedist')} :#{p:component('BTN_AgregarRedist_SolTeminada')}
+						:#{p:component('PNL_DatosFraccion')}">
+				<f:setPropertyActionListener value="#{redist}"
+					target="#{cc.attrs.nameBean.redistSol}">
+				</f:setPropertyActionListener>
+			</p:commandButton>
+
+			<p:commandButton title="#{msg.eliminar}" icon="ui-icon-circle-close"
+				disabled="#{!(cc.attrs.nameBean.tabHabilitado and (!cc.attrs.nameBean.edicionRegistro) and (redist.estatus.codigo != 'X'))}"
+				update="TBL_Redistribuciones" onclick="PF('DLG_Eliminar').show()">
+				<f:setPropertyActionListener value="#{redist}"
+					target="#{cc.attrs.nameBean.redistSol}">
+				</f:setPropertyActionListener>
+			</p:commandButton>
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.rangos.consecutivo']}" width="75"
+			style="font-size:12px;">
+			<h:outputText value="#{redist.solicitudRedistribucion.id}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.claveServicio']}" width="75"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{redist.idClaveServicio}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.rangos.sna']}" width="75"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{redist.sna}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.rangos.inicial']}" width="100"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{redist.numInicio}" />
+		</p:column>
+
+		<p:column headerText="#{msg['cesion.rangos.final']}" width="100"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{redist.numFinal}" />
+		</p:column>
+
+		<p:column headerText="#{msg['asignacion.nng.cliente']}" width="75"
+			style="font-size:12px;">
+			<h:outputText value="#{redist.cliente}" />
+		</p:column>
+
+		<p:column headerText="#{msg['proveedor.antesBcd']}" width="120"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{redist.bcd}" />
+		</p:column>
+
+		<p:column headerText="#{msg['proveedor.ida']}" width="120"
+			style="text-align:center; font-size:12px;">
+			<h:outputText value="#{redist.proveedorSolicitante.ida}" />
+		</p:column>
+
+		<p:column headerText="#{msg['analisis.concesionario']}" width="120"
+			style="font-size:12px;">
+			<h:outputText value="#{redist.proveedorConcesionario.nombre}" />
+		</p:column>
+
+		<p:column headerText="#{msg['catalogo.proveedores.edicion.BcdRed']}"
+			width="75" style="text-align:center; font-size:12px;">
+			<h:outputText value="#{redist.proveedorConcesionario.bcd}" />
+		</p:column>
+
+		<p:column headerText="#{msg['analisis.pstArrendatario']}" width="120"
+			style="font-size:12px;">
+			<h:outputText value="#{redist.proveedorArrendatario.nombre}" />
+		</p:column>
+
+		<p:column headerText="#{msg['redistribucion.estatus']}" width="115"
+			style="text-align:center; font-size:12px;">
+			<h:outputText
+				value="#{redist.estatus.descripcion == null ? 'Pendiente' : redist.estatus.descripcion}" />
+		</p:column>
+	</p:dataTable>
+
+	<p:panel styleClass="botonera alaDcha">
+		<p:commandButton id="btnSalvar"
+			value="#{msg['manual.generales.btn.guardar']}" icon="ui-icon-disk"
+			actionListener="#{cc.attrs.nameBean.guardarCambiosManual}"
+			disabled="#{!(cc.attrs.nameBean.tabHabilitado and cc.attrs.nameBean.salvarHabilitado)}"
+			update="MSG_RedistribucionesNNG" style="height:30px;  width:96px">
+		</p:commandButton>
+	</p:panel>
+
+	<p:confirmDialog id="DLG_Eliminar_Rango_Fraccion"
+		widgetVar="DLG_Eliminar_Rango_Fraccion" global="false"
+		closeOnEscape="true" closable="false"
+		message="#{msg['eliminar.registro.confirmar']}"
+		header="#{msg['eliminar.registro']}" severity="alert"
+		appendTo="@(body)">
+		<p:commandButton value="Sí" icon="ui-icon-check"
+			oncomplete="PF('DLG_Eliminar_Rango_Fraccion').hide();"
+			style="height:30px; width:82px">
+			<p:ajax event="click" global="false"
+				listener="#{cc.attrs.nameBean.eliminarRangoAFraccionar}"
+				update="TBL_SerieAFraccionar TBL_RangosFraccionados MSG_RedistribucionesNNG">
+			</p:ajax>
+		</p:commandButton>
+		<p:commandButton type="button" value="No" icon="ui-icon-close"
+			onclick="PF('DLG_Eliminar_Rango_Fraccion').hide();"
+			style="height:30px; width:82px">
+		</p:commandButton>
+	</p:confirmDialog>
+
+	<p:confirmDialog id="DLG_Eliminar" widgetVar="DLG_Eliminar"
+		global="false" closeOnEscape="true" closable="false"
+		message="#{msg['eliminar.registro.confirmar']}"
+		header="#{msg['eliminar.registro']}" severity="alert"
+		appendTo="@(body)">
+		<p:commandButton value="Sí" icon="ui-icon-check"
+			oncomplete="PF('DLG_Eliminar').hide();"
+			style="height:30px; width:82px">
+			<p:ajax event="click" global="false"
+				listener="#{cc.attrs.nameBean.eliminarRedistribucion}"
+				update="TBL_Redistribuciones TBL_EstadoActual MSG_RedistribucionesNNG">
+			</p:ajax>
+		</p:commandButton>
+		<p:commandButton type="button" value="No" icon="ui-icon-close"
+			onclick="PF('DLG_Eliminar').hide();" style="height:30px; width:82px">
+		</p:commandButton>
+	</p:confirmDialog>
+
+	<p:confirmDialog id="DLG_Agregar_SolTerminada"
+		widgetVar="DLG_Agregar_SolTerminada" global="false"
+		closeOnEscape="true" closable="false"
+		message="#{msg['modificar.solicitud.terminada']}"
+		header="#{msg['dialog.header.confirmacion']}" severity="alert"
+		appendTo="@(body)">
+		<p:commandButton value="Sí" icon="ui-icon-check"
+			oncomplete="PF('DLG_Agregar_SolTerminada').hide();"
+			style="height:30px; width:82px">
+			<p:ajax event="click" global="false"
+				listener="#{cc.attrs.nameBean.agregarRedistribucion(true)}"
+				update="TBL_Redistribuciones TBL_EstadoActual MSG_RedistribucionesNNG btnSalvar 
+							PNL_EdicionSerie TBL_Series PNL_Agregar PNL_Acciones DLG_ArrendatarioRedNng">
+			</p:ajax>
+		</p:commandButton>
+		<p:commandButton type="button" value="No" icon="ui-icon-close"
+			onclick="PF('DLG_Agregar_SolTerminada').hide();"
+			style="height:30px; width:82px">
+		</p:commandButton>
+	</p:confirmDialog>
+
+	<p:confirmDialog id="DLG_AgregarFraccion_SolTerminada"
+		widgetVar="DLG_AgregarFraccion_SolTerminada" global="false"
+		closeOnEscape="true" closable="false"
+		message="#{msg['modificar.solicitud.terminada']}"
+		header="#{msg['dialog.header.confirmacion']}" severity="alert"
+		appendTo="@(body)">
+		<p:commandButton value="Sí" icon="ui-icon-check"
+			oncomplete="PF('DLG_AgregarFraccion_SolTerminada').hide();"
+			style="height:30px; width:82px">
+			<p:ajax event="click" global="false"
+				listener="#{cc.attrs.nameBean.agregarFraccionamiento}"
+				update="TBL_SerieAFraccionar MSG_RedistribucionesNNG">
+			</p:ajax>
+		</p:commandButton>
+		<p:commandButton type="button" value="No" icon="ui-icon-close"
+			onclick="PF('DLG_AgregarFraccion_SolTerminada').hide();"
+			style="height:30px; width:82px">
+		</p:commandButton>
+	</p:confirmDialog>
+
+	<p:confirmDialog id="DLG_ArrendatarioRedNng"
+		widgetVar="DLG_ArrendatarioRedNng" global="false" closeOnEscape="true"
+		closable="false" header="#{msg['dialog.header.confirmacion']}"
+		severity="alert" appendTo="@(body)">
+		<f:facet name="message">
+			<h:outputText value="#{cc.attrs.nameBean.rangoArrendadoMsg}"
+				escape="false" />
+		</f:facet>
+		<p:commandButton value="Sí" icon="ui-icon-check" global="false"
+			oncomplete="PF('DLG_ArrendatarioRedNng').hide();"
+			style="height:30px; width:82px">
+			<p:ajax event="click"
+				listener="#{cc.attrs.nameBean.agregarRedistribucion(false)}"
+				update="TBL_Redistribuciones TBL_EstadoActual MSG_RedistribucionesNNG btnSalvar">
+			</p:ajax>
+		</p:commandButton>
+		<p:commandButton type="button" value="No" icon="ui-icon-close"
+			onclick="PF('DLG_ArrendatarioRedNng').hide();"
+			style="height:30px; width:82px">
+		</p:commandButton>
+	</p:confirmDialog>
+
+</composite:implementation>
+</html>
