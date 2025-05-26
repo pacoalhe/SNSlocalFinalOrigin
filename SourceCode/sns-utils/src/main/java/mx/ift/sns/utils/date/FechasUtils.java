@@ -339,4 +339,17 @@ public final class FechasUtils {
 		return dateFormat.format(cal.getTime());
 	}
 
+    public static final String FECHA_PRUEBA_STR = "2025-05-08";
+    public static final Date FECHA_PRUEBA;
+
+    static {
+        Date tmp = null;
+        try {
+            tmp = new SimpleDateFormat("yyyy-MM-dd").parse(FECHA_PRUEBA_STR);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        FECHA_PRUEBA = tmp;
+    }
+
 }

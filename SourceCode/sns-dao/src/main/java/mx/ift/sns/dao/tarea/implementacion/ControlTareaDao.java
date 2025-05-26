@@ -25,7 +25,7 @@ public class ControlTareaDao extends BaseDAO<ControlTarea> implements IControlTa
 
         try {
             TypedQuery<ControlTarea> tQuery = getEntityManager().createQuery(sbQuery.toString(), ControlTarea.class);
-            tQuery.setParameter("libre", false);
+            tQuery.setParameter("libre", 0); //Valor entero, dejo de ser boolean
             tQuery.setParameter("fecha", fecha);
             tQuery.setParameter("tarea", tarea);
 
@@ -37,6 +37,19 @@ public class ControlTareaDao extends BaseDAO<ControlTarea> implements IControlTa
         }
     }
 
+    /**
+     * FJAH 08052025 Refactorización para evitar dejar con harcode de tareas a no ejecutarse.
+     * 0 = desbloqueado
+     * 1 = bloqueo automático (cron)
+     * 2 = bloqueo manual protegido
+     */
+    @Override
+    public int desbloqueoTareas() {
+        String sQuery = "UPDATE ControlTarea SET bloqueado = 0 WHERE bloqueado = 1";
+        Query query = getEntityManager().createQuery(sQuery);
+        return query.executeUpdate();
+    }
+    /*
     @Override
     public void desbloqueoTareas() {
         String sQuery = "UPDATE ControlTarea SET bloqueado = :libre";
@@ -46,4 +59,6 @@ public class ControlTareaDao extends BaseDAO<ControlTarea> implements IControlTa
 
         query.executeUpdate();
     }
+
+     */
 }

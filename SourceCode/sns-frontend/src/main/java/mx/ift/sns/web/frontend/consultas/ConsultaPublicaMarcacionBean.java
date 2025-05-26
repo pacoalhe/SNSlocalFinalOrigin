@@ -10,11 +10,14 @@ import java.util.Locale;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
 import javax.persistence.NoResultException;
 
+import mx.ift.sns.negocio.pnn.IPlanNumeracionService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +80,9 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 
     @EJB(mappedName = "PlanMaestroService")
     private IPlanMaestroService planService;
+
+	@EJB(mappedName = "PlanNumeracionService")
+	private IPlanNumeracionService planNumeracionService;
 
     /** Campo poblacion buscada. */
     private Poblacion poblacion;
@@ -292,10 +298,10 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    Collections.sort(poblacionesNameAux);
 	} catch (NoResultException e) {
 	    LOGGER.error("Error al buscar todas las poblaciones" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
 	} catch (Exception e) {
 	    LOGGER.error("Error al buscar todas las poblaciones" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
 	return poblacionesNameAux;
     }
@@ -325,7 +331,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.setMunicipioInfoTableActivated(false);
 	} catch (Exception e) {
 	    LOGGER.error("Error al limpiar todo" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -394,7 +400,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -417,7 +423,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado de carga de datos al buscar por número local" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -483,7 +489,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado al buscar por alguno de los cuatro inputs" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -644,16 +650,131 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
-    /**
-     * Busca el proveedor a partir de un rangoSerie.
-     * 
-     * @param rango            RangoSerie
-     * @param numeroConsultado Strings
-     */
+	/**
+	 * FJAH 16042025-05052025
+	 * Refactorización del proveedor
+	 * Busca el proveedor a partir de un rangoSerie.
+	 *
+	 * @param rango            RangoSerie
+	 * @param numeroConsultado Strings
+	 */
+	private void findProveedorPrestador(RangoSerie rango, String numeroConsultado) {
+		Boolean numeroPortadoBool = false;
+		try {
+			LOGGER.info("===> findProveedorPrestador ejecutado para número " + numeroConsultado);
+
+			NumeroPortado numeroPortado = ngPublicService.findNumeroPortado(numeroConsultado);
+			String action = ngPublicService.getActionPorted(ACTION_REVERSE);
+
+			LOGGER.info("Se realiza la busqueda del numero en el plan maestro ******");
+
+			LOGGER.info("===> Resultado findNumeroPortado: " + (numeroPortado != null ? "Sí" : "No"));
+			if (numeroPortado != null) {
+				LOGGER.info("    RIDA: " + numeroPortado.getRida() + ", DIDA: " + numeroPortado.getDida() + ", ACTION: " + numeroPortado.getAction());
+			}
+
+			PlanMaestroDetalle planEncontrado = planNumeracionService.getDetalleNumeroConsultaPublica(
+					Long.valueOf(numeroConsultado), Long.valueOf(numeroConsultado));
+			LOGGER.info("===> Resultado planService.getPlanMaestroDetalle: " + (planEncontrado != null ? "Sí" : "No"));
+
+			boolean numIni = false;
+			boolean numFin = false;
+
+			Nir nir = ngPublicService.getNirById(rango.getId().getIdNir());
+
+			if (nir != null && rango != null && rango.getId() != null) {
+				int codigo = nir.getCodigo();
+				BigDecimal sna = rango.getId().getSna();
+				String numInicio = rango.getNumInicio();
+				String numFinal = rango.getNumFinal();
+
+				if (sna != null && numInicio != null && numFinal != null) {
+					Long numeroIni = Long.valueOf(codigo + sna.toString() + numInicio);
+					Long numeroFinal = Long.valueOf(codigo + sna.toString() + numFinal);
+
+					Long numeroLong = Long.valueOf(numeroConsultado != null ? numeroConsultado : "0");
+					numIni = numeroIni <= numeroLong;
+					numFin = numeroFinal >= numeroLong;
+				}
+			}
+
+			LOGGER.info("===> Dentro de rango? " + (numIni && numFin));
+
+			if (numeroPortado != null || (planEncontrado != null && numIni && numFin)) {
+				List<Proveedor> pstIDOListAux = new ArrayList<>();
+				String actionPorted = "";
+
+				if (numeroPortado != null) {
+					numeroPortadoBool = true;
+					actionPorted = numeroPortado.getAction();
+
+					LOGGER.info("===> Buscando PST por RIDA de Portados...");
+					pstIDOListAux = ngPublicService.getProveedorByIDO(numeroPortado.getRida());
+
+					if (pstIDOListAux.isEmpty()) {
+						LOGGER.info("No se encontró por IDO. Buscando por IDA: {}", numeroPortado.getRida());
+						pstIDOListAux = ngPublicService.getProveedorByIDA(numeroPortado.getRida());
+
+						if (pstIDOListAux.isEmpty()) {
+							LOGGER.info("No se encontró por RIDA. Buscando por DIDA como IDA: {}", numeroPortado.getDida());
+							pstIDOListAux = ngPublicService.getProveedorByIDA(numeroPortado.getDida());
+
+							if (pstIDOListAux.isEmpty()) {
+								LOGGER.info("No se encontró por DIDA en IDA. Buscando por DIDA como IDO: {}", numeroPortado.getDida());
+								pstIDOListAux = ngPublicService.getProveedorByIDO(numeroPortado.getDida());
+							}
+						}
+					}
+				} else if (planEncontrado != null && !numeroPortadoBool) {
+					pstIDOListAux = ngPublicService.getProveedorByIDA(BigDecimal.valueOf(planEncontrado.getIda()));
+
+					if (pstIDOListAux.isEmpty()) {
+						pstIDOListAux = ngPublicService.getProveedorByIDO(BigDecimal.valueOf(planEncontrado.getIda()));
+
+						if (pstIDOListAux.isEmpty()) {
+							pstIDOListAux = ngPublicService.getProveedorByIDO(BigDecimal.valueOf(planEncontrado.getIdo()));
+						}
+					}
+				}
+
+				if (!pstIDOListAux.isEmpty()) {
+					for (Proveedor pst : pstIDOListAux) {
+						if (pstIDOListAux.size() == 1 || (pst.getConsultaPublicaSns() != null
+								&& pst.getConsultaPublicaSns().equals(NUMERACION_GEOGRAFICA))) {
+							this.setPrestadorNumero(pst);
+						}
+					}
+				} else {
+					this.setPrestadorNumero(null);
+					LOGGER.info("===> No se encontró proveedor actual en CAT_PST para RIDA/DIDA. Se mantiene valor anterior o se deja en null.");
+					FacesContext.getCurrentInstance().addMessage(null,
+							new FacesMessage(FacesMessage.SEVERITY_WARN,
+									"Proveedor no encontrado",
+									"Proveedor actual no registrado en el catálogo"));
+				}
+
+			} else {
+				Proveedor proveedorAux = rango.getArrendatario();
+				if (proveedorAux == null) {
+					proveedorAux = rango.getAsignatario();
+				}
+				this.setPrestadorNumero(proveedorAux);
+			}
+
+			if (this.prestadorNumero != null) {
+				this.setNumeracionAsignadaProveedor(ngPublicService.getTotalNumeracionAginadaProveedor(this.prestadorNumero.getId()));
+			}
+
+		} catch (Exception e) {
+			LOGGER.info("===> [ERROR] Excepción en findProveedorPrestador: " + e.getMessage());
+			LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
+		}
+	}
+	/*
     private void findProveedorPrestador(RangoSerie rango, String numeroConsultado) {
 	Boolean numeroPortadoBool = false;
 	try {
@@ -774,9 +895,11 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
+
+	 */
 
     /**
      * Obtiene las poblaciones y la numeracion asignada del proveedor del numero
@@ -791,7 +914,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.nirsProveedorTabla = false;
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -815,7 +938,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -831,7 +954,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.nirsProveedorTabla = false;
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -847,7 +970,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.nirsProveedorTabla = true;
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -870,7 +993,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -888,7 +1011,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    numeroStr = numFormato.format(num);
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado al dar formato a la numeración asignada" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
 	return numeroStr;
     }
@@ -922,7 +1045,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.setTipoModalidadRed(resultado);
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado al devolver el tipo de red de la numeración consultada" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -937,7 +1060,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.setNirsPoblacion(ngPublicService.findAllNirByPoblacion(poblacion));
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado de carga de datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
 	return this.nirsPoblacion;
     }
@@ -963,7 +1086,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado de carga de datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -1023,7 +1146,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado de carga de datos de la población seleccionada" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -1073,7 +1196,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado de carga de datos de la población seleccionada" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -1100,7 +1223,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error al crear el inegio del municipio" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
 	return inegiMunicipio;
     }
@@ -1201,7 +1324,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("error en la carga de datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 
@@ -1240,7 +1363,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error al cargar datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
+	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
 	}
     }
 

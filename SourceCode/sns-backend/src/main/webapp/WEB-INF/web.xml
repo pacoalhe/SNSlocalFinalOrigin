@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns="http://java.sun.com/xml/ns/javaee"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-	version="3.0">
+		 xmlns="http://java.sun.com/xml/ns/javaee"
+		 xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+		 version="3.0">
+
 	<display-name>sns-backend</display-name>
 
 	<context-param>
-		<description>State saving method: 'client' or 'server' (=default). See JSF Specification 2.5.2</description>
 		<param-name>javax.faces.STATE_SAVING_METHOD</param-name>
 		<param-value>server</param-value>
 	</context-param>
@@ -17,13 +17,8 @@
 	</context-param>
 
 	<context-param>
-		<description>
-			Means that you get extra debugging support. In particular, a Java action that
-			has no corresponding file results in an error message, rather than the original
-			page being displayed with no hint about the problem. Production Development
-		</description>
 		<param-name>javax.faces.PROJECT_STAGE</param-name>
-		<param-value>Production</param-value>
+		<param-value>Development</param-value>
 	</context-param>
 
 	<context-param>
@@ -92,137 +87,5 @@
 		<error-code>404</error-code>
 		<location>/errores/not-found.xhtml</location>
 	</error-page>
-
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS index</web-resource-name>
-			<url-pattern>/index.xhtml</url-pattern>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ANALISTA</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS ng</web-resource-name>
-			<url-pattern>/numeracion-geografica/*</url-pattern>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ANALISTA</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS nng</web-resource-name>
-			<url-pattern>/numeracion-no-geografica/*</url-pattern>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ANALISTA</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS cpsn</web-resource-name>
-			<url-pattern>/cpsn/*</url-pattern>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ANALISTA</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS cpsi</web-resource-name>
-			<url-pattern>/cpsi/*</url-pattern>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ANALISTA</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS reporteador</web-resource-name>
-			<url-pattern>/reporteador/*</url-pattern>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ANALISTA</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS bitacora</web-resource-name>
-			<url-pattern>/bitacora/*</url-pattern>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ANALISTA</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS portabilidad</web-resource-name>
-			<url-pattern>/portabilidad/*</url-pattern>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ANALISTA</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS ac</web-resource-name>
-			<url-pattern>/admin-catalogos/*</url-pattern>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ANALISTA</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-
-	<login-config>
-		<auth-method>FORM</auth-method>
-		<realm-name>default</realm-name>
-		<form-login-config>
-			<form-login-page>/login.xhtml</form-login-page>
-			<form-error-page>/errores/login-error.xhtml</form-error-page>
-		</form-login-config>
-	</login-config>
-
-	<security-role>
-		<role-name>ANALISTA</role-name>
-	</security-role>
-
-
 
 </web-app>

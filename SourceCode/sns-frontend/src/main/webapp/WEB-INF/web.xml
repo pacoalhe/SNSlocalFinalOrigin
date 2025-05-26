@@ -1,37 +1,27 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns="http://java.sun.com/xml/ns/javaee"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-	version="3.0">
-
+<?xml version="1.0" encoding="utf-8"?>
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
 	<display-name>sns-frontend</display-name>
-
 	<context-param>
 		<description>State saving method: 'client' or 'server' (=default). See JSF Specification 2.5.2</description>
 		<param-name>javax.faces.STATE_SAVING_METHOD</param-name>
 		<param-value>server</param-value>
 	</context-param>
-
-<!-- 	<context-param> -->
-<!-- 		<param-name>primefaces.PUBLIC_CAPTCHA_KEY</param-name> -->
-<!-- 		<param-value>6LeaNQwTAAAAAPyuQoe5HSKotN3T7Fk8ab60EXoa</param-value> -->
-<!-- 	</context-param> -->
-
-<!-- 	<context-param> -->
-<!-- 		<param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name> -->
-<!-- 		<param-value>6LeaNQwTAAAAANKjNPtvN7kUWKwSBx70zV5VJzsQ</param-value> -->
-<!-- 	</context-param> -->
-
- 	<context-param>
-        <param-name>primefaces.PUBLIC_CAPTCHA_KEY</param-name>
-        <param-value>6LcOiAkUAAAAAEPK2QomWZKks0ZPS46SGpf_EVsZ</param-value>
-    </context-param>
-    <context-param>
-        <param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name>
-        <param-value>6LcOiAkUAAAAAPJ6G9bRgbM4oc5HsBgfAo75vn6S</param-value>
-    </context-param>
-
-
+	<!-- 	<context-param> -->
+	<!-- 		<param-name>primefaces.PUBLIC_CAPTCHA_KEY</param-name> -->
+	<!-- 		<param-value>6LeaNQwTAAAAAPyuQoe5HSKotN3T7Fk8ab60EXoa</param-value> -->
+	<!-- 	</context-param> -->
+	<!-- 	<context-param> -->
+	<!-- 		<param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name> -->
+	<!-- 		<param-value>6LeaNQwTAAAAANKjNPtvN7kUWKwSBx70zV5VJzsQ</param-value> -->
+	<!-- 	</context-param> -->
+	<context-param>
+		<param-name>primefaces.PUBLIC_CAPTCHA_KEY</param-name>
+		<param-value>6LcOiAkUAAAAAEPK2QomWZKks0ZPS46SGpf_EVsZ</param-value>
+	</context-param>
+	<context-param>
+		<param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name>
+		<param-value>6LcOiAkUAAAAAPJ6G9bRgbM4oc5HsBgfAo75vn6S</param-value>
+	</context-param>
 	<context-param>
 		<description>
 			Means that you get extra debugging support. In particular, a Java action that
@@ -82,7 +72,7 @@
 		<servlet-name>Faces Servlet</servlet-name>
 	</filter-mapping>
 	<session-config>
-		<session-timeout>10</session-timeout>
+		<session-timeout>30</session-timeout>
 		<cookie-config>
 			<name>FRONTAPPID</name>
 			<http-only>true</http-only>
@@ -108,39 +98,9 @@
 		<error-code>503</error-code>
 		<location>/errores/error.xhtml</location>
 	</error-page>
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS frontend</web-resource-name>
-			<url-pattern>/*</url-pattern>
-		</web-resource-collection>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>SNS planes</web-resource-name>
-			<url-pattern>/planes-numeracion/privado/*</url-pattern>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ANALISTA</role-name>
-			<role-name>ABD-PRE</role-name>
-			<role-name>IFT</role-name>
-			<role-name>PST</role-name>
-			<role-name>ABD</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
-	<login-config>
-		<auth-method>FORM</auth-method>
-		<realm-name>default</realm-name>
-		<form-login-config>
-			<form-login-page>/login.xhtml</form-login-page>
-			<form-error-page>/errores/login-error.xhtml</form-error-page>
-		</form-login-config>
-	</login-config>
+
+
+
 	<security-role>
 		<role-name>ANALISTA</role-name>
 	</security-role>

@@ -1,10 +1,8 @@
-/**
- *
- */
 package mx.ift.sns.negocio.port;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -12,16 +10,54 @@ import org.slf4j.LoggerFactory;
 
 import mx.ift.sns.modelo.port.NumeroPortado;
 
+import javax.annotation.PostConstruct;
+import javax.ejb.*;
+
+
 /**
  * @author jparanda
  *
  */
-public class ProcesarRegistrosPortados implements Runnable {
+
+@Stateless
+public class ProcesarRegistrosPortados {
+
+    @EJB
+    private PortadosDAO portadosDAO;
 
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcesarRegistrosPortados.class);
 
+    @Asynchronous
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public Future<Boolean> procesarAsync(String[] valores) {
+        try {
+            checkFila(valores);
+            return new AsyncResult<>(true);
+        } catch (Exception e) {
+            // Maneja log de error aquí
+            return new AsyncResult<>(false);
+        }
+    }
 
+
+    /*
+    @Asynchronous
+    public void procesarAsync(String[] valores) {
+        try {
+            checkFila(valores);
+        } catch (Exception e) {
+            LOGGER.error("Error procesando registro portado: ", e);
+        }
+    }
+
+     */
+
+    public ProcesarRegistrosPortados() {
+        // Obligatorio: constructor público sin parámetros
+    }
+
+/*
     private String[] valores;
 
     public ProcesarRegistrosPortados(String[] vals) {
@@ -48,8 +84,14 @@ public class ProcesarRegistrosPortados implements Runnable {
         this.valores = valores;
     }
 
+ */
+
     public void checkFila(String[] valores) {
         // portId,portType,action,numberFrom,numberTo,isMpp,rida,rcr,dida,dcr,actionDate
+        if (portadosDAO == null) {
+            LOGGER.error("portadosDAO no ha sido inyectado correctamente");
+            return;
+        }
 
         if (valores.length >= 1) {
 
@@ -82,7 +124,8 @@ public class ProcesarRegistrosPortados implements Runnable {
 
 
                 try {
-                    PortadosDAO.update(num);
+                    portadosDAO.update(num);
+                    //PortadosDAO.update(num);
 					LOGGER.info("<---PorId procesado:"+portId);
                 } catch (SQLException e) {
                     LOGGER.info("**********************************Error se cierra conexión PortadosDAO.closed();");
@@ -97,6 +140,10 @@ public class ProcesarRegistrosPortados implements Runnable {
 
     }
 
-
+    @PostConstruct
+    public void init() {
+        LOGGER.info("ProcesarRegistrosCancelados inicializado correctamente");
+        LOGGER.info("PortadosDAO inyectado: {}", portadosDAO != null);
+    }
 
 }

@@ -1,9 +1,8 @@
 package mx.ift.sns.dao;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceContext;
 import javax.persistence.OptimisticLockException;
-import javax.persistence.Persistence;
 import javax.persistence.PersistenceUnitUtil;
 
 import mx.ift.sns.negocio.exceptions.RegistroModificadoException;
@@ -11,63 +10,29 @@ import mx.ift.sns.negocio.exceptions.RegistroModificadoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Clase base para los DAOs.
- * @param <T> entidad sobre la que trabaja.
- */
+import java.util.ArrayList;
+import java.util.List;
+
 public class BaseDAO<T> implements IBaseDAO<T> {
 
-    /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseDAO.class);
 
-    /** Entity manager. */
-    private static EntityManager em = null;
+    @PersistenceContext(unitName = "sns") // ← Esto le dice a WebLogic que gestione el EntityManager
+    private EntityManager em;
 
-    /**
-     * Utility interface between the application and the persistence provider managing the persistence unit.
-     */
-    private static PersistenceUnitUtil util = null;
+    private PersistenceUnitUtil util;
 
-    /**
-     * Devuelve el entity manager.
-     * @return entity manager
-     */
     public EntityManager getEntityManager() {
-
-        if (em == null) {
-            EntityManagerFactory factory = Persistence.createEntityManagerFactory("sns");
-            EntityManager em = factory.createEntityManager();
-            util = factory.getPersistenceUnitUtil();
-
-            LOGGER.debug("creado util1 {}", util);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("creado em {}", em);
-            }
+        if (util == null && em != null) {
+            util = em.getEntityManagerFactory().getPersistenceUnitUtil();
+            LOGGER.debug("Inicializado util: {}", util);
         }
-
         return em;
-    }
-
-    /**
-     * Set del entity manager para pruebas.
-     * @param e entitiy manager
-     */
-    public static void setEntityManager(EntityManager e) {
-        em = e;
-
-        util = e.getEntityManagerFactory().getPersistenceUnitUtil();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("em {}", em);
-            LOGGER.debug("util {}", util);
-        }
     }
 
     @Override
     public T create(T entity) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("{}", entity);
-        }
-
+        LOGGER.debug("{}", entity);
         getEntityManager().persist(entity);
         getEntityManager().flush();
         return entity;
@@ -75,63 +40,60 @@ public class BaseDAO<T> implements IBaseDAO<T> {
 
     @Override
     public T update(T entity) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("{}", entity);
-        }
-
+        LOGGER.debug("{}", entity);
         try {
             entity = getEntityManager().merge(entity);
             getEntityManager().flush();
         } catch (OptimisticLockException e) {
             throw new RegistroModificadoException();
         }
-
         return entity;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void delete(T entity) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("{}", entity);
-        }
-
+        LOGGER.debug("{}", entity);
         Object entityPk = util.getIdentifier(entity);
         T pAttachedEntity = (T) getEntityManager().find(entity.getClass(), entityPk);
-
         getEntityManager().remove(pAttachedEntity);
     }
 
     @Override
     public T saveOrUpdate(T entity) {
-
-        T r = null;
         Object id = util.getIdentifier(entity);
-        if (id == null) {
-            r = create(entity);
-        } else {
-            r = update(entity);
-        }
-
-        return r;
+        return id == null ? create(entity) : update(entity);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public T reload(T entity) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("{}", entity);
-        }
-
+        LOGGER.debug("{}", entity);
         return (T) getEntityManager().find(entity.getClass(), util.getIdentifier(entity));
     }
 
     @Override
     public void refresh(T entity) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("{}", entity);
-        }
-
+        LOGGER.debug("{}", entity);
         getEntityManager().refresh(entity);
+    }
+
+    @Override
+    public List<T> saveAll(List<T> entities) {
+        List<T> savedEntities = new ArrayList<>();
+        for (T entity : entities) {
+            savedEntities.add(saveOrUpdate(entity));
+        }
+        return savedEntities;
+    }
+
+    @Override
+    public List<T> deleteAll(List<T> entities) {
+        List<T> deletedEntities = new ArrayList<>();
+        for (T entity : entities) {
+            deletedEntities.add(entity);
+            delete(entity);
+        }
+        return deletedEntities;
     }
 }

@@ -1,6 +1,7 @@
 package mx.ift.sns.dao.port.implementation;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -75,7 +76,24 @@ public class NumerosPortadosDAOImpl extends BaseDAO<NumeroPortado> implements IN
     @Override
     public BigDecimal getTotalNumerosPortadosHoy() throws Exception {
 
+        // Para productivo (usa la fecha real)
+        /* TODO FJAH desbloquear para productivo
         Date fechaHoy = sdf.parse(sdf.format(new Date()));
+         */
+
+        //TODO FJAH quitar cuando se terminen las pruebas locales
+        // Para pruebas locales: forzar fecha
+        Date fechaHoy = null;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            // Forzar la fecha solo para pruebas retroactivas
+            fechaHoy = sdf.parse("2025-05-08");
+        } catch (ParseException e) {
+            e.printStackTrace();
+            LOGGER.error("Error al parsear la fecha forzada para pruebas retroactivas", e);
+            return BigDecimal.ZERO; // O maneja el error según tu lógica
+        }
+        //Termina pruebas locales
 
         String sQuery = "SELECT COUNT(n) FROM NumeroPortado n WHERE n.actionDate > :hoy";
 

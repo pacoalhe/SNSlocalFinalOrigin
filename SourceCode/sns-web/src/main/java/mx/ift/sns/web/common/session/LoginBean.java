@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -66,11 +67,42 @@ public class LoginBean implements Serializable {
     private long intervaloChequeoSesion = 60;
 
     /** Inicialización de Variables. JSR260, Método invocado al cargar terminar de instanciar el bean. */
+    //FJAH 08052025 -- Emulación de usuario real: Paco DEV
     @PostConstruct
     public void init() {
-        String parametro = configuracionFacade.getParamByName("intervaloChequeoSesion");
-        if (parametro != null) {
-            intervaloChequeoSesion = Long.parseLong(parametro);
+        // Cargar parámetro de tiempo de chequeo
+        try {
+            String param = configuracionFacade.getParamByName("intervaloChequeoSesion");
+            if (param != null) {
+                intervaloChequeoSesion = Long.parseLong(param);
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Error cargando intervaloChequeoSesion, usando valor por defecto", e);
+        }
+
+        // Emular login local si no hay Principal (solo para entorno local o QA sin contenedor)
+        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+        HttpServletRequest request = (HttpServletRequest) ec.getRequest();
+
+        if (request.getUserPrincipal() == null) {
+            String uid = "dgtic.dds.ext196";
+
+            try {
+                usuario = usuariosService.findUsuario(uid);
+                if (usuario != null) {
+                    username = usuario.getNombre();
+                    usuario = usuariosService.login(usuario);
+
+                    HttpSession session = (HttpSession) ec.getSession(true);
+                    session.setAttribute(ATT_UID, uid);
+
+                    LOGGER.info("Usuario real emulado en entorno local: {} ({})", uid, username);
+                } else {
+                    LOGGER.warn("Usuario '{}' no encontrado en la BD", uid);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error emulando login con usuario '{}'", uid, e);
+            }
         }
     }
 
@@ -217,9 +249,50 @@ public class LoginBean implements Serializable {
     }
 
     /**
+     * FJAH 09052025 refactorización cierre de conexiones
+     */
+    /**
      * Método que comprueba si ha expirado la sesión.
      * @throws IOException excepción
      */
+    /*
+    public void isSesionExpirada() throws IOException {
+        FacesContext context = FacesContext.getCurrentInstance();
+
+        if (context == null) return;
+
+        ExternalContext ec = context.getExternalContext();
+        HttpSession sesion = (HttpSession) ec.getSession(false);
+
+        // Si la sesión ya no existe o el usuario ya es nulo, no hacemos nada
+        if (sesion == null || usuario == null) {
+            LOGGER.debug("isSesionExpirada: sesión o usuario nulo, no se realiza verificación.");
+            return;
+        }
+
+        Date fecha = new Date();
+        long tiempoSinAccion = (fecha.getTime() - sesion.getLastAccessedTime()) / 1000;
+
+        if (inicializarInactividad || tiempoSinAccion != intervaloChequeoSesion) {
+            tiempoInactivo = tiempoSinAccion;
+        } else {
+            tiempoInactivo += tiempoSinAccion;
+        }
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Comprobando la sesión: Último acceso hace " + tiempoInactivo
+                    + " sg. Tiempo máximo de espera: " + this.idleTimeout + " sg.");
+        }
+
+        if (tiempoInactivo >= (sesion.getMaxInactiveInterval())) {
+            idle();
+        }
+
+        inicializarInactividad = false;
+    }
+
+     */
+
     public void isSesionExpirada() throws IOException {
         HttpSession sesion = (HttpSession) FacesContext.getCurrentInstance()
                 .getExternalContext().getSession(true);
@@ -244,11 +317,22 @@ public class LoginBean implements Serializable {
         inicializarInactividad = false;
     }
 
+
     /**
      * @return the intervaloChequeoSesion
      */
     public long getIntervaloChequeoSesion() {
         return intervaloChequeoSesion;
     }
+
+    /**
+     * FJAH 09052025 refactorización cierre de conexiones
+     */
+    /*
+    @PreDestroy
+    public void onDestroy() {
+        LOGGER.info("LoginBean destruido");
+    }
+     */
 
 }

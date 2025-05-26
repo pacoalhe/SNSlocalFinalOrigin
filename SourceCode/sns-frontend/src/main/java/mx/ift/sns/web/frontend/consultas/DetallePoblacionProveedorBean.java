@@ -107,10 +107,42 @@ public class DetallePoblacionProveedorBean implements Serializable {
     }
 
     /**
+     * FJAH
      * Convierte la numeración asignada a formato numero USA. Ejemplo: 1,000,000
-     * @param num BigDecimal
+     * @param -num BigDecimal
      * @return String
      */
+    public String formatoNumeracionAsignada(Object numObj) {
+        String numeroStr = "";
+        try {
+            if (numObj == null) {
+                LOGGER.warn("El valor proporcionado es nulo, no se puede formatear.");
+                return "Número no disponible";
+            }
+
+            BigDecimal num;
+            if (numObj instanceof BigDecimal) {
+                num = (BigDecimal) numObj;
+            } else if (numObj instanceof Number) {
+                num = new BigDecimal(((Number) numObj).toString());
+            } else {
+                LOGGER.warn("El valor proporcionado no es un número válido: {}", numObj);
+                return "Número no disponible";
+            }
+
+            NumberFormat numFormato = NumberFormat.getNumberInstance(Locale.US);
+            numeroStr = numFormato.format(num);
+
+            this.setNirsProveedorTabla(false); // sigue funcionando, pero ya validado
+
+        } catch (Exception e) {
+            LOGGER.error("Error inesperado al dar formato a la numeración asignada: ", e);
+            numeroStr = "Error en formato";
+        }
+        return numeroStr;
+    }
+
+    /*
     public String formatoNumeracionAsignada(BigDecimal num) {
         NumberFormat numFormato;
         String numeroStr = "";
@@ -123,6 +155,8 @@ public class DetallePoblacionProveedorBean implements Serializable {
         }
         return numeroStr;
     }
+
+     */
 
     /**
      * Obtiene los nirs y la numeracion asignada del proveedor del numero consultado.

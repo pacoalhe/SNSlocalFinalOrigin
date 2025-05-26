@@ -1,5 +1,7 @@
 package mx.ift.sns.dao;
 
+import java.util.List;
+
 /**
  * Interfaz que implementan los DAOs.
  * @param <T> parametro generico
@@ -46,4 +48,13 @@ public interface IBaseDAO<T> {
      * @param entity - entity object
      */
     void refresh(T entity);
+
+    /**
+     * Saves or updates a list of entities.
+     * @param entities - list of entity objects to be inserted or updated
+     * @return list of saved or updated entities
+     */
+    List<T> saveAll(List<T> entities);
+
+    List<T> deleteAll(List<T> entities);
 }

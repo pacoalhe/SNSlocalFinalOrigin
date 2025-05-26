@@ -7,12 +7,14 @@ import mx.ift.sns.negocio.ng.model.ResultadoValidacionArrendamiento;
 import mx.ift.sns.negocio.ng.model.ResultadoValidacionCSV;
 import mx.ift.sns.negocio.port.CanceladosDAO;
 import mx.ift.sns.negocio.port.NumeroCanceladoRequestDTO;
+import mx.ift.sns.negocio.port.NumeroRequestDTO;
 import mx.ift.sns.negocio.port.ProcesarRegistrosCancelados;
 import mx.ift.sns.utils.date.FechasUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ejb.Stateless;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -20,6 +22,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,7 +31,13 @@ import java.util.concurrent.Executors;
  * Validador de archivos csv.
  */
 
+@Stateless
 public class ValidadorArchivoDeletedCSV2 {
+
+    //FJAH 26052025
+    public ValidadorArchivoDeletedCSV2() {
+        // Constructor vacío requerido por EJB
+    }
 
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ValidadorArchivoDeletedCSV.class);
@@ -96,6 +105,45 @@ public class ValidadorArchivoDeletedCSV2 {
      * @return res resultado de la validacion
      * @throws Exception error
      */
+    //FJAH 26052025 Refactorizacion
+    public Collection<NumeroCanceladoRequestDTO> validar(String fileName) throws Exception {
+        LOGGER.debug("fichero {}", fileName);
+        totalFilas = 0;
+
+        File f1 = new File(fileName);
+        if (StringUtils.isEmpty(fileName) || !f1.exists()) {
+            LOGGER.debug("nombre fichero vacio o no existe");
+            res.setError(ResultadoValidacionArrendamiento.ERROR_FICHERO);
+            return Collections.emptyList();
+        }
+
+        try (FileReader freader = new FileReader(fileName);
+             CSVReader cvsReader = new CSVReader(freader, DELIMITADOR,'"',1)) {
+
+            res.setError(ResultadoValidacionArrendamiento.VALIDACION_OK);
+            List<String[]> allRows = cvsReader.readAll();
+            LOGGER.debug("---------------------------tamaño del fichero {}", allRows.size());
+
+            Collection<NumeroCanceladoRequestDTO> list = new ArrayList<>();
+            if (!allRows.isEmpty()) {
+                for (String[] row : allRows) {
+                    NumeroCanceladoRequestDTO dto = checkFila(row);
+                    if (dto != null) list.add(dto); // Evita nulos
+                }
+                LOGGER.info("<---Finished all threads---->");
+            } else {
+                LOGGER.debug("fichero vacio");
+                res.setError(ResultadoValidacionArrendamiento.ERROR_FICHERO_VACIO);
+            }
+            LOGGER.debug("fin validacion {} filas={} res={}", fileName, totalFilas, res.getError());
+            return list;
+        } catch (Exception e) {
+            res.setError(ResultadoValidacionArrendamiento.ERROR_FICHERO);
+            LOGGER.error("Error validando archivo {}", fileName, e);
+            return Collections.emptyList();
+        }
+    }
+    /*
     public Collection<NumeroCanceladoRequestDTO> validar(String fileName) throws Exception {
 
         LOGGER.debug("fichero {}", fileName);
@@ -137,13 +185,13 @@ public class ValidadorArchivoDeletedCSV2 {
             }
             else
             {
-                /* fichero vacio. */
+                // fichero vacio. //
                 LOGGER.debug("fichero vacio");
                 res.setError(ResultadoValidacionArrendamiento.ERROR_FICHERO_VACIO);
             }
 
         } catch (Exception e) {
-            /* fichero incorrecto. */
+            // fichero incorrecto. //
             res.setError(ResultadoValidacionArrendamiento.ERROR_FICHERO);
 
             LOGGER.error("Error validando archivo {}", fileName, e);
@@ -157,6 +205,8 @@ public class ValidadorArchivoDeletedCSV2 {
 
         return null;
     }
+
+     */
 
     /**
      * @return the hayError

@@ -3,9 +3,12 @@ package mx.ift.sns.negocio.utils.csv;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 
 import mx.ift.sns.negocio.ng.model.ResultadoValidacionArrendamiento;
@@ -19,13 +22,21 @@ import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVReader;
 
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 
 
 /**
  * Validador de archivos csv.
  */
 
+@Stateless
 public class ValidadorArchivoDeletedCSV {
+
+    //FJAH 26052025
+    public ValidadorArchivoDeletedCSV() {
+        // Constructor vacío requerido por EJB
+    }
 
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ValidadorArchivoDeletedCSV.class);
@@ -47,6 +58,11 @@ public class ValidadorArchivoDeletedCSV {
 
     /** Numero total de filas del archivo, sin la cabecera. */
     private int totalFilas = 0;
+
+    //FJAH 24052025
+    @EJB
+    private ProcesarRegistrosCancelados procesadorCancelados;
+
 
     /**
      * Comprueba la cabecera del fichero.
@@ -78,6 +94,9 @@ public class ValidadorArchivoDeletedCSV {
         LOGGER.debug("fichero {}", fileName);
 
         totalFilas = 0;
+        int successCount = 0;
+        int failCount = 0;
+        int POOL_SIZE = 8; // O ajústalo según tu infra
 
         if (StringUtils.isEmpty(fileName)) {
             LOGGER.debug("nombre fichero vacio");
@@ -93,37 +112,93 @@ public class ValidadorArchivoDeletedCSV {
             return res;
         }
 
-        try {
+        ExecutorService executor = Executors.newFixedThreadPool(POOL_SIZE);
+        List<Future<Boolean>> futures = new ArrayList<>();
+
+        try (FileReader freader = new FileReader(fileName)){
 
             res.setError(ResultadoValidacionArrendamiento.VALIDACION_OK);
-            FileReader freader = null;
-            freader = new FileReader(fileName);
+            //FileReader freader = null;
+            //freader = new FileReader(fileName);
             cvsReader = new CSVReader(freader, DELIMITADOR,'"',1);
             List<String[]> allRows = cvsReader.readAll();
             LOGGER.info("-----------------Tamaño del fichero csvdeleted "+ allRows.size() );
             
-            int cpus = Runtime.getRuntime().availableProcessors();
+            //int cpus = Runtime.getRuntime().availableProcessors();
 
+            if (!allRows.isEmpty()) {
+                LOGGER.info("<--Inicia el recorrido del csv {}", FechasUtils.getActualDate());
+
+                for (final String[] row : allRows) {
+                    futures.add(executor.submit(new Callable<Boolean>() {
+                        @Override
+                        public Boolean call() {
+                            try {
+                                // Aquí llamas tu método asíncrono y esperas el resultado
+                                return procesadorCancelados.procesarAsync(row).get();
+                            } catch (Exception e) {
+                                LOGGER.error("Error procesando registro", e);
+                                return false;
+                            }
+                        }
+                    }));
+                }
+
+                /*
+                List<Future<Boolean>> futures = new ArrayList<>();
+                for (String[] row : allRows) {
+                    futures.add(procesadorCancelados.procesarAsync(row));
+                }
+                 */
+
+                // Espera a que todos terminen (importante)
+                for (Future<Boolean> f : futures) {
+                    try {
+                        Boolean ok = f.get(); // Espera a que termine
+                        if (Boolean.TRUE.equals(ok)) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                        }
+                        //f.get(); // espera a que termine, puedes manejar el resultado
+                    } catch (Exception e) {
+                        LOGGER.error("Error esperando procesamiento asíncrono", e);
+                        LOGGER.info("Procesados exitosamente: {} / Fallidos: {}", successCount, failCount);
+                    }
+                }
+                LOGGER.info("<---Finished all threads---->");
+            } else {
+                LOGGER.debug("fichero vacio");
+                res.setError(ResultadoValidacionArrendamiento.ERROR_FICHERO_VACIO);
+            }
+
+            /*
             if (allRows.size() > 0) {
             	LOGGER.info("<--Inicia el recorido del csv {}",FechasUtils.getActualDate());
-            	ExecutorService executorServiceCancelados=Executors.newFixedThreadPool(cpus);
+            	//ExecutorService executorServiceCancelados=Executors.newFixedThreadPool(cpus);
 				for (String[] row : allRows) {
-					Runnable worker=new ProcesarRegistrosCancelados(row);
-					executorServiceCancelados.execute(worker);
+                    //FJAH 24052025
+					//Runnable worker=new ProcesarRegistrosCancelados(row);
+					//executorServiceCancelados.execute(worker);
 					//checkFila(row);
-					
+                    procesadorCancelados.procesarAsync(row);
+
 				}
-				executorServiceCancelados.shutdown();
-				while (!executorServiceCancelados.isTerminated()) {}
+                //FJAH 24052025
+				//executorServiceCancelados.shutdown();
+				//while (!executorServiceCancelados.isTerminated()) {}
 				LOGGER.info("<---Finished all threads---->");
 				LOGGER.info("<--finaliza el recorido del csv {}",FechasUtils.getActualDate());
                 }
             else
             {
-                /* fichero vacio. */
+                // fichero vacio. //
                 LOGGER.debug("fichero vacio");
                 res.setError(ResultadoValidacionArrendamiento.ERROR_FICHERO_VACIO);
             }
+
+             */
+
             
         } catch (Exception e) {
             /* fichero incorrecto. */
@@ -137,6 +212,7 @@ public class ValidadorArchivoDeletedCSV {
         }
 
         LOGGER.debug("fin validacion {} filas={} res={}", fileName, totalFilas, res.getError());
+        LOGGER.info("RESUMEN FINAL CANCELADOS: Exitosos = {}, Fallidos = {}", successCount, failCount);
 
         return res;
     }

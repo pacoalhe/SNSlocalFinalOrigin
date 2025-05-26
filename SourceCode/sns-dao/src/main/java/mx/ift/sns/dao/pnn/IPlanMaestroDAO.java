@@ -30,10 +30,18 @@ public interface IPlanMaestroDAO extends IBaseDAO<PlanMaestroDetalle> {
     /**
      * Método que elimina un registro del plan maestro.
      * 
-     * @param ido           Integer
      * @param numeroInicial Long
      * @param numeroFinal   Long
      * @return eliminado Boolean
      */
     Boolean eliminaNumero(Long numeroInicial, Long numeroFinal);
+
+    /**
+     * FJAH 17042025
+     * @param numeroInicial
+     * @param numeroFinal
+     * @return
+     */
+    PlanMaestroDetalle getDetalleNumeroConsultaPublica(Long numeroInicial, Long numeroFinal);
+
 }

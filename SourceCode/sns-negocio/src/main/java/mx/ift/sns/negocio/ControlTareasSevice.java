@@ -1,5 +1,7 @@
 package mx.ift.sns.negocio;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.ejb.Remote;
@@ -42,7 +44,14 @@ public class ControlTareasSevice implements IControlTareas {
         ControlTarea control = new ControlTarea();
         control.setTarea(tarea);
         control = controlTareaDao.reload(control);
-        control.setBloqueado(false);
+
+         /** FJAH 08052025 Refactorización para evitar dejar con harcode de tareas a no ejecutarse.
+                    * 0 = desbloqueado
+                    * 1 = bloqueo automático (cron)
+                    * 2 = bloqueo manual protegido
+         */
+        control.setBloqueado(0);
+        //control.setBloqueado(false);
         controlTareaDao.update(control);
 
     }
@@ -52,8 +61,25 @@ public class ControlTareasSevice implements IControlTareas {
     public boolean isAccesoPermitido(String tarea) {
 
         boolean resultado = false;
+
         ControlTarea control = new ControlTarea();
+
+        /* TODO FJAH desbloquear para prodcutivo
         Date fechaHoy = FechasUtils.getFechaHoy();
+         */
+
+        // TODO FJAH solo aplica para pruebas locales
+        Date fechaHoy = null;
+        try {
+            // Forzar la fecha solo para pruebas retroactivas
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            fechaHoy = sdf.parse("2025-05-08");
+        } catch (ParseException e) {
+            e.printStackTrace();
+            LOGGER.error("Error al parsear la fecha forzada para pruebas retroactivas", e);
+            return false; // O maneja el error según tu lógica
+        }
+        // FJAH termina la modificación
 
         LOGGER.info("Buscamos si la tarea {} en {} tiene acceso permitido para el día {}", tarea,
                 WeblogicNode.getName(), FechasUtils.fechaToString(fechaHoy));
@@ -61,7 +87,13 @@ public class ControlTareasSevice implements IControlTareas {
         try {
             control = controlTareaDao.getTareaNoBloqueada(tarea, fechaHoy);
             if (control != null) {
-                control.setBloqueado(true);
+                /** FJAH 08052025 Refactorización para evitar dejar con harcode de tareas a no ejecutarse.
+                 * 0 = desbloqueado
+                 * 1 = bloqueo automático (cron)
+                 * 2 = bloqueo manual protegido
+                 */
+                control.setBloqueado(1);
+                //control.setBloqueado(true);
                 LOGGER.info("La tarea encontrada tiene fecha: {}", FechasUtils.fechaToString(control.getFecha()));
 
                 control.setFecha(fechaHoy);
@@ -84,10 +116,25 @@ public class ControlTareasSevice implements IControlTareas {
 
     }
 
+    /**
+     * FJAH 08052025 Refactorización para evitar dejar con harcode de tareas a no ejecutarse.
+     * 0 = desbloqueado
+     * 1 = bloqueo automático (cron)
+     * 2 = bloqueo manual protegido
+     */
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void desbloqueoTareas() {
+        int updated = controlTareaDao.desbloqueoTareas();
+        LOGGER.info("Tareas desbloqueadas automáticamente: {}", updated);
+    }
+    /*
     @Override
     public void desbloqueoTareas() {
         controlTareaDao.desbloqueoTareas();
 
     }
+
+     */
 
 }

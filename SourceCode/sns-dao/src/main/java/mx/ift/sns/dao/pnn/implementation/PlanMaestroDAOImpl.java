@@ -24,102 +24,134 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
 
     @Override
     public PlanMaestroDetalle getDetalleNumero(Long numeroInicial, Long numeroFinal) {
-	final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO "
-		+ "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= " + numeroInicial + " AND NUMERO_FINAL >= " + numeroFinal;
+        final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO "
+                + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= :numeroInicial AND NUMERO_FINAL >= :numeroFinal";
 
-	PlanMaestroDetalle planMaestroDetalle = null;
+        PlanMaestroDetalle planMaestroDetalle = new PlanMaestroDetalle();
 
-	try {
-	    Query consulta = getEntityManager().createNativeQuery(strQuery, PlanMaestroDetalle.class);
+        try {
+            Query consulta = getEntityManager().createNativeQuery(strQuery, PlanMaestroDetalle.class);
 
-	    LOGGER.info("Se realiza la búsqueda del número " + numeroInicial + " en el plan maestro");
-	    @SuppressWarnings("unchecked")
-	    List<PlanMaestroDetalle> listPlanMaestroDetalle = consulta.getResultList();
+            LOGGER.info("Se realiza la búsqueda del número {} en el plan maestro", numeroInicial);
+            @SuppressWarnings("unchecked")
+            List<PlanMaestroDetalle> listPlanMaestroDetalle = consulta.getResultList();
 
-	    if ((listPlanMaestroDetalle != null) && (listPlanMaestroDetalle.size() > 0)) {
-		planMaestroDetalle = listPlanMaestroDetalle.get(0);
-		LOGGER.info("Se localizó el número " + numeroInicial + "en el plan maestro.");
-	    }
-
-	} catch (NoResultException e) {
-	    LOGGER.error("No se localizó el número " + numeroInicial + "en el plan maestro.");
-	    return null;
-	}
-
-	return planMaestroDetalle;
+            if (listPlanMaestroDetalle != null && !listPlanMaestroDetalle.isEmpty()) {
+                planMaestroDetalle = listPlanMaestroDetalle.get(0);
+                LOGGER.info("Se localizó el número {} en el plan maestro.", numeroInicial);
+            }
+        } catch (NoResultException e) {
+            LOGGER.error("No se localizó el número {} en el plan maestro.", numeroInicial);
+            return null;
+        }
+        return planMaestroDetalle;
     }
 
     @Override
-    public PlanMaestroDetalle actualizaNumero(Long numeroInicial, Long numeroFinal,
-	    PlanMaestroDetalle registroActualizado) {
-	final String strQueryUpdate = "UPDATE PlanMaestroDetalle p SET p.tipoServicio = :tipoServicio, p.mpp = :mpp, p.areaServicio = :areaServicio, p.ido = :ido, p.ida = :ida "
-		+ "WHERE ((p.id.numeroInicial = :noInicial AND p.id.numeroFinal = :noFinal))";
-	// PlanMaestroDetalle planMaestroDetalle = null;
-	LOGGER.info("Editar entidad: " + registroActualizado.toString());
-	if (getEntityManager().isOpen()) {
-	    LOGGER.info("em opened..." + getEntityManager().getProperties());
-	}
-	try {
-	    // getEntityManager().joinTransaction();
-	    // getEntityManager().getTransaction().begin();
+    public PlanMaestroDetalle actualizaNumero(Long numeroInicial, Long numeroFinal, PlanMaestroDetalle registroActualizado) {
+        final String strQueryUpdate = "UPDATE PlanMaestroDetalle p SET p.tipoServicio = :tipoServicio, p.mpp = :mpp, p.areaServicio = :areaServicio, p.ido = :ido, p.ida = :ida "
+                + "WHERE ((p.id.numeroInicial = :noInicial AND p.id.numeroFinal = :noFinal))";
+        // PlanMaestroDetalle planMaestroDetalle = null;
+        LOGGER.info("Editar entidad: {}", registroActualizado.toString());
+        if (getEntityManager().isOpen()) {
+            LOGGER.info("em opened...{}", getEntityManager().getProperties());
+        }
+        try {
+            // getEntityManager().joinTransaction();
+            // getEntityManager().getTransaction().begin();
 
-	    // planMaestroDetalle = saveOrUpdate(registroActualizado);
-	    // refresh(planMaestroDetalle);
+            // planMaestroDetalle = saveOrUpdate(registroActualizado);
+            // refresh(planMaestroDetalle);
 
-	    TypedQuery<PlanMaestroDetalle> query = getEntityManager().createQuery(strQueryUpdate,
-		    PlanMaestroDetalle.class);
+            TypedQuery<PlanMaestroDetalle> query = getEntityManager().createQuery(strQueryUpdate, PlanMaestroDetalle.class);
 
-	    query.setParameter("ido", registroActualizado.getIdo());
-	    query.setParameter("noInicial", numeroInicial);
-	    query.setParameter("noFinal", numeroFinal);
-	    query.setParameter("tipoServicio", registroActualizado.getTipoServicio());
-	    query.setParameter("mpp", registroActualizado.getMpp());
-	    query.setParameter("ida", registroActualizado.getIda());
-	    query.setParameter("areaServicio", registroActualizado.getAreaServicio());
+            query.setParameter("ido", registroActualizado.getIdo());
+            query.setParameter("noInicial", numeroInicial);
+            query.setParameter("noFinal", numeroFinal);
+            query.setParameter("tipoServicio", registroActualizado.getTipoServicio());
+            query.setParameter("mpp", registroActualizado.getMpp());
+            query.setParameter("ida", registroActualizado.getIda());
+            query.setParameter("areaServicio", registroActualizado.getAreaServicio());
 
-	    LOGGER.info("Query=> " + query);
-	    int updated = query.executeUpdate();
-	    LOGGER.info("updated?=> " + updated);
+            LOGGER.info("Query=> {}", query);
+			int updated = query.executeUpdate();
+			LOGGER.info("updated?=> {}", updated);
 
-	    // getEntityManager().merge(registroActualizado);
-	    // getEntityManager().persist(registroActualizado);
-	    // getEntityManager().flush();
-	    // getEntityManager().getTransaction().commit();
+            // getEntityManager().merge(registroActualizado);
+            // getEntityManager().persist(registroActualizado);
+            // getEntityManager().flush();
+            // getEntityManager().getTransaction().commit();
 
-	    // LOGGER.info("PlanMaestroUpdated=> " + planMaestroDetalle.toString());
-	    // isUpdated = true;
-	} catch (Exception e) {
-	    LOGGER.error("ERROR: " + e.getMessage());
-	    if (LOGGER.isDebugEnabled()) {
-		LOGGER.debug("No se pudo actualizar el numero en el plan maestro.");
-	    }
-	    return null;
-	}
-
-	return registroActualizado;
+            // LOGGER.info("PlanMaestroUpdated=> " + planMaestroDetalle.toString());
+            // isUpdated = true;
+        } catch (Exception e) {
+            LOGGER.error("ERROR: {}", e.getMessage());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("No se pudo actualizar el numero en el plan maestro.");
+            }
+            return null;
+        }
+        return registroActualizado;
     }
 
     @Override
     public Boolean eliminaNumero(Long numeroInicial, Long numeroFinal) {
-	String strQuery = "DELETE FROM PlanMaestroDetalle p WHERE ((p.id.numeroInicial = :numeroInicial AND p.id.numeroFinal = :numeroFinal))";
+        String strQuery = "DELETE FROM PlanMaestroDetalle p WHERE ((p.id.numeroInicial = :numeroInicial AND p.id.numeroFinal = :numeroFinal))";
 
-	LOGGER.info("Valores a eliminar=> noInicial: " + numeroInicial + " noFinal: " + numeroFinal);
-	try {
-	    Query query = getEntityManager().createQuery(strQuery);
+        LOGGER.info("Valores a eliminar=> noInicial: {} noFinal: {}", numeroInicial, numeroFinal);
+        try {
+            Query query = getEntityManager().createQuery(strQuery);
 
-	    query.setParameter("numeroInicial", numeroInicial);
-	    query.setParameter("numeroFinal", numeroFinal);
-	    LOGGER.info("Query=> " + query);
+            query.setParameter("numeroInicial", numeroInicial);
+            query.setParameter("numeroFinal", numeroFinal);
+            LOGGER.info("Query=> {}", query);
 
-	    query.executeUpdate();
-	} catch (Exception e) {
-	    LOGGER.error("ERROR: " + e.getMessage());
-	    if (LOGGER.isDebugEnabled()) {
-		LOGGER.debug("No se pudo eliminar el numero en el plan maestro.");
-	    }
-	    return false;
-	}
-
-	return true;
+            query.executeUpdate();
+        } catch (Exception e) {
+            LOGGER.error("ERROR: {}", e.getMessage());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("No se pudo eliminar el numero en el plan maestro.");
+            }
+            return false;
+        }
+        return true;
     }
+
+    /**
+     * FJAH 16042025
+     * Creación del metodo para la consulta de numeración geografica .xhtml
+     *
+     * @param numeroInicial
+     * @param numeroFinal
+     * @return
+     */
+
+    @Override
+    public PlanMaestroDetalle getDetalleNumeroConsultaPublica(Long numeroInicial, Long numeroFinal) {
+        final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO "
+                + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= ? AND NUMERO_FINAL >= ?";
+
+        try {
+            Query query = getEntityManager().createNativeQuery(strQuery, PlanMaestroDetalle.class);
+            query.setParameter(1, numeroInicial);
+            query.setParameter(2, numeroFinal);
+
+            LOGGER.info("Consulta pública: búsqueda del número {} en el plan maestro", numeroInicial);
+
+            @SuppressWarnings("unchecked")
+            List<PlanMaestroDetalle> resultados = query.getResultList();
+
+            if (resultados != null && !resultados.isEmpty()) {
+                return resultados.get(0);
+            }
+
+        } catch (NoResultException e) {
+            LOGGER.error("Consulta pública: número {} no localizado en plan maestro", numeroInicial);
+        } catch (Exception e) {
+            LOGGER.error("Error en getDetalleNumeroConsultaPublica: {}", e.getMessage(), e);
+        }
+
+        return null;
+    }
+
 }

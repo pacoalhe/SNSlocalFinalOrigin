@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +14,184 @@ import org.slf4j.LoggerFactory;
 import mx.ift.sns.modelo.port.NumeroPortado;
 import mx.ift.sns.utils.dbConnection.ConnectionBD;
 
-public final class PortadosDAO {
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.sql.DataSource;
+
+
+@Stateless
+public class PortadosDAO {
+
+	//FJAH 26052025
+	public PortadosDAO() {
+		// Constructor vacío requerido por EJB
+	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PortadosDAO.class);
 
-	private static Connection conn = ConnectionBD.getConnection();
+	//private static Connection conn = ConnectionBD.getConnection();
 
+	/**
+	 * FJAH 23052025 Refactorización del metodo update
+	 * Sin campos estáticos de conexión.
+	 * Cada método abre y cierra su propia conexión.
+	 * Manejo seguro de autoCommit:
+	 * 				Se pone en false para transacción manual.
+	 * 				Se hace rollback en caso de excepción.
+	 * 				Se restaura autoCommit a true antes de cerrar conexión (buena práctica con pools).
+	 * Todos los recursos se cierran en el bloque finally.
+	 * Thread-safe:
+	 * 				No hay variables de instancia ni estáticas compartidas.
+	 */
+	@Resource(lookup = "jdbc/SNS")
+	private DataSource dataSource;
+
+
+	private final ReentrantLock lock = new ReentrantLock();
+	private static final long LOCK_TIMEOUT = 30; // segundos
+	public void update(NumeroPortado numero) throws SQLException {
+		LOGGER.debug("Iniciando actualización para número: {}", numero.getNumberFrom());
+
+		if (!acquireLockWithTimeout()) {
+			throw new SQLException("No se pudo adquirir el lock para actualización");
+		}
+
+		try {
+			executeUpdateTransaction(numero);
+		} finally {
+			releaseLock();
+		}
+	}
+
+	private boolean acquireLockWithTimeout() throws SQLException {
+		try {
+			if (!lock.tryLock()) {
+				LOGGER.warn("Lock no disponible inmediatamente, esperando...");
+				return lock.tryLock(LOCK_TIMEOUT, TimeUnit.SECONDS);
+			}
+			return true;
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new SQLException("Interrupción durante la espera del lock", e);
+		}
+	}
+
+	private void executeUpdateTransaction(NumeroPortado numero) throws SQLException {
+		try (Connection conn = dataSource.getConnection()) {
+			if (existeNumeroPortado(conn, numero.getNumberFrom())) {
+				actualizarNumeroPortado(conn, numero);
+			} else {
+				insertarNumeroPortado(conn, numero);
+			}
+		}
+	}
+
+	private void insertarNumeroPortado(Connection conn, NumeroPortado numero) throws SQLException {
+		final String sql = "INSERT INTO port_num_portado (PORTID, PORTTYPE, ACTION, NUMBERFROM, " +
+				"NUMBERTO, ISMPP, RIDA, RCR, DIDA, DCR, ACTIONDATE) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+		try (PreparedStatement ps = conn.prepareStatement(sql)) {
+			setInsertParameters(ps, numero);
+			int affectedRows = ps.executeUpdate();
+			LOGGER.debug("Número {} insertado correctamente. Filas afectadas: {}",
+					numero.getNumberFrom(), affectedRows);
+		}
+	}
+
+	private void setInsertParameters(PreparedStatement ps, NumeroPortado numero) throws SQLException {
+		ps.setString(1, numero.getPortId());
+		ps.setString(2, numero.getPortType());
+		ps.setString(3, numero.getAction());
+		ps.setString(4, numero.getNumberFrom());
+		ps.setString(5, numero.getNumberTo());
+		ps.setString(6, numero.getIsMpp());
+		ps.setInt(7, toInt(numero.getRida()));
+		ps.setInt(8, toInt(numero.getRcr()));
+
+		// Manejo especial para DIDA y DCR como en el código original
+		if (numero.getDida() != null && !"null".equals(numero.getDida().toString())) {
+			ps.setInt(9, toInt(numero.getDida()));
+		} else {
+			ps.setNull(9, java.sql.Types.INTEGER);
+			LOGGER.info("+++++++-------------Dida null");
+		}
+
+		if (numero.getDcr() != null && !"null".equals(numero.getDcr().toString())) {
+			ps.setInt(10, toInt(numero.getDcr()));
+		} else {
+			ps.setNull(10, java.sql.Types.INTEGER);
+			LOGGER.info("+++++++-------------DCR null");
+		}
+
+		ps.setTimestamp(11, numero.getActionDate());
+	}
+
+	private boolean existeNumeroPortado(Connection conn, String numberFrom) throws SQLException {
+		final String sql = "SELECT count(1) FROM port_num_portado WHERE numberfrom=?";
+		try (PreparedStatement ps = conn.prepareStatement(sql)) {
+			ps.setString(1, numberFrom);
+			try (ResultSet rs = ps.executeQuery()) {
+				return rs.next() && rs.getInt(1) > 0;
+			}
+		}
+	}
+
+	private void actualizarNumeroPortado(Connection conn, NumeroPortado numero) throws SQLException {
+		final String sql = "UPDATE port_num_portado SET PORTID=?, PORTTYPE=?, ACTION=?, "
+				+ "NUMBERFROM=?, NUMBERTO=?, ISMPP=?, RIDA=?, RCR=?, DIDA=?, DCR=?, "
+				+ "ACTIONDATE=? WHERE NUMBERFROM=?";
+
+		try (PreparedStatement ps = conn.prepareStatement(sql)) {
+			setUpdateParameters(ps, numero);
+			int affectedRows = ps.executeUpdate();
+			LOGGER.debug("Número {} actualizado correctamente. Filas afectadas: {}",
+					numero.getNumberFrom(), affectedRows);
+		}
+	}
+
+	private void setUpdateParameters(PreparedStatement ps, NumeroPortado numero) throws SQLException {
+		ps.setString(1, numero.getPortId());
+		ps.setString(2, numero.getPortType());
+		ps.setString(3, numero.getAction());
+		ps.setString(4, numero.getNumberFrom());
+		ps.setString(5, numero.getNumberTo());
+		ps.setString(6, numero.getIsMpp());
+		ps.setInt(7, toInt(numero.getRida()));
+		ps.setInt(8, toInt(numero.getRcr()));
+		ps.setObject(9, numero.getDida(), java.sql.Types.INTEGER);
+		ps.setObject(10, numero.getDcr(), java.sql.Types.INTEGER);
+		ps.setTimestamp(11, numero.getActionDate());
+		ps.setString(12, numero.getNumberFrom());
+	}
+
+	private int toInt(Object value) {
+		if (value == null) return 0;
+		try {
+			return new BigDecimal(value.toString()).intValue();
+		} catch (NumberFormatException e) {
+			LOGGER.warn("Error al convertir valor numérico: {}", value);
+			return 0;
+		}
+	}
+
+	private void releaseLock() {
+		if (lock.isHeldByCurrentThread()) {
+			lock.unlock();
+			LOGGER.debug("Lock liberado");
+		}
+	}
+
+	@PostConstruct
+	public void init() {
+		LOGGER.info("PortadosDAO inicializado correctamente");
+	}
+}
+
+
+	/*
 	public static void update(NumeroPortado numero) throws SQLException {
 
 //		Connection conn = ConnectionBD.getNewConnection();
@@ -189,6 +363,8 @@ public final class PortadosDAO {
 
 	}
 
+	 */
+
 //	public static void closed() {
 //		try {
 //			if(conn!=null) {
@@ -202,4 +378,4 @@ public final class PortadosDAO {
 //		}
 //	}
 
-}
+

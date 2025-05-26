@@ -54,10 +54,55 @@ public class RepresentanteBean implements Serializable {
     }
 
     /**
+     * INICIO FJAH 25MAR2025
      * Convierte a formato numero USA un número. Ejemplo:100,000
-     * @param num BigDecimal
+     * @param "num" BigDecimal
      * @return String
      */
+    public String formatoNumeracionAsignada(Object numObj) {
+        // Si el número es nulo, evitamos formatear y simplemente retornamos un valor vacío o algún valor predeterminado
+        if (numObj == null) {
+            //LOGGER.warn("[LOCAL] LLAMADA DESDE REPRESENTANTEBEAN. Valor nulo recibido. StackTrace: ", new Exception("Debug trace"));
+            return "";  // Retornar un valor vacío o un valor predeterminado
+        }
+        String numeroStr = "";
+        try {
+            if (numObj == null) {
+                LOGGER.warn("No se recibió ningún valor para mostrar la numeración asignada. Verifique si el proveedor tiene datos cargados.");
+                return "Número no disponible";
+            }
+
+            BigDecimal num;
+            // Si ya es BigDecimal, lo usamos directamente; de lo contrario, convertimos
+            if (numObj instanceof BigDecimal) {
+                num = (BigDecimal) numObj;
+            } else if (numObj instanceof Number) {
+                num = new BigDecimal(((Number) numObj).toString());
+            } else if (numObj instanceof String) {
+                try {
+                    num = new BigDecimal((String) numObj);
+                } catch (NumberFormatException nfe) {
+                    LOGGER.warn("Se recibió un texto que no se puede convertir a número: '{}'. Asegúrese de enviar un valor numérico válido.", numObj);
+                    return "Número no disponible";
+                }
+            } else {
+                LOGGER.warn("Se intentó formatear un objeto no numérico del tipo '{}'. Esto ocurre cuando se envía un dato incorrecto, como un proveedor completo en lugar de su ID.", numObj.getClass().getName());
+                return "Número no disponible";
+            }
+
+            LOGGER.debug("Se está aplicando el formato USA al número: {}", num);
+            NumberFormat numFormato = NumberFormat.getNumberInstance(Locale.US);
+            numeroStr = numFormato.format(num);
+            LOGGER.debug("Número formateado correctamente como: {}", numeroStr);
+        } catch (Exception e) {
+            LOGGER.error("Ocurrió un error inesperado al intentar mostrar la numeración asignada. Esto puede deberse a un dato mal enviado o sin formato válido. Detalle técnico:", e);
+            numeroStr = "Error en formato";
+        }
+        return numeroStr;
+    }
+    //FIN FJAH 25MAR2025
+
+    /*
     public String formatoNumeracionAsignada(BigDecimal num) {
         NumberFormat numFormato;
         String numeroStr = "";
@@ -69,6 +114,8 @@ public class RepresentanteBean implements Serializable {
         }
         return numeroStr;
     }
+
+     */
 
     // /////////////////////////////////////////////GETTERS Y SETTERS/////////////////////////////////
 

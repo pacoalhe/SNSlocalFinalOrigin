@@ -3,13 +3,14 @@ package mx.ift.sns.negocio.utils.csv;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 
 import mx.ift.sns.negocio.ng.model.ResultadoValidacionArrendamiento;
 import mx.ift.sns.negocio.ng.model.ResultadoValidacionCSV;
+import mx.ift.sns.negocio.port.ProcesarRegistrosCancelados;
 import mx.ift.sns.negocio.port.ProcesarRegistrosPortados;
 import mx.ift.sns.utils.date.FechasUtils;
 
@@ -19,11 +20,19 @@ import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVReader;
 
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+
 /**
  * Validador de archivos csv.
  */
 
+@Stateless
 public class ValidadorArchivoPortadosCSV {
+
+    public ValidadorArchivoPortadosCSV() {
+        // Constructor vacío requerido por EJB
+    }
 
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ValidadorArchivoPortadosCSV.class);
@@ -45,6 +54,10 @@ public class ValidadorArchivoPortadosCSV {
 
     /** Numero total de filas del archivo, sin la cabecera. */
     private int totalFilas = 0;
+
+    //FJAH 24052025
+    @EJB
+    private ProcesarRegistrosPortados procesadorPortados;
 
     /**
      * Comprueba la cabecera del fichero.
@@ -76,6 +89,9 @@ public class ValidadorArchivoPortadosCSV {
         LOGGER.debug("fichero {}", fileName);
 
         totalFilas = 0;
+        int successCount = 0;
+        int failCount = 0;
+        int POOL_SIZE = 8; // O ajústalo según tu infra
 
         if (StringUtils.isEmpty(fileName)) {
             LOGGER.debug("nombre fichero vacio");
@@ -91,50 +107,114 @@ public class ValidadorArchivoPortadosCSV {
             return res;
         }
 
-        try {
+        ExecutorService executor = Executors.newFixedThreadPool(POOL_SIZE);
+        List<Future<Boolean>> futures = new ArrayList<>();
+
+        try (FileReader freader = new FileReader(fileName)) {
 
             res.setError(ResultadoValidacionArrendamiento.VALIDACION_OK);
-            FileReader freader = null;
-            freader = new FileReader(fileName);
+            //FileReader freader = null;
+            //freader = new FileReader(fileName);
             cvsReader = new CSVReader(freader, DELIMITADOR,'"',1);
 
             List<String[]> allRows = cvsReader.readAll();
-            LOGGER.debug("---------------------------tamaño del fichero "+allRows.size());
-            int cpus = Runtime.getRuntime().availableProcessors();
+            LOGGER.debug("---------------------------tamaño del fichero csvportados "+allRows.size());
+            //int cpus = Runtime.getRuntime().availableProcessors();
 
+            if (!allRows.isEmpty()) {
+                LOGGER.info("<--Inicia el recorido del csv {}", FechasUtils.getActualDate());
+
+                /*
+                List<Future<Boolean>> futures = new ArrayList<>();
+                for (String[] row : allRows) {
+                    futures.add(procesadorPortados.procesarAsync(row));
+                }
+
+                 */
+
+                for (final String[] row : allRows) {
+                    futures.add(executor.submit(new Callable<Boolean>() {
+                        @Override
+                        public Boolean call() {
+                            try {
+                                // Aquí llamas tu método asíncrono y esperas el resultado
+                                return procesadorPortados.procesarAsync(row).get();
+                            } catch (Exception e) {
+                                LOGGER.error("Error procesando registro", e);
+                                return false;
+                            }
+                        }
+                    }));
+                }
+
+                // Espera a que todos terminen (importante)
+                for (Future<Boolean> f : futures) {
+                    try {
+                        Boolean ok = f.get();
+                        if (Boolean.TRUE.equals(ok)) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                        }
+                        //f.get(); // espera a que termine, puedes manejar el resultado
+                    } catch (Exception e) {
+                        failCount++;
+                        LOGGER.error("Error esperando procesamiento asíncrono", e);
+                    }
+                }
+                LOGGER.info("<---Finished all threads---->");
+                LOGGER.info("Procesados exitosamente: {} / Fallidos: {}", successCount, failCount);
+            } else {
+                LOGGER.debug("fichero vacio");
+                res.setError(ResultadoValidacionArrendamiento.ERROR_FICHERO_VACIO);
+            }
+
+            /*
             if (allRows.size() > 0) {
 
-                ExecutorService executorServicePortados=Executors.newFixedThreadPool(cpus);
+                //ExecutorService executorServicePortados=Executors.newFixedThreadPool(cpus);
                 for (String[] row : allRows) {
-                    Runnable worker=new ProcesarRegistrosPortados(row);
-                    executorServicePortados.execute(worker);
+                    //FJAH 24052025
+                    //Runnable worker=new ProcesarRegistrosPortados(row);
+                    //executorServicePortados.execute(worker);
                     //checkFila(row);
+                    //executorServicePortados.execute(worker);
+                    procesadorPortados.procesarAsync(row);
 
                 }
-                executorServicePortados.shutdown();
-                while (!executorServicePortados.isTerminated()) {}
+                //FJAH 24052025
+                //executorServicePortados.shutdown();
+                //executorServicePortados.awaitTermination(30, TimeUnit.MINUTES);
+                //while (!executorServicePortados.isTerminated()) {}
                 LOGGER.info("<---Finished all threads---->");
 
             }
             else
             {
-                /* fichero vacio. */
+                // fichero vacio. //
                 LOGGER.debug("fichero vacio");
                 res.setError(ResultadoValidacionArrendamiento.ERROR_FICHERO_VACIO);
             }
-
+            */
+/*
         } catch (Exception e) {
-            /* fichero incorrecto. */
+            // fichero incorrecto. //
             res.setError(ResultadoValidacionArrendamiento.ERROR_FICHERO);
 
             LOGGER.error("Error validando archivo {}", fileName, e);
+ */
+
         } finally {
+            executor.shutdown();
             if (cvsReader != null) {
                 cvsReader.close();
             }
         }
 
         LOGGER.debug("fin validacion {} filas={} res={}", fileName, totalFilas, res.getError());
+
+        // Resumen al resultado si lo requieres
+        LOGGER.info("RESUMEN FINAL PORTADOS: Exitosos = {}, Fallidos = {}", successCount, failCount);
 
         return res;
     }

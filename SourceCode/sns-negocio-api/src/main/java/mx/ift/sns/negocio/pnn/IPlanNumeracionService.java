@@ -5,6 +5,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import mx.ift.sns.modelo.pnn.Plan;
+import mx.ift.sns.modelo.pnn.PlanMaestroDetalle;
 import mx.ift.sns.modelo.pnn.TipoPlan;
 
 /**
@@ -73,5 +74,13 @@ public interface IPlanNumeracionService {
      * @return Plan
      */
     Plan getPlanByTipoAndClaveServicio(String idTipo, BigDecimal claveServicio);
+
+    /**
+     * FJAH 17042025
+     * @param numeroInicial
+     * @param numeroFinal
+     * @return
+     */
+    PlanMaestroDetalle getDetalleNumeroConsultaPublica(Long numeroInicial, Long numeroFinal);
 
 }

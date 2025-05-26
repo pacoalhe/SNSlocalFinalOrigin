@@ -19,6 +19,17 @@ import javax.persistence.Version;
 @NamedQuery(name = "ControlTarea.findAll", query = "SELECT c FROM ControlTarea c")
 public class ControlTarea implements Serializable {
 
+    /**
+     * FJAH 08052025 Refactorización para evitar dejar con harcode de tareas a no ejecutarse.
+     * 0 = desbloqueado
+     * 1 = bloqueo automático (cron)
+     * 2 = bloqueo manual protegido
+     */
+    public static final int BLOQUEADO_NO = 0;
+    public static final int BLOQUEADO_SI = 1;
+    public static final int BLOQUEADO_MANUAL = 2;
+
+
     /** Serial UID. */
     private static final long serialVersionUID = 1L;
 
@@ -76,8 +87,15 @@ public class ControlTarea implements Serializable {
     @Id
     private String tarea;
 
+    /**
+     * FJAH 08052025 Refactorización para evitar dejar con harcode de tareas a no ejecutarse.
+     * 0 = desbloqueado
+     * 1 = bloqueo automático (cron)
+     * 2 = bloqueo manual protegido
+     */
     /** Tarea bloqueada. */
-    private boolean bloqueado;
+    private Integer bloqueado;
+    //private boolean bloqueado;
 
     /** Fecha tarea. */
     @Temporal(TemporalType.DATE)
@@ -106,18 +124,34 @@ public class ControlTarea implements Serializable {
     }
 
     /**
+     * FJAH 08052025 Refactorización para evitar dejar con harcode de tareas a no ejecutarse.
+     * 0 = desbloqueado
+     * 1 = bloqueo automático (cron)
+     * 2 = bloqueo manual protegido
+     */
+    /**
      * @return the bloqueado
      */
-    public boolean isBloqueado() {
+    public Integer getBloqueado() {
+        return bloqueado;
+    }
+    /*public boolean isBloqueado() {
         return bloqueado;
     }
 
+     */
     /**
      * @param bloqueado the bloqueado to set
      */
-    public void setBloqueado(boolean bloqueado) {
+    public void setBloqueado(Integer bloqueado) {
         this.bloqueado = bloqueado;
     }
+    /*public void setBloqueado(boolean bloqueado) {
+        this.bloqueado = bloqueado;
+    }
+
+     */
+
 
     /**
      * @return the fecha

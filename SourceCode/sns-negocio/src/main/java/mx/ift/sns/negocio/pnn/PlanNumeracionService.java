@@ -12,9 +12,11 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import mx.ift.sns.dao.pnn.IPlanDAO;
+import mx.ift.sns.dao.pnn.IPlanMaestroDAO;
 import mx.ift.sns.dao.pnn.ITipoPlanDAO;
 import mx.ift.sns.dao.pnn.ITipoPlanRolDAO;
 import mx.ift.sns.modelo.pnn.Plan;
+import mx.ift.sns.modelo.pnn.PlanMaestroDetalle;
 import mx.ift.sns.modelo.pnn.TipoPlan;
 import mx.ift.sns.negocio.IBitacoraService;
 import mx.ift.sns.negocio.ng.ISeriesService;
@@ -43,6 +45,9 @@ public class PlanNumeracionService implements IPlanNumeracionService {
     /** DAO de tipo de plan por rol. */
     @Inject
     private ITipoPlanRolDAO tipoPlanRolDAO;
+
+    @Inject
+    private IPlanMaestroDAO planMaestroDao;
 
     /** Servicio series. */
     @EJB
@@ -155,4 +160,16 @@ public class PlanNumeracionService implements IPlanNumeracionService {
     public Plan getPlanByTipoAndClaveServicio(String idTipo, BigDecimal claveServicio) {
         return tipoPlanRolDAO.getPlanByTipoAndClaveServicio(idTipo, claveServicio);
     }
+
+    /**
+     * FJAH 17042025
+     * @param numeroInicial
+     * @param numeroFinal
+     * @return
+     */
+    @Override
+    public PlanMaestroDetalle getDetalleNumeroConsultaPublica(Long numeroInicial, Long numeroFinal) {
+        return planMaestroDao.getDetalleNumeroConsultaPublica(numeroInicial, numeroFinal);
+    }
+
 }

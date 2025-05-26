@@ -38,6 +38,7 @@ import mx.ift.sns.modelo.usu.Usuario;
 import mx.ift.sns.negocio.IBitacoraService;
 import mx.ift.sns.negocio.conf.IParametrosService;
 import mx.ift.sns.negocio.exceptions.SincronizacionABDException;
+import mx.ift.sns.negocio.ng.model.ResultadoValidacionCSV;
 import mx.ift.sns.negocio.not.IMailService;
 import mx.ift.sns.negocio.port.modelo.ResultadoParser;
 import mx.ift.sns.negocio.utils.csv.ValidadorArchivoDeletedCSV;
@@ -73,6 +74,11 @@ import org.slf4j.LoggerFactory;
 @Stateless(name = "PortabilidadService", mappedName = "PortabilidadService")
 @Remote(IPortabilidadService.class)
 public class PortabilidadService implements IPortabilidadService {
+
+    //FJAH 26052025
+    public PortabilidadService() {
+        // Constructor vacío requerido por EJB
+    }
 
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(PortabilidadService.class);
@@ -112,6 +118,19 @@ public class PortabilidadService implements IPortabilidadService {
     /** Servicio de bitácora. */
     @EJB
     private IBitacoraService bitacoraService;
+
+    //FJAH 24052025
+    @EJB
+    private ValidadorArchivoDeletedCSV validadorArchivoDeletedCSV;
+
+    @EJB
+    private ValidadorArchivoDeletedCSV2 importDeleted;
+
+    @EJB
+    private ValidadorArchivoPortadosCSV validadorArchivoPortadosCSV;
+
+    @EJB
+    private ValidadorArchivoPortadosCSV2 validadorArchivoPortadosCSV2;
 
     /** DAO de status de portabilidad. */
     @Inject
@@ -359,11 +378,13 @@ public class PortabilidadService implements IPortabilidadService {
             LOGGER.debug("***-************- status:"+status.toString());
             LOGGER.debug("Validamos fichero: " + tmpPortedCSV+" longitud"+tmpPortedCSV.length());
             // importamos portados
-            ValidadorArchivoPortadosCSV importPortados = new ValidadorArchivoPortadosCSV();
-            
+            //FJAH 24052025
+            //ValidadorArchivoPortadosCSV importPortados = new ValidadorArchivoPortadosCSV();
+
             LOGGER.info("<--Inicia el procesamiento del csv de portados {}",FechasUtils.getActualDate());
 //            Cargar BD
-            importPortados.validar(tmpPortedCSV.getAbsolutePath());
+            //importPortados.validar(tmpPortedCSV.getAbsolutePath());
+            validadorArchivoPortadosCSV.validar(tmpPortedCSV.getAbsolutePath());
             
             LOGGER.info("<--finaliza el procesamiento del csv de portados {}", FechasUtils.getActualDate());
             
@@ -403,14 +424,19 @@ public class PortabilidadService implements IPortabilidadService {
             LOGGER.debug("***-************- status:"+status.toString());
             LOGGER.debug("Validamos fichero: " + tmpPortedCSV+" longitud"+tmpPortedCSV.length());
             // importamos portados
-            ValidadorArchivoPortadosCSV2 importPortados = new ValidadorArchivoPortadosCSV2();
+            //FJAH 24052025
+            //ValidadorArchivoPortadosCSV2 importPortados = new ValidadorArchivoPortadosCSV2();
 
             LOGGER.info("<--Inicia el procesamiento del csv de portados {}",FechasUtils.getActualDate());
 //            Cargar BD
-            Collection<NumeroRequestDTO> list = importPortados.validar(tmpPortedCSV.getAbsolutePath());
+
+
+            //Collection<NumeroRequestDTO> list = importPortados.validar(tmpPortedCSV.getAbsolutePath());
+            Collection<NumeroRequestDTO> list = validadorArchivoPortadosCSV2.validar(tmpPortedCSV.getAbsolutePath());
             for( NumeroRequestDTO dto : list ) {
                 sendPOST(dto, "https://sns.ift.org.mx/pst/insertPortados");
             }
+
             LOGGER.info("<--finaliza el procesamiento del csv de portados {}", FechasUtils.getActualDate());
 
 
@@ -444,12 +470,13 @@ public class PortabilidadService implements IPortabilidadService {
             LOGGER.debug("*****-*******-****** status:"+status.toString());
             LOGGER.debug("Validamos fichero: " + tmpDeletedCSV+" longitud"+tmpDeletedCSV.length());
             // importamos cancelaciones
-            
-            ValidadorArchivoDeletedCSV importDeleted=new ValidadorArchivoDeletedCSV();
+            //FJAH 24052025
+            //ValidadorArchivoDeletedCSV importDeleted=new ValidadorArchivoDeletedCSV();
+            ResultadoValidacionCSV resultado = validadorArchivoDeletedCSV.validar(tmpDeletedCSV.getAbsolutePath());
             LOGGER.info("<--Inicia el procesamiento del csv de cancelados {}",FechasUtils.getActualDate());
 
-            importDeleted.validar(tmpDeletedCSV.getAbsolutePath());
-            
+            //importDeleted.validar(tmpDeletedCSV.getAbsolutePath());
+
             LOGGER.info("<--finaliza el procesamiento del csv de cancelados {}", FechasUtils.getActualDate());
 
             return status;
@@ -486,14 +513,15 @@ public class PortabilidadService implements IPortabilidadService {
             LOGGER.debug("*****-*******-****** status:"+status.toString());
             LOGGER.debug("Validamos fichero: " + tmpDeletedCSV+" longitud"+tmpDeletedCSV.length());
             // importamos cancelaciones
-
-            ValidadorArchivoDeletedCSV2 importDeleted=new ValidadorArchivoDeletedCSV2();
+            //FJAH 24052025
+            //ValidadorArchivoDeletedCSV2 importDeleted=new ValidadorArchivoDeletedCSV2();
             LOGGER.info("<--Inicia el procesamiento del csv de cancelados {}",FechasUtils.getActualDate());
-
+            //Collection<NumeroCanceladoRequestDTO> list = importDeleted.validar(tmpDeletedCSV.getAbsolutePath());
             Collection<NumeroCanceladoRequestDTO> list = importDeleted.validar(tmpDeletedCSV.getAbsolutePath());
-            for ( NumeroCanceladoRequestDTO dto : list ) {
+            for (NumeroCanceladoRequestDTO dto : list) {
                 sendPOST(dto, "https://sns.ift.org.mx/pst/deletePort");
             }
+
             LOGGER.info("<--finaliza el procesamiento del csv de cancelados {}", FechasUtils.getActualDate());
 
             return status;
@@ -535,26 +563,32 @@ public class PortabilidadService implements IPortabilidadService {
     @Asynchronous
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void syncBDDPortabilidadAsync() {
-        LOGGER.debug("");
+        LOGGER.info("[syncBDDPortabilidadAsync] INICIO");
 
         if (checkConfig() == false) {
             bitacoraService.add(BIT_MSG_ERR_CONFIG);
+            LOGGER.warn("[syncBDDPortabilidadAsync] Configuración inválida, abortando.");
             return;
         }
 
         EstatusSincronizacion status = getStatus();
+        LOGGER.debug("[syncBDDPortabilidadAsync] Estatus inicial: {}", status);
 
         if (FechasUtils.esHoy(status.getTs())) {
+            LOGGER.debug("[syncBDDPortabilidadAsync] El status es de hoy.");
             if ((status.getEstatus() != null) && status.getEstatus().equals(EstatusSincronizacion.ESTATUS_PORT_OK)) {
-                LOGGER.debug("ejecutado hoy con ok, no hacemos nada.");
+                LOGGER.info("[syncBDDPortabilidadAsync] Ya fue ejecutado hoy con OK, no hace nada.");
                 return;
             } else {
                 int r = status.getReintentos().compareTo(MAX_REINTENTOS);
+                LOGGER.info("[syncBDDPortabilidadAsync] Reintentos actuales: {}", status.getReintentos());
                 if (r > 0) {
+                    LOGGER.warn("[syncBDDPortabilidadAsync] Máximo de reintentos alcanzado, abortando.");
                     LOGGER.debug("maximo reintentos.");
                     return;
                 } else {
                     LOGGER.debug("aumentamos reintentos");
+                    LOGGER.info("[syncBDDPortabilidadAsync] Aumentando reintentos.");
                     status.setReintentos(status.getReintentos().add(BigDecimal.ONE));
                 }
             }
@@ -568,12 +602,14 @@ public class PortabilidadService implements IPortabilidadService {
             // calculamos el dia de ayer
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.DATE, -1);
-            LOGGER.debug("Obtenemos ficheros");
+            LOGGER.info("[syncBDDPortabilidadAsync] Fecha de proceso: {}", cal.getTime());
+            LOGGER.info("[syncBDDPortabilidadAsync] Obteniendo nombres de archivos remotos...");
             String remoteFilePortedPath = getNumbersPortedFileName(cal.getTime());
             String remoteFileDeletedPath = getNumbersDeletedFileName(cal.getTime());
 
             tmpPorted = FicheroTemporal.getTmpFileName();
             tmpDeleted = FicheroTemporal.getTmpFileName();
+            LOGGER.info("[syncBDDPortabilidadAsync] Archivos temporales: ported={}, deleted={}", tmpPorted, tmpDeleted);
 
             //ConexionSFTP con = new ConexionSFTP();
 
@@ -586,18 +622,23 @@ public class PortabilidadService implements IPortabilidadService {
             													conectionParams,
             													remoteFilePortedPath,
             													remoteFileDeletedPath);
+            LOGGER.info("[syncBDDPortabilidadAsync] Iniciando descarga de archivos diarios...");
             ar.getArchidosDiarios();
+            LOGGER.info("[syncBDDPortabilidadAsync] Descarga finalizada.");
 
             if(tmpPorted.length()==0 || tmpDeleted.length()==0) {
+                LOGGER.error("[syncBDDPortabilidadAsync] Algún archivo descargado está vacío. ported.length={}, deleted.length={}", tmpPorted.length(), tmpDeleted.length());
             	throw new FileNotFoundException(remoteFilePortedPath);
             }
-            LOGGER.debug("Parseamos ficheros a CSV");
+            LOGGER.info("[syncBDDPortabilidadAsync] Parseando ficheros a CSV...");
             EstatusSincronizacion s = me.parsePortabilidad(tmpPorted, status);
+            LOGGER.info("[syncBDDPortabilidadAsync] Resultado parsePortabilidad: {}", s);
             status.setPortProcesadas(s.getPortProcesadas());
             status.setPortProcesar(s.getPortProcesadas());
             status.setProcesadasTs(s.getProcesadasTs());
 //            EstatusSincronizacion s =me.parseDeleted(tmpDeleted, status);
             s = me.parseDeleted(tmpDeleted, status);
+            LOGGER.info("[syncBDDPortabilidadAsync] Resultado parsePortabilidad: {}", s);
             status.setPortCanceladas(s.getPortCanceladas());
             status.setPortCancelar(s.getPortCancelar());
             status.setCanceladasTs(s.getCanceladasTs());
@@ -606,15 +647,22 @@ public class PortabilidadService implements IPortabilidadService {
             status.setTs(new Date());
             status.setReintentos(BigDecimal.ZERO);
 
+            // Obtenemos los totales realmente registrados en BD
+            BigDecimal totalPort = numerosPortadosDAO.getTotalNumerosPortadosHoy();
+            BigDecimal totalCancel = numerosCanceladosDAO.getTotalNumerosCanceladosHoy();
             // Obtenemos los totales que ralmente se ha registrado en BD
-            status.setPortProcesadas(numerosPortadosDAO.getTotalNumerosPortadosHoy());
-            status.setPortCanceladas(numerosCanceladosDAO.getTotalNumerosCanceladosHoy());
+            status.setPortProcesadas(totalPort);
+            status.setPortCanceladas(totalCancel);
+            //status.setPortProcesadas(numerosPortadosDAO.getTotalNumerosPortadosHoy());
+            //status.setPortCanceladas(numerosCanceladosDAO.getTotalNumerosCanceladosHoy());
+            LOGGER.info("[syncBDDPortabilidadAsync] Totales en BD: portados={}, cancelados={}", totalPort, totalCancel);
 
             String msg = formatMensaje(BIT_MSG_SYNC_OK, status);
-            LOGGER.info("+++++++++++++ "+msg);
+            LOGGER.info("[syncBDDPortabilidadAsync] Mensaje a bitácora: {}", msg);
             bitacoraService.add(msg);
+
             enviarMailSyncOk(status);
-            LOGGER.info("Sincronización ABD ejecutada en {}: {}", WeblogicNode.getName(), msg);
+            LOGGER.info("[syncBDDPortabilidadAsync] Sincronización ABD ejecutada en {}: {}", WeblogicNode.getName(), msg);
         } catch (FileNotFoundException e) {
             LOGGER.error("No se puede acceder al archivo: " + e.getMessage());
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
@@ -624,31 +672,35 @@ public class PortabilidadService implements IPortabilidadService {
 
             enviarMailErrorABD("No se puede acceder al archivo: " + e.getMessage());
         } catch (FileSystemException e) {
-            LOGGER.error("No se puede acceder al archivo: " + e.getMessage());
+            LOGGER.error("[syncBDDPortabilidadAsync] No se puede acceder al archivo: {}", e.getMessage(), e);
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
             status.setTs(new Date());
             enviarMailErrorABD("No se puede acceder al archivo: " + e.getMessage());
         } catch (Exception e) {
-            LOGGER.error("Error inespedado", e);
+            LOGGER.error("[syncBDDPortabilidadAsync] Error inesperado", e);
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
             status.setTs(new Date());
 
             enviarMailErrorABD("Error inespedado: " + e.getMessage());
         } finally {
+            LOGGER.info("[syncBDDPortabilidadAsync] Guardando status y eliminando temporales.");
 
             me.saveStatus(status);
 
             if (tmpPorted != null) {
                 FileUtils.deleteQuietly(tmpPorted);
+                LOGGER.info("[syncBDDPortabilidadAsync] Archivo temporal ported eliminado: {}", tmpPorted);
             }
 
             if (tmpDeleted != null) {
                 FileUtils.deleteQuietly(tmpDeleted);
-            }
+                LOGGER.info("[syncBDDPortabilidadAsync] Archivo temporal deleted eliminado: {}", tmpDeleted);
 
+            }
+            LOGGER.info("[syncBDDPortabilidadAsync] FIN");
         }
 
     }
@@ -787,7 +839,9 @@ public class PortabilidadService implements IPortabilidadService {
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void syncBDDPortabilidad() throws Exception {
+        LOGGER.info("[syncBDDPortabilidad] INICIO");
         syncBDDPortabilidadAsync();
+        LOGGER.info("[syncBDDPortabilidad] FIN (llamó a async)");
     }
 
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -798,8 +852,10 @@ public class PortabilidadService implements IPortabilidadService {
     @Override
     public void syncBDDPortabilidad(String file, TipoFicheroPort tipo, Usuario usuario)
             throws SincronizacionABDException {
+        LOGGER.info("[syncBDDPortabilidad(file,tipo,usuario)] INICIO: file={}, tipo={}, usuario={}", file, tipo, usuario);
         if (checkConfig() == false) {
             bitacoraService.add(BIT_MSG_ERR_CONFIG);
+            LOGGER.debug("Error configuracion Sincronización con ADB");
             return;
         }
 
@@ -809,28 +865,42 @@ public class PortabilidadService implements IPortabilidadService {
         File tmp = null;
 
         try {
+            LOGGER.debug("[syncBDDPortabilidad] Tipo de fichero recibido: {}", tipo.getCdg());
             if (tipo.getCdg().equals(TipoFicheroPort.DIARIO_PORTED)) {
-                LOGGER.debug("fichero de portabilidad.");
+                LOGGER.info("[syncBDDPortabilidad] Procesando fichero de portabilidad: {}", file);
 
                 tmp = new File(file);
+                LOGGER.debug("[syncBDDPortabilidad] Llamando a parsePortabilidad()");
                 parsePortabilidad(tmp, status);
+                LOGGER.info("[syncBDDPortabilidad] parsePortabilidad() terminó correctamente.");
             } else if (tipo.getCdg().equals(TipoFicheroPort.DIARIO_DELETED)) {
-                LOGGER.debug("fichero de cancelaciones.");
+                LOGGER.info("[syncBDDPortabilidad] Procesando fichero de cancelaciones: {}", file);
                 tmp = new File(file);
+                LOGGER.debug("[syncBDDPortabilidad] Llamando a parseDeleted()");
                 parseDeleted(tmp, status);
+                LOGGER.info("[syncBDDPortabilidad] parseDeleted() terminó correctamente.");
+            }else {
+                LOGGER.warn("[syncBDDPortabilidad] Tipo de fichero NO reconocido: {}", tipo.getCdg());
             }
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_OK);
             status.setTs(new Date());
 
+            // Loguea los totales registrados en BD
+            BigDecimal portProcesadas = numerosPortadosDAO.getTotalNumerosPortadosHoy();
+            BigDecimal portCanceladas = numerosCanceladosDAO.getTotalNumerosCanceladosHoy();
+            LOGGER.info("[syncBDDPortabilidad] Totales procesadas hoy: portProcesadas={}, portCanceladas={}", portProcesadas, portCanceladas);
+
             // Obtenemos los totales que ralmente se ha registrado en BD
             status.setPortProcesadas(numerosPortadosDAO.getTotalNumerosPortadosHoy());
             status.setPortCanceladas(numerosCanceladosDAO.getTotalNumerosCanceladosHoy());
 
+
             String msg = formatMensaje(BIT_MSG_SYNC_MANUAL_OK, status);
+            LOGGER.info("[syncBDDPortabilidad] Mensaje bitácora OK: {}", msg);
             bitacoraService.add(usuario, msg);
         } catch (FileNotFoundException e) {
-            LOGGER.error("no se puede acceder al archivo", e);
+            LOGGER.error("[syncBDDPortabilidad] No se puede acceder al archivo: {}", file, e);
 
             bitacoraService.add(usuario, BIT_MSG_SYNC_MANUAL_ERROR);
 
@@ -840,7 +910,7 @@ public class PortabilidadService implements IPortabilidadService {
             throw new SincronizacionABDException(BIT_MSG_SYNC_MANUAL_ERROR);
 
         } catch (FileSystemException e) {
-            LOGGER.error("no se puede acceder a los archivos", e);
+            LOGGER.error("[syncBDDPortabilidad] No se puede acceder a los archivos", e);
 
             bitacoraService.add(usuario, BIT_MSG_SYNC_ERROR);
 
@@ -850,18 +920,20 @@ public class PortabilidadService implements IPortabilidadService {
             throw new SincronizacionABDException(BIT_MSG_SYNC_ERROR);
         } catch (Exception e) {
 
-            LOGGER.error("exc", e);
+            LOGGER.error("[syncBDDPortabilidad] Exception general", e);
             bitacoraService.add(usuario, BIT_MSG_SYNC_MANUAL_ERROR);
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
             throw new SincronizacionABDException(BIT_MSG_SYNC_MANUAL_ERROR);
         } finally {
+            LOGGER.debug("[syncBDDPortabilidad] Llamando a FicheroTemporal.delete()");
             FicheroTemporal.delete(tmp);
             status.setTs(new Date());
             saveStatus(status);
+            LOGGER.info("[syncBDDPortabilidad] FIN bloque finally");
         }
 
-        LOGGER.debug("fin");
+        LOGGER.info("[syncBDDPortabilidad] FIN OK");
     }
 
     @Override

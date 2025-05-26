@@ -23,8 +23,15 @@ public interface IControlTareaDao extends IBaseDAO<ControlTarea> {
     ControlTarea getTareaNoBloqueada(String tarea, Date fecha);
 
     /**
+     * FJAH 08052025 Refactorización para evitar dejar con harcode de tareas a no ejecutarse.
+     * 0 = desbloqueado
+     * 1 = bloqueo automático (cron)
+     * 2 = bloqueo manual protegido
+     */
+    /**
      * Desbloquea todas las tareas.
      */
-    void desbloqueoTareas();
+    int desbloqueoTareas();
+    //void desbloqueoTareas();
 
 }

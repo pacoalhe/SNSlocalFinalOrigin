@@ -109,9 +109,11 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para desbloquear todas las tareas antes que se ejecuten.
      */
-    @Schedule(hour = "22", minute = "00", persistent = false)
+    @Schedule(hour = "22", minute = "00", persistent = true)
     void timeoutDesbloqueoTareas() {
-        controlTareasService.desbloqueoTareas();
+        LOGGER.info("Inicio del timer timeoutDesbloqueoTareas");
+        ejecutarDesbloqueoDeTareas();
+        LOGGER.info("Fin del timer timeoutDesbloqueoTareas");
     }
 
     /**
@@ -417,7 +419,7 @@ public class Scheduler implements IScheduler {
     @Schedule(hour = "2", minute = "0", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutABD() {
-
+        LOGGER.info("Inicio timer portabilidad ABD 02:00h"); //FJAH 25Mar2025
 	if (controlTareasService.isAccesoPermitido(ControlTarea.PRIMER_ABD)) {
 	    LOGGER.info("Ejecutando tareas planificadas 02:00h");
 	    try {
@@ -430,6 +432,7 @@ public class Scheduler implements IScheduler {
 		LOGGER.error("Detalle error", e.getCause());
 	    }
 	    controlTareasService.desbloquearTarea(ControlTarea.PRIMER_ABD);
+        LOGGER.info("Fin timer portabilidad ABD 02:00h"); //FJAH 25Mar2025
 	}
 
     }
@@ -440,6 +443,7 @@ public class Scheduler implements IScheduler {
     @Schedule(hour = "3", minute = "0", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutABD2() {
+        LOGGER.info("Inicio timer portabilidad ABD2 03:00h"); //FJAH 25Mar2025
 	if (controlTareasService.isAccesoPermitido(ControlTarea.SEGUNDO_ABD)) {
 	    LOGGER.info("Ejecutando tareas planificadas 03:00h");
 	    try {
@@ -452,6 +456,7 @@ public class Scheduler implements IScheduler {
 		LOGGER.error("Detalle error", e.getCause());
 	    }
 	    controlTareasService.desbloquearTarea(ControlTarea.SEGUNDO_ABD);
+        LOGGER.info("Fin timer portabilidad ABD2 04:00h"); //FJAH 25Mar2025
 	}
     }
 
@@ -461,6 +466,7 @@ public class Scheduler implements IScheduler {
     @Schedule(hour = "4", minute = "0", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutABD3() {
+        LOGGER.info("Inicio timer portabilidad ABD3 04:00h"); //FJAH 25Mar2025
 	if (controlTareasService.isAccesoPermitido(ControlTarea.TERCER_ABD)) {
 	    LOGGER.info("Ejecutando tareas planificadas 04:00h");
 	    try {
@@ -473,12 +479,14 @@ public class Scheduler implements IScheduler {
 		LOGGER.error("Detalle error", e.getCause());
 	    }
 	    controlTareasService.desbloquearTarea(ControlTarea.TERCER_ABD);
+        LOGGER.info("Fin timer portabilidad ABD3 04:00h"); //FJAH 25Mar2025
 	}
     }
 
     @Schedule(hour = "5", minute = "30", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void portacionSNS() {
+        LOGGER.info("Inicio timer PMN SNS 05:30h"); //FJAH 25Mar2025
         LOGGER.info("Fecha inicio de actualización PMN SNS. " + new Date().toString());
         // if (controlTareasService.isAccesoPermitido(ControlTarea.PORTACION_SNS)) {
         try {
@@ -488,6 +496,7 @@ public class Scheduler implements IScheduler {
         }
         // controlTareasService.desbloquearTarea(ControlTarea.PORTACION_SNS);
         LOGGER.info("Fecha terminacion de actualización PMN SNS. " + new Date().toString());
+        LOGGER.info("Fin timer PMN SNS 05:30h"); //FJAH 25Mar2025
         // }
     }
 
@@ -554,4 +563,164 @@ public class Scheduler implements IScheduler {
         timeoutDesbloqueoTareas();
         timeoutCuarentena();
     }
+
+
+    /**
+     * Timer para ejecutar tareas a la hora requerida
+     * FJAH 26MAR2025
+     */
+    private boolean testMode = true; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
+
+    @Schedule(hour = "11", minute = "59", persistent = false)
+    void timeoutPruebas() {
+        LOGGER.info("Inicio del timer timeoutPruebas a las 17:25 pm FJAH 22MAY2025");
+
+        // Si no estamos en modo test, no se ejecuta el timer de prueba
+        if (!testMode) {
+            LOGGER.info("Modo test deshabilitado, se omite ejecución de timeoutPruebas FJAH 22MAY2025");
+            return;
+        }
+
+        try {
+            testGenerarPlanes(); // FJAH 26MAR2025
+        } catch (Exception e) {
+            LOGGER.error("Error en la ejecución de testGenerarPlanes a las 12:00 pm FJAH 22MAY2025", e);
+            logBitacora("Error en testGenerarPlanes a las 12:00 pm FJAH 22MAY2025: " + e.getMessage());
+        }
+
+        LOGGER.info("Fin del timer timeoutPruebas a las 12:00 pm FJAH 22MAY2025");
+    }
+    /**
+     * Método de prueba para ejecutar todos los planes secuencialmente.
+     * FJAH 26MAR2025
+     */
+    public void testGenerarPlanes() {
+        LOGGER.info("Inicio de testGenerarPlanes FJAH 22MAY2025");
+
+        try {
+            //timeoutDesbloqueoTareas();
+            timeoutABD();
+            //FJAH 26032025 Modificación a logBitacora para persistincia
+            logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutABD FJAH 22MAYO2025.");
+        } catch (Exception e) {
+            LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 22MAYO2025", e);
+        }
+
+		/*
+
+		try {
+			timeoutABD2();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanABD FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
+		try {
+			timeoutABD3();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanABD FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
+		 */
+
+/*
+
+		try {
+			timeoutPlanABD();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanABD FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
+		try {
+			timeoutPlanIFT();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanIFT FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutPlanIFT durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
+		try {
+			timeoutPlanNg();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanNg FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutPlanNg durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
+		try {
+			timeoutPlanNng();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanNng FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutPlanNng durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
+		try {
+			timeoutPlanNngEspecifica();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanNngEspecifica FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutPlanNngEspecifica durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
+		try {
+			timeoutPlanNngEspecificaIFT();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanNngEspecificaIFT FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutPlanNngEspecificaIFT durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
+		try {
+			timeoutPlanNngEspecificaPst();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanNngEspecificaPst FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutPlanNngEspecificaPst durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
+		try {
+			timeoutReporteABD();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutReporteABD FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutReporteABD durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
+ */
+        LOGGER.info("Fin de testGenerarPlanes FJAH 22MAYO2025");
+    }
+
+    private void ejecutarDesbloqueoDeTareas() {
+        LOGGER.info("Iniciando el proceso de desbloqueo de tareas.");
+
+        if (bitacoraService != null) {
+            logBitacora("Inicio de cron job: Desbloqueo de tareas.");
+        }
+
+        try {
+            controlTareasService.desbloqueoTareas();
+
+            LOGGER.info("Tareas desbloqueadas exitosamente.");
+            if (bitacoraService != null) {
+                logBitacora("Tareas desbloqueadas exitosamente.");
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error ejecutando el desbloqueo de tareas", e);
+            if (bitacoraService != null) {
+                logBitacora("Error ejecutando desbloqueo de tareas: " + e.getMessage());
+            }
+        }
+    }
+
+    // FJAH 26MAR2025: Método auxiliar para registrar en la bitácora en una nueva transacción
+    private void logBitacora(String s) {
+        bitacoraService.add(s);
+    }
+
 }

@@ -40,7 +40,7 @@ public class SNS {
     public void init() {
         final String v = " start " + Version.getModulo() + " " + Version.getVersion();
 
-        BaseDAO.setEntityManager(entityManager);
+        //BaseDAO.setEntityManager(entityManager);
 
         String nodo = WeblogicNode.getName();
 
