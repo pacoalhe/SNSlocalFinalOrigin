@@ -14,6 +14,28 @@ import java.util.concurrent.TimeUnit;
  */
 public final class FechasUtils {
 
+    //FJAH 28.05.2025 Refactorizar fecha hoy a manual o viceversa
+    //private static String FECHA_MANUAL = "30.05.2025"; // Ejemplo: "28.05.2025"
+    private static String FECHA_MANUAL = null; // Ejemplo: null para el día actual
+
+    //public static final String FECHA_PRUEBA_STR = "2025-05-08";
+    //public static final Date FECHA_PRUEBA;
+/*
+
+
+    static {
+        Date tmp = null;
+        try {
+            tmp = new SimpleDateFormat("yyyy-MM-dd").parse(FECHA_PRUEBA_STR);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        FECHA_PRUEBA = tmp;
+    }
+
+ */
+
+
     /** Fecha y hora. */
     public static final String FORMATO_FECHA_HORA = "dd/MM/yyyy HH:mm:ss";
 
@@ -117,14 +139,32 @@ public final class FechasUtils {
      * @param pFormat Formato de Fecha
      * @return fecha actual con el formato indicado por parámetros.
      */
+    //FJAH 28.05.2025 Refactorizacion de la fecha hoy a manual y viceversa
     public static Date getFechaHoy(String pFormat) {
         try {
-            sdfCustom = new SimpleDateFormat(pFormat, localeES);
-            return sdfCustom.parse(sdfCustom.format(new Date()));
-        } catch (Exception pe) {
-            return null;
+            SimpleDateFormat sdfCustom = new SimpleDateFormat(pFormat, localeES);
+
+            if (FECHA_MANUAL != null && !FECHA_MANUAL.isEmpty()) {
+                return sdfCustom.parse(FECHA_MANUAL);
+            } else {
+                return sdfCustom.parse(sdfCustom.format(new Date()));
+            }
+        } catch (ParseException pe) {
+            throw new RuntimeException("Error formateando la fecha", pe);
         }
     }
+
+    /*
+    public static Date getFechaHoy(String pFormat) {
+        try {
+            SimpleDateFormat sdfCustom = new SimpleDateFormat(pFormat, localeES);
+            return sdfCustom.parse(sdfCustom.format(new Date()));
+        } catch (ParseException pe) {
+            throw new RuntimeException("Error formateando la fecha", pe);
+        }
+    }
+
+     */
 
     /**
      * Calcula una fecha a partir del día actual y sumándole los días/meses/años indicados por parámetros.
@@ -333,23 +373,44 @@ public final class FechasUtils {
      * Devuelve la fecha actual con formato dd/MM/yyyy HH:mm:ss.
      * @return fecha actual con formato dd/MM/yyyy HH:mm:ss
      */
+
+    public static String getActualDate() {
+        // Ejemplo: "dd.MM.yyyy HH:mm:ss"
+        DateFormat dateFormat = new SimpleDateFormat(FORMATO_FECHA_HORA);
+        Calendar cal = Calendar.getInstance();
+
+        if (FECHA_MANUAL != null && !FECHA_MANUAL.isEmpty()) {
+            // Obtener día, mes, año de FECHA_MANUAL y poner hora/min/seg del sistema
+            try {
+                // Extraemos la parte de fecha usando mismo formato que FECHA_MANUAL
+                SimpleDateFormat sdfFecha = new SimpleDateFormat("dd.MM.yyyy");
+                Date fechaManualDate = sdfFecha.parse(FECHA_MANUAL);
+                Calendar calManual = Calendar.getInstance();
+                calManual.setTime(fechaManualDate);
+
+                // Copiar hora/min/seg/millis actuales
+                calManual.set(Calendar.HOUR_OF_DAY, cal.get(Calendar.HOUR_OF_DAY));
+                calManual.set(Calendar.MINUTE, cal.get(Calendar.MINUTE));
+                calManual.set(Calendar.SECOND, cal.get(Calendar.SECOND));
+                calManual.set(Calendar.MILLISECOND, cal.get(Calendar.MILLISECOND));
+
+                return dateFormat.format(calManual.getTime());
+            } catch (ParseException e) {
+                throw new RuntimeException("Error formateando la fecha manual", e);
+            }
+        } else {
+            // Fecha y hora actual
+            return dateFormat.format(cal.getTime());
+        }
+    }
+
+    /*
     public static String getActualDate(){
 		DateFormat dateFormat = new SimpleDateFormat(FORMATO_FECHA_HORA);
 		Calendar cal = Calendar.getInstance();
 		return dateFormat.format(cal.getTime());
 	}
 
-    public static final String FECHA_PRUEBA_STR = "2025-05-08";
-    public static final Date FECHA_PRUEBA;
-
-    static {
-        Date tmp = null;
-        try {
-            tmp = new SimpleDateFormat("yyyy-MM-dd").parse(FECHA_PRUEBA_STR);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        FECHA_PRUEBA = tmp;
-    }
+     */
 
 }

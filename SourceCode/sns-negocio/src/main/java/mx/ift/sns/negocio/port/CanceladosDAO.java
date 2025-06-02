@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,20 +31,22 @@ public class CanceladosDAO {
 	//private static Connection conn = ConnectionBD.getConnection();
 
 	/**
-	 * FJAH 23052025 Refactorización del metodo update
+	 * FJAH 23052025 Refactorización
 	 * Sin campos estáticos de conexión.
 	 * Cada método abre y cierra su propia conexión.
 	 * Manejo seguro de autoCommit:
-	 * 				Se pone en false para transacción manual.
-	 * 				Se hace rollback en caso de excepción.
-	 * 				Se restaura autoCommit a true antes de cerrar conexión (buena práctica con pools).
+	 * Se pone en false para transacción manual.
+	 * Se hace rollback en caso de excepción.
+	 * Se restaura autoCommit a true antes de cerrar conexión (buena práctica con pools).
 	 * Todos los recursos se cierran en el bloque finally.
 	 * Thread-safe:
-	 * 				No hay variables de instancia ni estáticas compartidas.
+	 * No hay variables de instancia ni estáticas compartidas.
 	 */
 
 	@Resource(lookup = "jdbc/SNS")
 	private DataSource dataSource;
+
+	final int BATCH_SIZE = 2500;
 
 	private final ReentrantLock lock = new ReentrantLock();
 	private static final long LOCK_TIMEOUT = 30; // segundos
@@ -94,14 +97,14 @@ public class CanceladosDAO {
 			//conn.setAutoCommit(false);
 
 			//try {
-				if (existeNumeroPortado(conn, numero)) {
-					eliminarNumeroPortado(conn, numero);
-					LOGGER.debug("Número {} eliminado correctamente de port_num_portado", numero);
-				}
-				//conn.commit();
+			if (existeNumeroPortado(conn, numero)) {
+				eliminarNumeroPortado(conn, numero);
+				LOGGER.debug("Número {} eliminado correctamente de port_num_portado", numero);
+			}
+			//conn.commit();
 			//} catch (SQLException e) {
 			//	if (!conn.isClosed()) {
-					//conn.rollback();
+			//conn.rollback();
 			//	}
 			//	throw e;
 			//}
@@ -113,9 +116,9 @@ public class CanceladosDAO {
 			//conn.setAutoCommit(false);
 
 			//try {
-				insertarNumeroCancelado(conn, numero);
-				LOGGER.debug("Número {} insertado correctamente en port_num_cancelado", numero.getNumberFrom());
-				//conn.commit();
+			insertarNumeroCancelado(conn, numero);
+			LOGGER.debug("Número {} insertado correctamente en port_num_cancelado", numero.getNumberFrom());
+			//conn.commit();
 			/*
 			} catch (SQLException e) {
 				if (!conn.isClosed()) {
@@ -191,7 +194,226 @@ public class CanceladosDAO {
 		}
 	}
 
+	public int procesarCanceladosBatch(List<NumeroCancelado> numeros) throws SQLException {
+		int totalProcesados = 0;
+		int totalDeletes = 0;
+		int totalDeletesAfectados = 0;
+		Connection conn = null;
+		PreparedStatement psDelete = null;
+		PreparedStatement psInsert = null;
+
+		String deleteSQL = "DELETE FROM PORT_NUM_PORTADO WHERE NUMBERFROM = ?";
+		String insertSQL = "INSERT INTO PORT_NUM_CANCELADO " +
+				"(PORTID, PORTTYPE, ACTION, NUMBERFROM, NUMBERTO, ISMPP, RIDA, RCR, DIDA, DCR, ACTIONDATE, ASSIGNEEIDA, ASSIGNEECR) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+		//final int BATCH_SIZE = 1000;
+		int batchCountDelete = 0;
+		int batchCountInsert = 0;
+
+		try {
+			conn = dataSource.getConnection();
+			psDelete = conn.prepareStatement(deleteSQL);
+			psInsert = conn.prepareStatement(insertSQL);
+
+			// ====== DELETE EN BATCH ======
+			for (NumeroCancelado num : numeros) {
+				psDelete.setString(1, num.getNumberFrom());
+				psDelete.addBatch();
+				batchCountDelete++;
+				// Ejecutar el batch de deletes cada BATCH_SIZE
+				if (batchCountDelete >= BATCH_SIZE) {
+					int[] deleteResults = psDelete.executeBatch();
+					for (int del : deleteResults) if (del > 0) totalDeletesAfectados++;
+					totalDeletes += deleteResults.length;
+					psDelete.clearBatch();
+					batchCountDelete = 0;
+				}
+			}
+			// Ejecutar deletes restantes
+			if (batchCountDelete > 0) {
+				int[] deleteResults = psDelete.executeBatch();
+				for (int del : deleteResults) if (del > 0) totalDeletesAfectados++;
+				totalDeletes += deleteResults.length;
+				psDelete.clearBatch();
+			}
+			LOGGER.info("Batch DELETE: Total registros en XML deleted = {}, deletes ejecutados = {}, portados afectados (borrados) = {}",
+					numeros.size(), totalDeletes, totalDeletesAfectados);
+
+			// ====== INSERT EN BATCH ======
+			for (NumeroCancelado num : numeros) {
+				psInsert.setString(1, num.getPortId());
+				psInsert.setString(2, num.getPortType());
+				psInsert.setString(3, num.getAction());
+				psInsert.setString(4, num.getNumberFrom());
+				psInsert.setString(5, num.getNumberTo());
+				psInsert.setString(6, num.getIsMpp());
+				psInsert.setBigDecimal(7, num.getRida());
+				psInsert.setBigDecimal(8, num.getRcr());
+				psInsert.setBigDecimal(9, num.getDida());
+				psInsert.setBigDecimal(10, num.getDcr());
+				psInsert.setTimestamp(11, num.getActionDate());
+				psInsert.setBigDecimal(12, num.getAssigneeIda());
+				psInsert.setBigDecimal(13, num.getAssigneeCr());
+				psInsert.addBatch();
+				batchCountInsert++;
+
+				if (batchCountInsert >= BATCH_SIZE) {
+					try {
+						int[] insertResults = psInsert.executeBatch();
+						int loteProcesados = 0;
+						for (int r : insertResults) if (r > 0) loteProcesados++;
+						totalProcesados += loteProcesados;
+						LOGGER.info("Batch INSERT: {} registros insertados en cancelados.", loteProcesados);
+					} catch (SQLException ex) {
+						LOGGER.error("Error ejecutando batch insert en cancelados: {}", ex.getMessage(), ex);
+					}
+					psInsert.clearBatch();
+					batchCountInsert = 0;
+				}
+			}
+			// Ejecutar inserts restantes
+			if (batchCountInsert > 0) {
+				try {
+					int[] insertResults = psInsert.executeBatch();
+					int loteProcesados = 0;
+					for (int r : insertResults) if (r > 0) loteProcesados++;
+					totalProcesados += loteProcesados;
+					LOGGER.info("Batch final INSERT: {} registros insertados en cancelados.", loteProcesados);
+				} catch (SQLException ex) {
+					LOGGER.error("Error ejecutando batch final insert en cancelados: {}", ex.getMessage(), ex);
+				}
+				psInsert.clearBatch();
+			}
+
+			LOGGER.info("PROCESO COMPLETO CANCELADOS: Total insertados = {}, Total a procesar = {}", totalProcesados, numeros.size());
+
+			if (totalProcesados < numeros.size()) {
+				LOGGER.warn("Alerta: No todos los registros de XML deleted se insertaron en cancelados. Esperados: {}, insertados: {}",
+						numeros.size(), totalProcesados);
+			}
+			if (totalDeletesAfectados < numeros.size()) {
+				LOGGER.warn("Alerta: No todos los numbersFrom existían en portados. Esperados: {}, borrados en portados: {}",
+						numeros.size(), totalDeletesAfectados);
+			}
+		} catch (SQLException ex) {
+			LOGGER.error("Error global al procesar cancelados batch: {}", ex.getMessage(), ex);
+			throw ex;
+		} finally {
+			try { if (psDelete != null) psDelete.close(); } catch (Exception e) {}
+			try { if (psInsert != null) psInsert.close(); } catch (Exception e) {}
+			try { if (conn != null) conn.close(); } catch (Exception e) {}
+		}
+		return totalProcesados;
+	}
+
+
+	/*
+	public int procesarCanceladosBatch(List<NumeroCancelado> numeros) throws SQLException {
+		int totalProcesados = 0;
+		Connection conn = null;
+		PreparedStatement psDelete = null;
+		PreparedStatement psInsert = null;
+
+		String deleteSQL = "DELETE FROM PORT_NUM_PORTADO WHERE NUMBERFROM = ?";
+		String insertSQL = "INSERT INTO PORT_NUM_CANCELADO " +
+				"(PORTID, PORTTYPE, ACTION, NUMBERFROM, NUMBERTO, ISMPP, RIDA, RCR, DIDA, DCR, ACTIONDATE, ASSIGNEEIDA, ASSIGNEECR) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+		try {
+			conn = dataSource.getConnection();
+			psDelete = conn.prepareStatement(deleteSQL);
+			psInsert = conn.prepareStatement(insertSQL);
+
+			int batchCount = 0;
+			final int BATCH_SIZE = 1000; // Ajusta aquí si quieres
+
+			for (NumeroCancelado num : numeros) {
+				// Eliminar de portados
+				psDelete.setString(1, num.getNumberFrom());
+				int deleted = psDelete.executeUpdate();
+
+				//if (deleted > 0) {
+					// Insertar en cancelados (usando los datos del objeto NumeroCancelado)
+					psInsert.setString(1, num.getPortId());
+					psInsert.setString(2, num.getPortType());
+					psInsert.setString(3, num.getAction());
+					psInsert.setString(4, num.getNumberFrom());
+					psInsert.setString(5, num.getNumberTo());
+					psInsert.setString(6, num.getIsMpp());
+					psInsert.setBigDecimal(7, num.getRida());
+					psInsert.setBigDecimal(8, num.getRcr());
+					psInsert.setBigDecimal(9, num.getDida());
+					psInsert.setBigDecimal(10, num.getDcr());
+					psInsert.setTimestamp(11, num.getActionDate());
+					psInsert.setBigDecimal(12, num.getAssigneeIda());
+					psInsert.setBigDecimal(13, num.getAssigneeCr());
+					psInsert.addBatch();
+					batchCount++;
+				//}
+
+				// Ejecutar batch cada BATCH_SIZE registros
+				if (batchCount >= BATCH_SIZE) {
+					try {
+						int[] results = psInsert.executeBatch();
+						int loteProcesados = 0;
+						for (int r : results) {
+							if (r > 0) loteProcesados++;
+						}
+						totalProcesados += loteProcesados;
+						LOGGER.info("Batch de {} procesados (insertados en cancelados).", loteProcesados);
+					} catch (SQLException ex) {
+						LOGGER.error("Error ejecutando batch insert en cancelados: {}", ex.getMessage(), ex);
+					}
+					psInsert.clearBatch();
+					batchCount = 0;
+				}
+			}
+
+			// Ejecutar los restantes (menos de BATCH_SIZE)
+			if (batchCount > 0) {
+				try {
+					int[] results = psInsert.executeBatch();
+					int loteProcesados = 0;
+					for (int r : results) {
+						if (r > 0) loteProcesados++;
+					}
+					totalProcesados += loteProcesados;
+					LOGGER.info("Batch final de {} procesados (insertados en cancelados).", loteProcesados);
+				} catch (SQLException ex) {
+					LOGGER.error("Error ejecutando batch final insert en cancelados: {}", ex.getMessage(), ex);
+				}
+				psInsert.clearBatch();
+			}
+
+			LOGGER.info("Batch completo finalizado. Total insertados en cancelados: {}", totalProcesados);
+
+			if (totalProcesados < numeros.size()) {
+				LOGGER.warn("No todos los registros fueron procesados. Esperados: {}, afectados: {}", numeros.size(), totalProcesados);
+			} else if (totalProcesados == 0) {
+				LOGGER.warn("Ningún registro fue procesado en cancelados.");
+			}
+
+		} catch (SQLException ex) {
+			LOGGER.error("Error global al procesar cancelados batch: {}", ex.getMessage(), ex);
+		} finally {
+			try { if (psDelete != null) psDelete.close(); } catch (Exception e) {}
+			try { if (psInsert != null) psInsert.close(); } catch (Exception e) {}
+			try { if (conn != null) conn.close(); } catch (Exception e) {}
+		}
+
+		LOGGER.info("Total de registros cancelados (borrados e insertados): {}", totalProcesados);
+		return totalProcesados;
+	}
+
+	 */
+
 }
+
+
+
+
+
 	/*
 	public static void delete(String numero) throws SQLException {
 		Connection conn = null;

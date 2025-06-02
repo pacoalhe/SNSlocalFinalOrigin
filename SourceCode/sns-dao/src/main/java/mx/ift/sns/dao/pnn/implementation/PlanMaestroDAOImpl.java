@@ -24,26 +24,49 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
 
     @Override
     public PlanMaestroDetalle getDetalleNumero(Long numeroInicial, Long numeroFinal) {
+        //final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO "
+        //        + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= :numeroInicial AND NUMERO_FINAL >= :numeroFinal";
         final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO "
-                + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= :numeroInicial AND NUMERO_FINAL >= :numeroFinal";
+                + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= ?1 AND NUMERO_FINAL >= ?2";
 
-        PlanMaestroDetalle planMaestroDetalle = new PlanMaestroDetalle();
+        //FJAH 27.05.2025
+        LOGGER.debug("getDetalleNumero - numeroInicial: " + numeroInicial + ", numeroFinal: " + numeroFinal);
+        if (numeroInicial == null || numeroFinal == null) {
+            LOGGER.error("Parámetros null en getDetalleNumero: numeroInicial=" + numeroInicial + ", numeroFinal=" + numeroFinal);
+            return null;
+        }
+
+        //PlanMaestroDetalle planMaestroDetalle = new PlanMaestroDetalle();
+        PlanMaestroDetalle planMaestroDetalle = null;
+        //Fin FJAH
 
         try {
             Query consulta = getEntityManager().createNativeQuery(strQuery, PlanMaestroDetalle.class);
 
+            // FJAH 27.05.2025 *** Setteo parámetros ***
+            consulta.setParameter(1, numeroInicial);
+            consulta.setParameter(2, numeroFinal);
+            //Fin FJAH
+
             LOGGER.info("Se realiza la búsqueda del número {} en el plan maestro", numeroInicial);
+            //Uncheked
             @SuppressWarnings("unchecked")
             List<PlanMaestroDetalle> listPlanMaestroDetalle = consulta.getResultList();
 
             if (listPlanMaestroDetalle != null && !listPlanMaestroDetalle.isEmpty()) {
                 planMaestroDetalle = listPlanMaestroDetalle.get(0);
                 LOGGER.info("Se localizó el número {} en el plan maestro.", numeroInicial);
+            } else {
+                LOGGER.warn("No se encontró ningún resultado para el número {} en el plan maestro.", numeroInicial);
             }
         } catch (NoResultException e) {
             LOGGER.error("No se localizó el número {} en el plan maestro.", numeroInicial);
-            return null;
+            //FJAH 27.05.2025
+            //return null;
+        } catch (Exception e) {
+            LOGGER.error("Error inesperado en getDetalleNumero: " + e.getMessage(), e);
         }
+        //Fin FJAH
         return planMaestroDetalle;
     }
 

@@ -501,7 +501,7 @@ public class Scheduler implements IScheduler {
     }
 
 
-    @Schedule(hour = "13", minute = "30", persistent = false)
+    @Schedule(hour = "21", minute = "17", persistent = false)
     @TransactionAttribute( TransactionAttributeType.NOT_SUPPORTED)
     void portacionManual() {
 
@@ -569,41 +569,42 @@ public class Scheduler implements IScheduler {
      * Timer para ejecutar tareas a la hora requerida
      * FJAH 26MAR2025
      */
-    private boolean testMode = true; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
+    private boolean testMode = false; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
 
-    @Schedule(hour = "11", minute = "59", persistent = false)
+    @Schedule(hour = "08", minute = "40", persistent = false)
     void timeoutPruebas() {
-        LOGGER.info("Inicio del timer timeoutPruebas a las 17:25 pm FJAH 22MAY2025");
+        LOGGER.info("Inicio del timer timeoutPruebas");
 
         // Si no estamos en modo test, no se ejecuta el timer de prueba
         if (!testMode) {
-            LOGGER.info("Modo test deshabilitado, se omite ejecución de timeoutPruebas FJAH 22MAY2025");
+            LOGGER.info("Modo test deshabilitado, se omite ejecución de timeoutPruebas");
             return;
         }
 
         try {
             testGenerarPlanes(); // FJAH 26MAR2025
         } catch (Exception e) {
-            LOGGER.error("Error en la ejecución de testGenerarPlanes a las 12:00 pm FJAH 22MAY2025", e);
-            logBitacora("Error en testGenerarPlanes a las 12:00 pm FJAH 22MAY2025: " + e.getMessage());
+            LOGGER.error("Error en la ejecución de testGenerarPlanes", e);
+            logBitacora("Error en testGenerarPlanes: " + e.getMessage());
         }
 
-        LOGGER.info("Fin del timer timeoutPruebas a las 12:00 pm FJAH 22MAY2025");
+        LOGGER.info("Fin del timer timeoutPruebas");
     }
     /**
      * Método de prueba para ejecutar todos los planes secuencialmente.
      * FJAH 26MAR2025
      */
     public void testGenerarPlanes() {
-        LOGGER.info("Inicio de testGenerarPlanes FJAH 22MAY2025");
+        LOGGER.info("Inicio de testGenerarPlanes");
 
         try {
             //timeoutDesbloqueoTareas();
             timeoutABD();
+            //timeoutABD2();
             //FJAH 26032025 Modificación a logBitacora para persistincia
-            logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutABD FJAH 22MAYO2025.");
+            logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutABD");
         } catch (Exception e) {
-            LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 22MAYO2025", e);
+            LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: ", e);
         }
 
 		/*

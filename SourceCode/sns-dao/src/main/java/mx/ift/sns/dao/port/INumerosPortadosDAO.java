@@ -1,6 +1,7 @@
 package mx.ift.sns.dao.port;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 import mx.ift.sns.dao.IBaseDAO;
 import mx.ift.sns.modelo.port.NumeroPortado;
@@ -28,4 +29,16 @@ public interface INumerosPortadosDAO extends IBaseDAO<NumeroPortado> {
      * @throws Exception error
      */
     BigDecimal getTotalNumerosPortadosHoy() throws Exception;
+
+    /** /**
+     * FJAH 27.05.2025 Refactorización.
+     * Obtiene el total de números portados para una fecha de actionDate específica.
+     * @param fechaActionDate Fecha a consultar (generalmente, la extraída del archivo CSV/XML)
+     * @return total
+     * @throws Exception error
+     */
+    BigDecimal getTotalNumerosPortadosPorFecha(Date fechaActionDate) throws Exception;
+
+
+
 }

@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -24,12 +26,14 @@ import javax.sql.DataSource;
 @Stateless
 public class PortadosDAO {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(PortadosDAO.class);
+
 	//FJAH 26052025
 	public PortadosDAO() {
 		// Constructor vacío requerido por EJB
 	}
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(PortadosDAO.class);
+	final int BATCH_SIZE = 5000;
 
 	//private static Connection conn = ConnectionBD.getConnection();
 
@@ -47,7 +51,6 @@ public class PortadosDAO {
 	 */
 	@Resource(lookup = "jdbc/SNS")
 	private DataSource dataSource;
-
 
 	private final ReentrantLock lock = new ReentrantLock();
 	private static final long LOCK_TIMEOUT = 30; // segundos
@@ -184,10 +187,96 @@ public class PortadosDAO {
 		}
 	}
 
+	//FJAH 26052025 Refactorización en lotes
 	@PostConstruct
-	public void init() {
-		LOGGER.info("PortadosDAO inicializado correctamente");
+	public void init(){
+
 	}
+
+	public int upsertBatch(List<NumeroPortado> numeros) throws SQLException {
+		String mergeSQL = "MERGE INTO PORT_NUM_PORTADO t " +
+				"USING (SELECT ? AS PORTID, ? AS PORTTYPE, ? AS ACTION, ? AS NUMBERFROM, ? AS NUMBERTO, ? AS ISMPP, ? AS RIDA, ? AS RCR, ? AS DIDA, ? AS DCR, ? AS ACTIONDATE FROM DUAL) s " +
+				"ON (t.NUMBERFROM = s.NUMBERFROM) " +
+				"WHEN MATCHED THEN UPDATE SET " +
+				"    t.PORTID = s.PORTID, " +
+				"    t.PORTTYPE = s.PORTTYPE, " +
+				"    t.ACTION = s.ACTION, " +
+				"    t.NUMBERTO = s.NUMBERTO, " +
+				"    t.ISMPP = s.ISMPP, " +
+				"    t.RIDA = s.RIDA, " +
+				"    t.RCR = s.RCR, " +
+				"    t.DIDA = s.DIDA, " +
+				"    t.DCR = s.DCR, " +
+				"    t.ACTIONDATE = s.ACTIONDATE " +
+				"WHEN NOT MATCHED THEN INSERT (PORTID, PORTTYPE, ACTION, NUMBERFROM, NUMBERTO, ISMPP, RIDA, RCR, DIDA, DCR, ACTIONDATE) " +
+				"VALUES (s.PORTID, s.PORTTYPE, s.ACTION, s.NUMBERFROM, s.NUMBERTO, s.ISMPP, s.RIDA, s.RCR, s.DIDA, s.DCR, s.ACTIONDATE)";
+
+		int total = 0;
+		int batchCount = 0;
+		try (Connection conn = dataSource.getConnection();
+			 PreparedStatement ps = conn.prepareStatement(mergeSQL)) {
+			for (NumeroPortado n : numeros) {
+				ps.setString(1, n.getPortId());
+				ps.setString(2, n.getPortType());
+				ps.setString(3, n.getAction());
+				ps.setString(4, n.getNumberFrom());
+				ps.setString(5, n.getNumberTo());
+				ps.setString(6, n.getIsMpp());
+				ps.setBigDecimal(7, n.getRida());
+				ps.setBigDecimal(8, n.getRcr());
+				ps.setBigDecimal(9, n.getDida());
+				ps.setBigDecimal(10, n.getDcr());
+				ps.setTimestamp(11, n.getActionDate());
+				ps.addBatch();
+				batchCount++;
+
+				// Si quieres dividir en sublotes, activa esto:
+				if (batchCount >= BATCH_SIZE) {
+					int[] results = ps.executeBatch();
+					int lote = 0;
+					for (int r : results) lote += r;
+					total += lote;
+					LOGGER.info("Batch de {} registros procesados en MERGE portados", lote);
+					ps.clearBatch();
+					batchCount = 0;
+				}
+			}
+			// Procesa el último sub-lote si quedó incompleto
+			if (batchCount > 0) {
+				int[] results = ps.executeBatch();
+				int lote = 0;
+				for (int r : results) lote += r;
+				total += lote;
+				LOGGER.info("Batch final de {} registros procesados en MERGE portados", lote);
+				ps.clearBatch();
+			}
+		}
+		LOGGER.info("Total de registros afectados por batch (portados): {}", total);
+		return total;
+	}
+
+
+
+	public int insertOrUpdateBatch(List<NumeroPortado> batch) throws SQLException {
+		int count = 0;
+		try (Connection conn = dataSource.getConnection()) {
+			conn.setAutoCommit(false);
+			for (NumeroPortado numero : batch) {
+				if (existeNumeroPortado(conn, numero.getNumberFrom())) {
+					actualizarNumeroPortado(conn, numero);
+				} else {
+					insertarNumeroPortado(conn, numero);
+				}
+				count++;
+			}
+			conn.commit();
+		} catch (SQLException e) {
+			LOGGER.error("Error en insertOrUpdateBatch", e);
+			throw e;
+		}
+		return count;
+	}
+
 }
 
 

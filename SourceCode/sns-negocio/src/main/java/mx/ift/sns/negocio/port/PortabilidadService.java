@@ -1,6 +1,7 @@
 package mx.ift.sns.negocio.port;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -12,6 +13,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import javax.annotation.PostConstruct;
@@ -28,6 +31,7 @@ import javax.net.ssl.SSLContext;
 import javax.persistence.NoResultException;
 
 import com.google.gson.Gson;
+import com.opencsv.CSVReader;
 import mx.ift.sns.dao.port.IEstatusSincronizacionDao;
 import mx.ift.sns.dao.port.INumerosCanceladosDAO;
 import mx.ift.sns.dao.port.INumerosPortadosDAO;
@@ -79,6 +83,14 @@ public class PortabilidadService implements IPortabilidadService {
     public PortabilidadService() {
         // Constructor vacío requerido por EJB
     }
+
+    //FECHA PROCESO
+    public static final Date FECHA_PROCESO;
+    static {
+        FECHA_PROCESO = FechasUtils.getFechaHoy("dd.MM.yyyy");
+    }
+    //termina Fecha Proceso
+
 
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(PortabilidadService.class);
@@ -246,7 +258,7 @@ public class PortabilidadService implements IPortabilidadService {
      * @param d fecha
      * @return nombre
      */
-    private String getNumbersPortedFileName(Date d) {
+    private String getNumbersPortedFileName(Date d) throws ParseException {
 
         String dateToStr = FechasUtils.fechaToString(d, FORMATO_FECHA1);
         String dateToStr2 = FechasUtils.fechaToString(d, FORMATO_FECHA2);
@@ -269,7 +281,7 @@ public class PortabilidadService implements IPortabilidadService {
      * @param d fecha
      * @return nombre
      */
-    private String getNumbersDeletedFileName(Date d) {
+    private String getNumbersDeletedFileName(Date d) throws ParseException{
 
         String dateToStr = FechasUtils.fechaToString(d, FORMATO_FECHA1);
         String dateToStr2 = FechasUtils.fechaToString(d, FORMATO_FECHA2);
@@ -299,7 +311,8 @@ public class PortabilidadService implements IPortabilidadService {
             status = statusDAO.get();
         } catch (NoResultException e) {
             status = new EstatusSincronizacion();
-            status.setTs(new Date());
+            status.setTs(FECHA_PROCESO);
+            //Termina fecha inicial
             status.setReintentos(BigDecimal.ZERO);
         }
 
@@ -361,7 +374,7 @@ public class PortabilidadService implements IPortabilidadService {
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public EstatusSincronizacion parsePortabilidad(File tmpPorted, EstatusSincronizacion status) throws Exception {
-
+        LOGGER.info("[parsePortabilidad] valor recibido del status hash: {}", System.identityHashCode(status));
         File tmpPortedCSV = null;
 
         try {
@@ -375,20 +388,42 @@ public class PortabilidadService implements IPortabilidadService {
             status.setPortProcesadas(res.getNumerosOk());
             status.setPortProcesar(res.getNumerosTotal());
             status.setProcesadasTs(new Timestamp(res.getTimestamp().getTime()));
-            LOGGER.debug("***-************- status:"+status.toString());
+            LOGGER.info("***-************- status:"+status.toString());
             LOGGER.debug("Validamos fichero: " + tmpPortedCSV+" longitud"+tmpPortedCSV.length());
             // importamos portados
             //FJAH 24052025
             //ValidadorArchivoPortadosCSV importPortados = new ValidadorArchivoPortadosCSV();
 
             LOGGER.info("<--Inicia el procesamiento del csv de portados {}",FechasUtils.getActualDate());
+
 //            Cargar BD
             //importPortados.validar(tmpPortedCSV.getAbsolutePath());
-            validadorArchivoPortadosCSV.validar(tmpPortedCSV.getAbsolutePath());
-            
-            LOGGER.info("<--finaliza el procesamiento del csv de portados {}", FechasUtils.getActualDate());
-            
+            //validadorArchivoPortadosCSV.validar(tmpPortedCSV.getAbsolutePath());
+            LOGGER.info("[parsePortabilidad] Llamando a validar para el archivo CSV: {}", tmpPortedCSV.getAbsolutePath());
+            ResultadoValidacionCSV resultadoValidacionCSV = validadorArchivoPortadosCSV.validar(tmpPortedCSV.getAbsolutePath());
+            LOGGER.info("[parsePortabilidad] Valor recibido de actionDateLote en resultadoValidacionCSV: '{}'", resultadoValidacionCSV.getActionDateLote());
+            if (resultadoValidacionCSV.getActionDateLote() != null) {
+                Date fechaActionDateLote = null;
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // sin .S // formato correcto
+                    fechaActionDateLote = sdf.parse(resultadoValidacionCSV.getActionDateLote());
+                    LOGGER.info("[parsePortabilidad] Fecha parseada de actionDateLote: {}", fechaActionDateLote);
+                } catch (ParseException e) {
+                    LOGGER.error("[parsePortabilidad] Error al parsear actionDateLote: '{}'. Exception: {}", resultadoValidacionCSV.getActionDateLote(), e.getMessage());
+                }
+                LOGGER.info("[parsePortabilidad] ANTES de asignar valor al actiondate en el status hash: {}", System.identityHashCode(status));
+                status.setActionDateLote(fechaActionDateLote);
+                LOGGER.info("[parsePortabilidad] Se asignó actionDateLote en status: {}", fechaActionDateLote);
+                LOGGER.info("[parsePortabilidad] DESPUES de recibir actiondate status hash: {}", System.identityHashCode(status));
+            }else{
+                LOGGER.warn("[parsePortabilidad] No se obtuvo actionDateLote del lote (valor nulo o vacío). Usando FECHA_PROCESO como fallback.");
+                status.setActionDateLote(FECHA_PROCESO); // o el valor de fallback que uses
+            }
 
+            LOGGER.info("<--finaliza el procesamiento del csv de portados {}", FechasUtils.getActualDate());
+
+            LOGGER.info("[parsePortabilidad] status hash: {}", System.identityHashCode(status));
+            LOGGER.info("[parsePortabilidad] VALOR status.getActionDateLote EN EL RETURN status: {}", status.getActionDateLote());
             return status;
 
         } catch (Exception e) {
@@ -428,6 +463,7 @@ public class PortabilidadService implements IPortabilidadService {
             //ValidadorArchivoPortadosCSV2 importPortados = new ValidadorArchivoPortadosCSV2();
 
             LOGGER.info("<--Inicia el procesamiento del csv de portados {}",FechasUtils.getActualDate());
+
 //            Cargar BD
 
 
@@ -438,7 +474,6 @@ public class PortabilidadService implements IPortabilidadService {
             }
 
             LOGGER.info("<--finaliza el procesamiento del csv de portados {}", FechasUtils.getActualDate());
-
 
             return status;
 
@@ -473,6 +508,7 @@ public class PortabilidadService implements IPortabilidadService {
             //FJAH 24052025
             //ValidadorArchivoDeletedCSV importDeleted=new ValidadorArchivoDeletedCSV();
             ResultadoValidacionCSV resultado = validadorArchivoDeletedCSV.validar(tmpDeletedCSV.getAbsolutePath());
+
             LOGGER.info("<--Inicia el procesamiento del csv de cancelados {}",FechasUtils.getActualDate());
 
             //importDeleted.validar(tmpDeletedCSV.getAbsolutePath());
@@ -515,7 +551,9 @@ public class PortabilidadService implements IPortabilidadService {
             // importamos cancelaciones
             //FJAH 24052025
             //ValidadorArchivoDeletedCSV2 importDeleted=new ValidadorArchivoDeletedCSV2();
+
             LOGGER.info("<--Inicia el procesamiento del csv de cancelados {}",FechasUtils.getActualDate());
+
             //Collection<NumeroCanceladoRequestDTO> list = importDeleted.validar(tmpDeletedCSV.getAbsolutePath());
             Collection<NumeroCanceladoRequestDTO> list = importDeleted.validar(tmpDeletedCSV.getAbsolutePath());
             for (NumeroCanceladoRequestDTO dto : list) {
@@ -572,10 +610,10 @@ public class PortabilidadService implements IPortabilidadService {
         }
 
         EstatusSincronizacion status = getStatus();
-        LOGGER.debug("[syncBDDPortabilidadAsync] Estatus inicial: {}", status);
+        LOGGER.info("[syncBDDPortabilidadAsync] Estatus inicial: {}", status);
 
         if (FechasUtils.esHoy(status.getTs())) {
-            LOGGER.debug("[syncBDDPortabilidadAsync] El status es de hoy.");
+            LOGGER.info("[syncBDDPortabilidadAsync] El status es de hoy.");
             if ((status.getEstatus() != null) && status.getEstatus().equals(EstatusSincronizacion.ESTATUS_PORT_OK)) {
                 LOGGER.info("[syncBDDPortabilidadAsync] Ya fue ejecutado hoy con OK, no hace nada.");
                 return;
@@ -601,11 +639,16 @@ public class PortabilidadService implements IPortabilidadService {
 
             // calculamos el dia de ayer
             Calendar cal = Calendar.getInstance();
+            //cal.add(Calendar.DATE, -1);
+            cal.setTime(FECHA_PROCESO);   // FJAH 28.05.2025 Refactorizada
             cal.add(Calendar.DATE, -1);
+
             LOGGER.info("[syncBDDPortabilidadAsync] Fecha de proceso: {}", cal.getTime());
             LOGGER.info("[syncBDDPortabilidadAsync] Obteniendo nombres de archivos remotos...");
             String remoteFilePortedPath = getNumbersPortedFileName(cal.getTime());
             String remoteFileDeletedPath = getNumbersDeletedFileName(cal.getTime());
+            LOGGER.info("[syncBDDPortabilidadAsync] nombre archivo PORTADO remoto obtenido ..." + remoteFilePortedPath);
+            LOGGER.info("[syncBDDPortabilidadAsync] nombre archivo CANCELADO remoto obtenido ..." + remoteFileDeletedPath);
 
             tmpPorted = FicheroTemporal.getTmpFileName();
             tmpDeleted = FicheroTemporal.getTmpFileName();
@@ -631,25 +674,54 @@ public class PortabilidadService implements IPortabilidadService {
             	throw new FileNotFoundException(remoteFilePortedPath);
             }
             LOGGER.info("[syncBDDPortabilidadAsync] Parseando ficheros a CSV...");
-            EstatusSincronizacion s = me.parsePortabilidad(tmpPorted, status);
-            LOGGER.info("[syncBDDPortabilidadAsync] Resultado parsePortabilidad: {}", s);
+            //EstatusSincronizacion s = me.parsePortabilidad(tmpPorted, status);
+            //LOGGER.info("[syncBDDPortabilidadAsync] Resultado parsePortabilidad en s: {}", s);
+            LOGGER.info("[syncBDDPortabilidadAsync] ANTES de llamar a parsePortabilidad status hash: {}", System.identityHashCode(status));
+            status = me.parsePortabilidad(tmpPorted, status);
+            LOGGER.info("[syncBDDPortabilidadAsync] status DESPUES de llamar a parsePortabilidad status hash: {}", System.identityHashCode(status));
+            LOGGER.info("[syncBDDPortabilidadAsync] Resultado parseDeleted: {}", status);
+            LOGGER.info("[syncBDDPortabilidadAsync] Valor del actionDateLote en status: {}", status.getActionDateLote());
+            /*
             status.setPortProcesadas(s.getPortProcesadas());
             status.setPortProcesar(s.getPortProcesadas());
             status.setProcesadasTs(s.getProcesadasTs());
+            */
 //            EstatusSincronizacion s =me.parseDeleted(tmpDeleted, status);
-            s = me.parseDeleted(tmpDeleted, status);
-            LOGGER.info("[syncBDDPortabilidadAsync] Resultado parsePortabilidad: {}", s);
+            LOGGER.info("[syncBDDPortabilidadAsync] ANTES de parseDeleted status hash: {}", System.identityHashCode(status));
+            status = me.parseDeleted(tmpDeleted, status);
+            LOGGER.info("[syncBDDPortabilidadAsync] DESPUES de parseDeleted status hash: {}", System.identityHashCode(status));
+            LOGGER.info("[syncBDDPortabilidadAsync] Resultado parseDeleted: {}", status);
+            LOGGER.info("[syncBDDPortabilidadAsync] Valor del actionDateLote en status: {}", status.getActionDateLote());
+            /*
             status.setPortCanceladas(s.getPortCanceladas());
             status.setPortCancelar(s.getPortCancelar());
             status.setCanceladasTs(s.getCanceladasTs());
+             */
+
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_OK);
-            status.setTs(new Date());
+            //status.setTs(new Date());
+            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
             status.setReintentos(BigDecimal.ZERO);
 
+            //FJAH 27.05.2025 Refactorización fecha actiondate del XML
             // Obtenemos los totales realmente registrados en BD
-            BigDecimal totalPort = numerosPortadosDAO.getTotalNumerosPortadosHoy();
-            BigDecimal totalCancel = numerosCanceladosDAO.getTotalNumerosCanceladosHoy();
+            //BigDecimal totalPort = numerosPortadosDAO.getTotalNumerosPortadosHoy();
+            //BigDecimal totalCancel = numerosCanceladosDAO.getTotalNumerosCanceladosHoy();
+
+            // *** FJAH: Obtiene actionDate real del archivo procesado ***
+            LOGGER.info("[syncBDDPortabilidadAsync] status hash: {}", System.identityHashCode(status));
+            LOGGER.info("[syncBDDPortabilidadAsync] Valor del actionDateLote en status: {}", status.getActionDateLote());
+            Date fechaActionDateArchivo = status.getActionDateLote();
+            LOGGER.info("[syncBDDPortabilidadAsync] Se asignó fechaActionDateArchivo: {}", fechaActionDateArchivo);
+            if (fechaActionDateArchivo == null) {
+                LOGGER.warn("[syncBDDPortabilidadAsync] No se obtuvo actionDate del lote, usando FECHA_PROCESO como fallback");
+                fechaActionDateArchivo = FECHA_PROCESO;
+            }
+
+            BigDecimal totalPort = numerosPortadosDAO.getTotalNumerosPortadosPorFecha(fechaActionDateArchivo);
+            BigDecimal totalCancel = numerosCanceladosDAO.getTotalNumerosCanceladosPorFecha(fechaActionDateArchivo);
+
             // Obtenemos los totales que ralmente se ha registrado en BD
             status.setPortProcesadas(totalPort);
             status.setPortCanceladas(totalCancel);
@@ -668,7 +740,8 @@ public class PortabilidadService implements IPortabilidadService {
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-            status.setTs(new Date());
+            //status.setTs(new Date());
+            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
             enviarMailErrorABD("No se puede acceder al archivo: " + e.getMessage());
         } catch (FileSystemException e) {
@@ -676,13 +749,17 @@ public class PortabilidadService implements IPortabilidadService {
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-            status.setTs(new Date());
+
+            //status.setTs(new Date());
+            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
             enviarMailErrorABD("No se puede acceder al archivo: " + e.getMessage());
         } catch (Exception e) {
             LOGGER.error("[syncBDDPortabilidadAsync] Error inesperado", e);
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-            status.setTs(new Date());
+
+            //status.setTs(new Date());
+            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
             enviarMailErrorABD("Error inespedado: " + e.getMessage());
         } finally {
@@ -732,7 +809,8 @@ public class PortabilidadService implements IPortabilidadService {
                     status.setProcesadasTs(s.getProcesadasTs());
 
                     status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_OK);
-                    status.setTs(new Date());
+                    //status.setTs(new Date());
+                    status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
                     status.setReintentos(BigDecimal.ZERO);
 
                     status.setPortProcesadas(numerosPortadosDAO.getTotalNumerosPortadosHoy());
@@ -748,7 +826,8 @@ public class PortabilidadService implements IPortabilidadService {
                     LOGGER.error("Error inespedado", e);
                     bitacoraService.add(BIT_MSG_SYNC_ERROR);
                     status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-                    status.setTs(new Date());
+                    //status.setTs(new Date());
+                    status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
                     moverArchivo(tmpPorted);
                     enviarMailErrorABD("Error inespedado en el archivo de portaciones: "+tmpPorted.getName()+"\n" + e.getMessage());
                 } finally {
@@ -776,13 +855,17 @@ public class PortabilidadService implements IPortabilidadService {
                         moverArchivo(tmpDeleted);
                     }
 
-                    EstatusSincronizacion s = me.parseDeleted(tmpDeleted, status);
+                    //EstatusSincronizacion s = me.parseDeleted(tmpDeleted, status);
+                    me.parseDeleted(tmpDeleted, status);
+                    /*
                     status.setPortCanceladas(s.getPortCanceladas());
                     status.setPortCancelar((s.getPortCancelar()));
                     status.setCanceladasTs(s.getCanceladasTs());
+                     */
 
                     status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_OK);
-                    status.setTs(new Date());
+                    //status.setTs(new Date());
+                    status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
                     status.setReintentos(BigDecimal.ZERO);
 
                     // Obtenemos los totales que ralmente se ha registrado en BD
@@ -799,7 +882,8 @@ public class PortabilidadService implements IPortabilidadService {
                     LOGGER.error("Error inespedado", e);
                     bitacoraService.add(BIT_MSG_SYNC_ERROR);
                     status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-                    status.setTs(new Date());
+                    //status.setTs(new Date());
+                    status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
                     moverArchivo(tmpDeleted);
                     enviarMailErrorABD("Error inespedado en el archivo de cancelados: "+tmpDeleted.getName()+"\n" + e.getMessage());
@@ -871,30 +955,31 @@ public class PortabilidadService implements IPortabilidadService {
 
                 tmp = new File(file);
                 LOGGER.debug("[syncBDDPortabilidad] Llamando a parsePortabilidad()");
-                parsePortabilidad(tmp, status);
+                status = me.parsePortabilidad(tmp, status);
                 LOGGER.info("[syncBDDPortabilidad] parsePortabilidad() terminó correctamente.");
             } else if (tipo.getCdg().equals(TipoFicheroPort.DIARIO_DELETED)) {
                 LOGGER.info("[syncBDDPortabilidad] Procesando fichero de cancelaciones: {}", file);
                 tmp = new File(file);
                 LOGGER.debug("[syncBDDPortabilidad] Llamando a parseDeleted()");
-                parseDeleted(tmp, status);
+                status = me.parseDeleted(tmp, status);
                 LOGGER.info("[syncBDDPortabilidad] parseDeleted() terminó correctamente.");
             }else {
                 LOGGER.warn("[syncBDDPortabilidad] Tipo de fichero NO reconocido: {}", tipo.getCdg());
             }
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_OK);
-            status.setTs(new Date());
+            //status.setTs(new Date());
+            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
             // Loguea los totales registrados en BD
             BigDecimal portProcesadas = numerosPortadosDAO.getTotalNumerosPortadosHoy();
             BigDecimal portCanceladas = numerosCanceladosDAO.getTotalNumerosCanceladosHoy();
+
             LOGGER.info("[syncBDDPortabilidad] Totales procesadas hoy: portProcesadas={}, portCanceladas={}", portProcesadas, portCanceladas);
 
             // Obtenemos los totales que ralmente se ha registrado en BD
             status.setPortProcesadas(numerosPortadosDAO.getTotalNumerosPortadosHoy());
             status.setPortCanceladas(numerosCanceladosDAO.getTotalNumerosCanceladosHoy());
-
 
             String msg = formatMensaje(BIT_MSG_SYNC_MANUAL_OK, status);
             LOGGER.info("[syncBDDPortabilidad] Mensaje bitácora OK: {}", msg);
@@ -905,7 +990,8 @@ public class PortabilidadService implements IPortabilidadService {
             bitacoraService.add(usuario, BIT_MSG_SYNC_MANUAL_ERROR);
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-            status.setTs(new Date());
+            //status.setTs(new Date());
+            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
             throw new SincronizacionABDException(BIT_MSG_SYNC_MANUAL_ERROR);
 
@@ -915,7 +1001,8 @@ public class PortabilidadService implements IPortabilidadService {
             bitacoraService.add(usuario, BIT_MSG_SYNC_ERROR);
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-            status.setTs(new Date());
+            //status.setTs(new Date());
+            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
             throw new SincronizacionABDException(BIT_MSG_SYNC_ERROR);
         } catch (Exception e) {
@@ -928,7 +1015,8 @@ public class PortabilidadService implements IPortabilidadService {
         } finally {
             LOGGER.debug("[syncBDDPortabilidad] Llamando a FicheroTemporal.delete()");
             FicheroTemporal.delete(tmp);
-            status.setTs(new Date());
+            //status.setTs(new Date());
+            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
             saveStatus(status);
             LOGGER.info("[syncBDDPortabilidad] FIN bloque finally");
         }
@@ -1015,7 +1103,7 @@ public class PortabilidadService implements IPortabilidadService {
             final String body = "Número de portaciones a procesar : " + status.getPortProcesar()
                     + "\nNúmero de portaciones procesadas : " + status.getPortProcesadas()
                     + "\nNúmero de portaciones a cancelar : " + status.getPortCancelar()
-                    + "\nNúmero de portaciones canceladas : " + status.getPortCancelar();
+                    + "\nNúmero de portaciones canceladas : " + status.getPortCanceladas();
             subjectWithHost.append(subject).append(":Host:").append(getHostName());
             mailService.sendEmail(to, subjectWithHost.toString(), body);
         } catch (Exception e) {
@@ -1059,6 +1147,5 @@ public class PortabilidadService implements IPortabilidadService {
 		}
 		return hostName;
 	}
-	    
-    
+
 }

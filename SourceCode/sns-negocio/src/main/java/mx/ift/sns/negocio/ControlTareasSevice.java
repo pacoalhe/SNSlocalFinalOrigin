@@ -28,6 +28,13 @@ import org.slf4j.LoggerFactory;
 @Remote(IControlTareas.class)
 public class ControlTareasSevice implements IControlTareas {
 
+    //FECHA PROCESO
+    public static final Date FECHA_PROCESO;
+    static {
+        FECHA_PROCESO = FechasUtils.getFechaHoy("dd.MM.yyyy");
+    }
+    //termina Fecha Proceso}
+
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ControlTareasSevice.class);
 
@@ -64,22 +71,9 @@ public class ControlTareasSevice implements IControlTareas {
 
         ControlTarea control = new ControlTarea();
 
-        /* TODO FJAH desbloquear para prodcutivo
-        Date fechaHoy = FechasUtils.getFechaHoy();
-         */
+        //Date fechaHoy = FechasUtils.getFechaHoy();
+        Date fechaHoy = FECHA_PROCESO; //FJAH 28.05.2025 Refactorizado
 
-        // TODO FJAH solo aplica para pruebas locales
-        Date fechaHoy = null;
-        try {
-            // Forzar la fecha solo para pruebas retroactivas
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            fechaHoy = sdf.parse("2025-05-08");
-        } catch (ParseException e) {
-            e.printStackTrace();
-            LOGGER.error("Error al parsear la fecha forzada para pruebas retroactivas", e);
-            return false; // O maneja el error según tu lógica
-        }
-        // FJAH termina la modificación
 
         LOGGER.info("Buscamos si la tarea {} en {} tiene acceso permitido para el día {}", tarea,
                 WeblogicNode.getName(), FechasUtils.fechaToString(fechaHoy));

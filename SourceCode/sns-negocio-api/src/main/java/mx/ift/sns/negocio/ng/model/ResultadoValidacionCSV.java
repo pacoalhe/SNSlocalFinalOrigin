@@ -41,4 +41,16 @@ public class ResultadoValidacionCSV implements Serializable {
     public void setError(int error) {
         this.error = error;
     }
+
+    private String actionDateLote; // o Date/Timestamp si prefieres
+
+    public String getActionDateLote() {
+        return actionDateLote;
+    }
+
+    public void setActionDateLote(String actionDateLote) {
+        this.actionDateLote = actionDateLote;
+    }
+
+
 }

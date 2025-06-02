@@ -1074,6 +1074,84 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         return pstListIdo;
     }
 
+    /**
+     * FJAH 28.05.2025
+     * Refactorizar metodo
+     * @param "IdoProveedor" BigDecimal
+     * @return
+     */
+    @Override
+    public List<Proveedor> getProveedorByABC(BigDecimal abcProveedor) {
+        // Usamos el mismo patrón que los otros métodos, pero sobre la columna BCD.
+        // Obtener la base del query
+        StringBuffer sbquery = getNativeQueryBase();
+        // Agregar la condición WHERE
+        sbquery.append("WHERE PST.BCD = ?1");
+
+        // Convertir a String para la consulta
+        String nativeQuery = sbquery.toString();
+
+        System.out.println("===> Valor del parametro recibido, Buscando PST por IDO:" + abcProveedor);
+        //System.out.println("===> Query a ejecutarse Preparado ...." + nativeQuery);
+
+        // Crear la consulta nativa
+        Query query = getEntityManager().createNativeQuery(nativeQuery, Proveedor.class);
+        query.setParameter(1, abcProveedor);
+
+        //System.out.println("===> Query a ejecutarse Final " + query);
+
+        // Ejecutar la consulta
+        @SuppressWarnings("unchecked")
+        List<Proveedor> pstListBcd = query.getResultList();
+
+        System.out.println("===> Proveedores encontrados:" + pstListBcd.size());
+
+
+        //String queryBcd = "SELECT p FROM Proveedor p WHERE p.bcd = :bcd";
+        //TypedQuery<Proveedor> consultaBcd = getEntityManager().createQuery(queryBcd, Proveedor.class);
+        //consultaBcd.setParameter("bcd", abcProveedor);
+
+        //List<Proveedor> pstListBcd = consultaBcd.getResultList();
+
+        //System.out.println("===> Proveedores encontrados para BCD: " + pstListBcd.size());
+
+        // Si hay más de un proveedor, filtramos por principal
+
+        if (pstListBcd.size() > 1) {
+            List<Proveedor> pstListBcdPrincipal = new ArrayList<>();
+            for (Proveedor pst : pstListBcd) {
+                if (pst.getPrincipal() == 1) {
+                    pstListBcdPrincipal.add(pst);
+                }
+            }
+
+            if (!pstListBcdPrincipal.isEmpty()) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Proveedor principal con BCD {} encontrado: {}", abcProveedor, pstListBcdPrincipal.get(0).getNombre());
+                }
+                return pstListBcdPrincipal;
+            } else {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Proveedor principal no especificado para BCD {}", abcProveedor);
+                }
+                // Si no hay principal, podrías regresar el primero o todos (como en getProveedorByIDO)
+                return Collections.singletonList(pstListBcd.get(0));
+            }
+        } else {
+            if (pstListBcd.isEmpty()) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Proveedor no encontrado para BCD: {}", abcProveedor);
+                }
+            } else {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Proveedor con BCD {} encontrado: {}", abcProveedor, pstListBcd.get(0).getNombre());
+                }
+            }
+            return pstListBcd;
+        }
+    }
+
+
     /*
     @Override
     public List<Proveedor> getProveedorByIDA(BigDecimal idaProveedor) {
@@ -1194,8 +1272,6 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
 
     }
 
-     */
-
     @Override
     public List<Proveedor> getProveedorByABC(BigDecimal abcProveedor) {
         //Esto se modifico a partir del cambio de numeracion del 03/08/19
@@ -1253,6 +1329,8 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         }
 
     }
+
+     */
 
 	@Override
 	public boolean userIdUsedBySamePST(Proveedor proveedor) {

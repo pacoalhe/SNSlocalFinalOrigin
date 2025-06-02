@@ -5,12 +5,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.*;
 
 /**
  * Estado de la sincronización con el ABD.
@@ -208,6 +203,15 @@ public class EstatusSincronizacion implements Serializable {
         this.estatus = estatus;
     }
 
+    // FJAH 27.05.2025 Refactorización para obtener el valor real del actiondate
+    @Transient
+    private Date actionDateLote;
+
+    public Date getActionDateLote() { return actionDateLote; }
+    public void setActionDateLote(Date actionDateLote) { this.actionDateLote = actionDateLote; }
+
+
+
     /**
      * Limpia el objeto.
      */
@@ -242,6 +246,8 @@ public class EstatusSincronizacion implements Serializable {
         b.append(" portProcesadas=").append(portProcesadas);
         b.append(" portProcesar=").append(portProcesar);
         b.append(" procesadasTs=").append(procesadasTs);
+
+        b.append(" actionDateLote=").append(actionDateLote);
 
         return b.toString();
     }
