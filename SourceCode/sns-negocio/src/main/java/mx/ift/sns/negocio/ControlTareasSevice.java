@@ -29,10 +29,7 @@ import org.slf4j.LoggerFactory;
 public class ControlTareasSevice implements IControlTareas {
 
     //FECHA PROCESO
-    public static final Date FECHA_PROCESO;
-    static {
-        FECHA_PROCESO = FechasUtils.getFechaHoy("dd.MM.yyyy");
-    }
+        Date FECHA_PROCESO = FechasUtils.getFechaHoy("dd.MM.yyyy");
     //termina Fecha Proceso}
 
     /** Logger de la clase. */

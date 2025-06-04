@@ -24,21 +24,6 @@ import org.slf4j.LoggerFactory;
 @Named
 public class NumerosCanceladosDAOImpl extends BaseDAO<NumeroCancelado> implements INumerosCanceladosDAO {
 
-    //FECHA INICIAL
-    public static final Date FECHA_INICIAL;
-    static {
-        try {
-            //FECHA_INICIAL = new SimpleDateFormat("dd.MM.yyyy").parse("30.05.2025");
-
-            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-            FECHA_INICIAL = sdf.parse(sdf.format(new Date()));
-
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    //termina fecha inicial
-
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(NumerosCanceladosDAOImpl.class);
 
@@ -47,6 +32,19 @@ public class NumerosCanceladosDAOImpl extends BaseDAO<NumeroCancelado> implement
 
     /** Parseador de fechas con formato simple. */
     private static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", localeES);
+
+    //FECHA_PROCESO
+    private Date fechaproceso() {
+        try {
+            //date FECHA_PROCESO = new SimpleDateFormat("dd.MM.yyyy").parse("02.06.2025");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+            return sdf.parse(sdf.format(new Date())); // Siempre regresa la fecha actual con hora 00:00:00.000
+        } catch (ParseException e) {
+            LOGGER.error("Error al obtener la fecha de proceso", e);
+            return null;
+        }
+    }
+    //termina FECHA_PROCESO
 
     @Override
     public NumeroCancelado get(String numero) {
@@ -76,7 +74,7 @@ public class NumerosCanceladosDAOImpl extends BaseDAO<NumeroCancelado> implement
     public BigDecimal getTotalNumerosCanceladosHoy() throws Exception {
         // TODO FJAH 26052025 desbloquear para productivo
         //Date fechaHoy = sdf.parse(sdf.format(new Date()));
-        Date fechaHoy = FECHA_INICIAL; // Debe ser a las 00:00:00.000
+        Date fechaHoy = fechaproceso(); // Debe ser a las 00:00:00.000
 
         //String sQuery = "SELECT COUNT(n) FROM NumeroCancelado n WHERE n.actionDate > :hoy";
         String sQuery = "SELECT COUNT(n) FROM NumeroCancelado n WHERE FUNCTION('TRUNC', n.actionDate) = :fecha";

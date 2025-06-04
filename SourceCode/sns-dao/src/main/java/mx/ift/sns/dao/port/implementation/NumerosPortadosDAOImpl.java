@@ -26,20 +26,18 @@ import org.slf4j.LoggerFactory;
 @Named
 public class NumerosPortadosDAOImpl extends BaseDAO<NumeroPortado> implements INumerosPortadosDAO {
 
-    //FECHA INICIAL
-    public static final Date FECHA_INICIAL;
-    static {
+    //FECHA_PROCESO
+    private Date fechaproceso() {
         try {
-            //FECHA_INICIAL = new SimpleDateFormat("dd.MM.yyyy").parse("30.05.2025");
-
+            //date FECHA_PROCESO = new SimpleDateFormat("dd.MM.yyyy").parse("02.06.2025");
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-            FECHA_INICIAL = sdf.parse(sdf.format(new Date()));
-
+            return sdf.parse(sdf.format(new Date())); // Siempre regresa la fecha actual con hora 00:00:00.000
         } catch (ParseException e) {
-            throw new RuntimeException(e);
+            LOGGER.error("Error al obtener la fecha de proceso", e);
+            return null;
         }
     }
-    //termina fecha inicial
+    //termina FECHA_PROCESO
 
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(NumerosPortadosDAOImpl.class);
@@ -93,7 +91,7 @@ public class NumerosPortadosDAOImpl extends BaseDAO<NumeroPortado> implements IN
     public BigDecimal getTotalNumerosPortadosHoy() throws Exception {
         // TODO FJAH 26052025 desbloquear para productivo
         //Date fechaHoy = sdf.parse(sdf.format(new Date()));
-        Date fechaHoy = FECHA_INICIAL; // Debe ser a las 00:00:00.000
+        Date fechaHoy = fechaproceso(); // Debe ser a las 00:00:00.000
 
         //String sQuery = "SELECT COUNT(n) FROM NumeroPortado n WHERE n.actionDate > :hoy";
         String sQuery = "SELECT COUNT(n) FROM NumeroPortado n WHERE FUNCTION('TRUNC', n.actionDate) = :fecha";

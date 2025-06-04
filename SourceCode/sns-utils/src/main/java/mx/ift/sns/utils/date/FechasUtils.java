@@ -15,26 +15,8 @@ import java.util.concurrent.TimeUnit;
 public final class FechasUtils {
 
     //FJAH 28.05.2025 Refactorizar fecha hoy a manual o viceversa
-    //private static String FECHA_MANUAL = "30.05.2025"; // Ejemplo: "28.05.2025"
-    private static String FECHA_MANUAL = null; // Ejemplo: null para el día actual
-
-    //public static final String FECHA_PRUEBA_STR = "2025-05-08";
-    //public static final Date FECHA_PRUEBA;
-/*
-
-
-    static {
-        Date tmp = null;
-        try {
-            tmp = new SimpleDateFormat("yyyy-MM-dd").parse(FECHA_PRUEBA_STR);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        FECHA_PRUEBA = tmp;
-    }
-
- */
-
+    //private static String FECHA_PROCESO = "02.06.2025"; // Ejemplo: "28.05.2025"
+    private static String FECHA_PROCESO = null; // Ejemplo: null para el día actual
 
     /** Fecha y hora. */
     public static final String FORMATO_FECHA_HORA = "dd/MM/yyyy HH:mm:ss";
@@ -144,8 +126,8 @@ public final class FechasUtils {
         try {
             SimpleDateFormat sdfCustom = new SimpleDateFormat(pFormat, localeES);
 
-            if (FECHA_MANUAL != null && !FECHA_MANUAL.isEmpty()) {
-                return sdfCustom.parse(FECHA_MANUAL);
+            if (FECHA_PROCESO != null && !FECHA_PROCESO.isEmpty()) {
+                return sdfCustom.parse(FECHA_PROCESO);
             } else {
                 return sdfCustom.parse(sdfCustom.format(new Date()));
             }
@@ -379,12 +361,12 @@ public final class FechasUtils {
         DateFormat dateFormat = new SimpleDateFormat(FORMATO_FECHA_HORA);
         Calendar cal = Calendar.getInstance();
 
-        if (FECHA_MANUAL != null && !FECHA_MANUAL.isEmpty()) {
-            // Obtener día, mes, año de FECHA_MANUAL y poner hora/min/seg del sistema
+        if (FECHA_PROCESO != null && !FECHA_PROCESO.isEmpty()) {
+            // Obtener día, mes, año de FECHA_PROCESO y poner hora/min/seg del sistema
             try {
-                // Extraemos la parte de fecha usando mismo formato que FECHA_MANUAL
+                // Extraemos la parte de fecha usando mismo formato que FECHA_PROCESO
                 SimpleDateFormat sdfFecha = new SimpleDateFormat("dd.MM.yyyy");
-                Date fechaManualDate = sdfFecha.parse(FECHA_MANUAL);
+                Date fechaManualDate = sdfFecha.parse(FECHA_PROCESO);
                 Calendar calManual = Calendar.getInstance();
                 calManual.setTime(fechaManualDate);
 

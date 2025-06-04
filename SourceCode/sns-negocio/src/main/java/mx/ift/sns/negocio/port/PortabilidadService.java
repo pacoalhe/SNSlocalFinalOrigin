@@ -85,11 +85,8 @@ public class PortabilidadService implements IPortabilidadService {
     }
 
     //FECHA PROCESO
-    public static final Date FECHA_PROCESO;
-    static {
-        FECHA_PROCESO = FechasUtils.getFechaHoy("dd.MM.yyyy");
-    }
-    //termina Fecha Proceso
+    Date FECHA_PROCESO = FechasUtils.getFechaHoy("dd.MM.yyyy");
+    //termina Fecha Proceso}
 
 
     /** Logger de la clase. */
