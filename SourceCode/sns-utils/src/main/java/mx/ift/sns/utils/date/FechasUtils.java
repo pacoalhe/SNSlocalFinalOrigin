@@ -14,9 +14,11 @@ import java.util.concurrent.TimeUnit;
  */
 public final class FechasUtils {
 
+    /*
     //FJAH 28.05.2025 Refactorizar fecha hoy a manual o viceversa
     //private static String FECHA_PROCESO = "02.06.2025"; // Ejemplo: "28.05.2025"
     private static String FECHA_PROCESO = null; // Ejemplo: null para el día actual
+    */
 
     /** Fecha y hora. */
     public static final String FORMATO_FECHA_HORA = "dd/MM/yyyy HH:mm:ss";
@@ -121,6 +123,16 @@ public final class FechasUtils {
      * @param pFormat Formato de Fecha
      * @return fecha actual con el formato indicado por parámetros.
      */
+    public static Date getFechaHoy(String pFormat) {
+        try {
+            SimpleDateFormat sdfCustom = new SimpleDateFormat(pFormat, localeES);
+            return sdfCustom.parse(sdfCustom.format(new Date()));
+        } catch (ParseException pe) {
+            return null;
+        }
+    }
+
+    /*
     //FJAH 28.05.2025 Refactorizacion de la fecha hoy a manual y viceversa
     public static Date getFechaHoy(String pFormat) {
         try {
@@ -135,18 +147,9 @@ public final class FechasUtils {
             throw new RuntimeException("Error formateando la fecha", pe);
         }
     }
-
-    /*
-    public static Date getFechaHoy(String pFormat) {
-        try {
-            SimpleDateFormat sdfCustom = new SimpleDateFormat(pFormat, localeES);
-            return sdfCustom.parse(sdfCustom.format(new Date()));
-        } catch (ParseException pe) {
-            throw new RuntimeException("Error formateando la fecha", pe);
-        }
-    }
-
      */
+
+
 
     /**
      * Calcula una fecha a partir del día actual y sumándole los días/meses/años indicados por parámetros.
@@ -355,7 +358,14 @@ public final class FechasUtils {
      * Devuelve la fecha actual con formato dd/MM/yyyy HH:mm:ss.
      * @return fecha actual con formato dd/MM/yyyy HH:mm:ss
      */
+    public static String getActualDate(){
+		DateFormat dateFormat = new SimpleDateFormat(FORMATO_FECHA_HORA);
+		Calendar cal = Calendar.getInstance();
+		return dateFormat.format(cal.getTime());
+	}
 
+
+    /*
     public static String getActualDate() {
         // Ejemplo: "dd.MM.yyyy HH:mm:ss"
         DateFormat dateFormat = new SimpleDateFormat(FORMATO_FECHA_HORA);
@@ -386,13 +396,8 @@ public final class FechasUtils {
         }
     }
 
-    /*
-    public static String getActualDate(){
-		DateFormat dateFormat = new SimpleDateFormat(FORMATO_FECHA_HORA);
-		Calendar cal = Calendar.getInstance();
-		return dateFormat.format(cal.getTime());
-	}
-
      */
+
+
 
 }

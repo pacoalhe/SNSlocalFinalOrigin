@@ -28,9 +28,11 @@ import org.slf4j.LoggerFactory;
 @Remote(IControlTareas.class)
 public class ControlTareasSevice implements IControlTareas {
 
+    /*
     //FECHA PROCESO
         Date FECHA_PROCESO = FechasUtils.getFechaHoy("dd.MM.yyyy");
     //termina Fecha Proceso}
+     */
 
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ControlTareasSevice.class);
@@ -67,9 +69,9 @@ public class ControlTareasSevice implements IControlTareas {
         boolean resultado = false;
 
         ControlTarea control = new ControlTarea();
-
-        //Date fechaHoy = FechasUtils.getFechaHoy();
-        Date fechaHoy = FECHA_PROCESO; //FJAH 28.05.2025 Refactorizado
+        //TODO desloquear para QA y Productivo
+        Date fechaHoy = FechasUtils.getFechaHoy();
+        //Date fechaHoy = FECHA_PROCESO; //FJAH 28.05.2025 Refactorizado
 
 
         LOGGER.info("Buscamos si la tarea {} en {} tiene acceso permitido para el día {}", tarea,

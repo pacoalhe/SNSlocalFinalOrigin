@@ -569,9 +569,9 @@ public class Scheduler implements IScheduler {
      * Timer para ejecutar tareas a la hora requerida
      * FJAH 26MAR2025
      */
-    private boolean testMode = false; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
+    private boolean testMode = true; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
 
-    @Schedule(hour = "15", minute = "20", persistent = false)
+    @Schedule(hour = "12", minute = "22", persistent = false)
     void timeoutPruebas() {
         LOGGER.info("Inicio del timer timeoutPruebas");
 

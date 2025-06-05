@@ -33,6 +33,7 @@ public class NumerosCanceladosDAOImpl extends BaseDAO<NumeroCancelado> implement
     /** Parseador de fechas con formato simple. */
     private static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", localeES);
 
+    /*
     //FECHA_PROCESO
     private Date fechaproceso() {
         try {
@@ -45,6 +46,8 @@ public class NumerosCanceladosDAOImpl extends BaseDAO<NumeroCancelado> implement
         }
     }
     //termina FECHA_PROCESO
+
+     */
 
     @Override
     public NumeroCancelado get(String numero) {
@@ -73,8 +76,8 @@ public class NumerosCanceladosDAOImpl extends BaseDAO<NumeroCancelado> implement
     @Override
     public BigDecimal getTotalNumerosCanceladosHoy() throws Exception {
         // TODO FJAH 26052025 desbloquear para productivo
-        //Date fechaHoy = sdf.parse(sdf.format(new Date()));
-        Date fechaHoy = fechaproceso(); // Debe ser a las 00:00:00.000
+        Date fechaHoy = sdf.parse(sdf.format(new Date()));
+        //Date fechaHoy = fechaproceso(); // Debe ser a las 00:00:00.000
 
         //String sQuery = "SELECT COUNT(n) FROM NumeroCancelado n WHERE n.actionDate > :hoy";
         String sQuery = "SELECT COUNT(n) FROM NumeroCancelado n WHERE FUNCTION('TRUNC', n.actionDate) = :fecha";

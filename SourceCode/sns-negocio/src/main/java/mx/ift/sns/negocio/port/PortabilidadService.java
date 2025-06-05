@@ -84,9 +84,12 @@ public class PortabilidadService implements IPortabilidadService {
         // Constructor vacío requerido por EJB
     }
 
+    /*
     //FECHA PROCESO
     Date FECHA_PROCESO = FechasUtils.getFechaHoy("dd.MM.yyyy");
     //termina Fecha Proceso}
+
+     */
 
 
     /** Logger de la clase. */
@@ -308,8 +311,9 @@ public class PortabilidadService implements IPortabilidadService {
             status = statusDAO.get();
         } catch (NoResultException e) {
             status = new EstatusSincronizacion();
-            status.setTs(FECHA_PROCESO);
-            //Termina fecha inicial
+            status.setTs(new Date());
+            //status.setTs(FECHA_PROCESO);
+
             status.setReintentos(BigDecimal.ZERO);
         }
 
@@ -413,8 +417,9 @@ public class PortabilidadService implements IPortabilidadService {
                 LOGGER.info("[parsePortabilidad] Se asignó actionDateLote en status: {}", fechaActionDateLote);
                 LOGGER.info("[parsePortabilidad] DESPUES de recibir actiondate status hash: {}", System.identityHashCode(status));
             }else{
-                LOGGER.warn("[parsePortabilidad] No se obtuvo actionDateLote del lote (valor nulo o vacío). Usando FECHA_PROCESO como fallback.");
-                status.setActionDateLote(FECHA_PROCESO); // o el valor de fallback que uses
+                LOGGER.warn("[parsePortabilidad] No se obtuvo actionDateLote del lote (valor nulo o vacío).");
+                status.setActionDateLote(new Date());
+                //status.setActionDateLote(FECHA_PROCESO);
             }
 
             LOGGER.info("<--finaliza el procesamiento del csv de portados {}", FechasUtils.getActualDate());
@@ -636,9 +641,11 @@ public class PortabilidadService implements IPortabilidadService {
 
             // calculamos el dia de ayer
             Calendar cal = Calendar.getInstance();
-            //cal.add(Calendar.DATE, -1);
-            cal.setTime(FECHA_PROCESO);   // FJAH 28.05.2025 Refactorizada
+            //TODO FJAH desbloquear QA/Productivo
             cal.add(Calendar.DATE, -1);
+            //cal.setTime(FECHA_PROCESO);   // FJAH 28.05.2025 Refactorizada
+            //cal.add(Calendar.DATE, -1);
+            LOGGER.debug("Obtenemos ficheros");
 
             LOGGER.info("[syncBDDPortabilidadAsync] Fecha de proceso: {}", cal.getTime());
             LOGGER.info("[syncBDDPortabilidadAsync] Obteniendo nombres de archivos remotos...");
@@ -697,8 +704,8 @@ public class PortabilidadService implements IPortabilidadService {
 
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_OK);
-            //status.setTs(new Date());
-            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+            status.setTs(new Date());
+            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
             status.setReintentos(BigDecimal.ZERO);
 
             //FJAH 27.05.2025 Refactorización fecha actiondate del XML
@@ -712,8 +719,9 @@ public class PortabilidadService implements IPortabilidadService {
             Date fechaActionDateArchivo = status.getActionDateLote();
             LOGGER.info("[syncBDDPortabilidadAsync] Se asignó fechaActionDateArchivo: {}", fechaActionDateArchivo);
             if (fechaActionDateArchivo == null) {
-                LOGGER.warn("[syncBDDPortabilidadAsync] No se obtuvo actionDate del lote, usando FECHA_PROCESO como fallback");
-                fechaActionDateArchivo = FECHA_PROCESO;
+                LOGGER.warn("[syncBDDPortabilidadAsync] No se obtuvo actionDate del lote.");
+                fechaActionDateArchivo = new Date();
+                //fechaActionDateArchivo = FECHA_PROCESO;
             }
 
             BigDecimal totalPort = numerosPortadosDAO.getTotalNumerosPortadosPorFecha(fechaActionDateArchivo);
@@ -737,8 +745,8 @@ public class PortabilidadService implements IPortabilidadService {
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-            //status.setTs(new Date());
-            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+            status.setTs(new Date());
+            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
             enviarMailErrorABD("No se puede acceder al archivo: " + e.getMessage());
         } catch (FileSystemException e) {
@@ -747,16 +755,16 @@ public class PortabilidadService implements IPortabilidadService {
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
 
-            //status.setTs(new Date());
-            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+            status.setTs(new Date());
+            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
             enviarMailErrorABD("No se puede acceder al archivo: " + e.getMessage());
         } catch (Exception e) {
             LOGGER.error("[syncBDDPortabilidadAsync] Error inesperado", e);
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
 
-            //status.setTs(new Date());
-            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+            status.setTs(new Date());
+            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
             enviarMailErrorABD("Error inespedado: " + e.getMessage());
         } finally {
@@ -806,8 +814,8 @@ public class PortabilidadService implements IPortabilidadService {
                     status.setProcesadasTs(s.getProcesadasTs());
 
                     status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_OK);
-                    //status.setTs(new Date());
-                    status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+                    status.setTs(new Date());
+                    //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
                     status.setReintentos(BigDecimal.ZERO);
 
                     status.setPortProcesadas(numerosPortadosDAO.getTotalNumerosPortadosHoy());
@@ -823,8 +831,8 @@ public class PortabilidadService implements IPortabilidadService {
                     LOGGER.error("Error inespedado", e);
                     bitacoraService.add(BIT_MSG_SYNC_ERROR);
                     status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-                    //status.setTs(new Date());
-                    status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+                    status.setTs(new Date());
+                    //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
                     moverArchivo(tmpPorted);
                     enviarMailErrorABD("Error inespedado en el archivo de portaciones: "+tmpPorted.getName()+"\n" + e.getMessage());
                 } finally {
@@ -861,8 +869,8 @@ public class PortabilidadService implements IPortabilidadService {
                      */
 
                     status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_OK);
-                    //status.setTs(new Date());
-                    status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+                    status.setTs(new Date());
+                    //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
                     status.setReintentos(BigDecimal.ZERO);
 
                     // Obtenemos los totales que ralmente se ha registrado en BD
@@ -879,8 +887,8 @@ public class PortabilidadService implements IPortabilidadService {
                     LOGGER.error("Error inespedado", e);
                     bitacoraService.add(BIT_MSG_SYNC_ERROR);
                     status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-                    //status.setTs(new Date());
-                    status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+                    status.setTs(new Date());
+                    //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
                     moverArchivo(tmpDeleted);
                     enviarMailErrorABD("Error inespedado en el archivo de cancelados: "+tmpDeleted.getName()+"\n" + e.getMessage());
@@ -965,8 +973,8 @@ public class PortabilidadService implements IPortabilidadService {
             }
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_OK);
-            //status.setTs(new Date());
-            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+            status.setTs(new Date());
+            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
             // Loguea los totales registrados en BD
             BigDecimal portProcesadas = numerosPortadosDAO.getTotalNumerosPortadosHoy();
@@ -987,8 +995,8 @@ public class PortabilidadService implements IPortabilidadService {
             bitacoraService.add(usuario, BIT_MSG_SYNC_MANUAL_ERROR);
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-            //status.setTs(new Date());
-            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+            status.setTs(new Date());
+            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
             throw new SincronizacionABDException(BIT_MSG_SYNC_MANUAL_ERROR);
 
@@ -998,8 +1006,8 @@ public class PortabilidadService implements IPortabilidadService {
             bitacoraService.add(usuario, BIT_MSG_SYNC_ERROR);
 
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-            //status.setTs(new Date());
-            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+            status.setTs(new Date());
+            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
 
             throw new SincronizacionABDException(BIT_MSG_SYNC_ERROR);
         } catch (Exception e) {
@@ -1012,8 +1020,8 @@ public class PortabilidadService implements IPortabilidadService {
         } finally {
             LOGGER.debug("[syncBDDPortabilidad] Llamando a FicheroTemporal.delete()");
             FicheroTemporal.delete(tmp);
-            //status.setTs(new Date());
-            status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+            status.setTs(new Date());
+            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
             saveStatus(status);
             LOGGER.info("[syncBDDPortabilidad] FIN bloque finally");
         }
