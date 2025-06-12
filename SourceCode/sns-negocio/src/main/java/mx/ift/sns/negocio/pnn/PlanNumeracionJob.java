@@ -15,6 +15,7 @@ import javax.ejb.Remote;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.swing.*;
 
 import mx.ift.sns.modelo.ng.DetalleRangoAsignadoNg;
 import mx.ift.sns.modelo.ng.DetalleReporteAbd;
@@ -44,6 +45,7 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,8 +80,10 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
     private static final String NL = "\r\n";
 
     /** Cabecera del reporte ABD. */
-    private static final String CABECERA_REPORTE_ABD =
-            "ParticipantID, IDA, ASL, NumberFrom, NumberTo, IsMPP, Type, v_null" + NL;
+    private static final String CABECERA_REPORTE_ABD = "ParticipantID, IDA, ASL, NumberFrom, NumberTo, IsMPP, Type, v_null" + NL;
+
+    /** Cabecera del reporte ABD. */
+    private static final String CABECERA_REPORTE_ABD_NUEVO = "ParticipantID, IDA, ZONA, NumberFrom, NumberTo, IsMPP, Type, v_null" + NL;
 
     /** Cabecera del plan ABD. */
     private static final String CABECERA_PLAN_NUMERACION_ABD =
@@ -94,24 +98,25 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
             + "FECHA_RESERVA, OFICIO_ASIGNACION, FECHA_ASIGNACION, FECHA_CONSOLIDACION, FECHA_MIGRACION, NIR_ANTERIOR, "
             + "PUNTO_ENTREGA, IDO, IDA" + NL;
 
+    /** Cabecera del plan NG para PST Nuevo. */
+    private static final String CABECERA_PLAN_NUMERACION_GEOGRAFICA_PST_NUEVO = "ZONA, NUMERACION_INICIAL(10_DÍGITOS), NUMERACION_FINAL(10_DÍGITOS), "
+            + "OCUPACION, MODALIDAD, ESTATUS, RAZON_SOCIAL, NOMBRE_CORTO, ID_OPERADOR, OFICIO_ASIGNACION, FECHA_ASIGNACION, IDO, IDA" + NL;
+
     /** Cabecera del plan NG publico. */
     private static final String CABECERA_PLAN_NUMERACION_GEOGRAFICA_PUBLICO = "CLAVE_CENSAL, POBLACION, MUNICIPIO, "
             + "ESTADO, PRESUSCRIPCION, REGION, ASL, NIR, SERIE, NUMERACION_INICIAL, NUMERACION_FINAL, "
             + "OCUPACION, TIPO_RED, MODALIDAD, RAZON_SOCIAL, FECHA_ASIGNACION, FECHA_CONSOLIDACION, "
             + "FECHA_MIGRACION, NIR_ANTERIOR" + NL;
 
+    /** Cabecera del plan NG publico Nuevo. */
+    private static final String CABECERA_PLAN_NUMERACION_GEOGRAFICA_PUBLICO_NUEVO = "ZONA, NUMERACION_INICIAL(10_DÍGITOS), NUMERACION_FINAL(10_DÍGITOS), "
+            + "OCUPACION, MODALIDAD, RAZON_SOCIAL, FECHA_ASIGNACION" + NL;
+
     /** Cabecera del plan NNG especifico. */
     private static final String CABECERA_PLAN_NNG_ESPECIFICO = "ParticipanId, IDA, No_Geographic_Number, "
             + "Assignment_Date, Assignment_ID"
             + NL;
 
-    /** Cabecera del plan NNG especifico PST. */
-    
-    //private static final String CABECERA_PLAN_NNG_ESPECIFICO_PST = "No_Geographic_Number, Assignment_ID, "
-    //        + "Assignment_Date, ABC, IDA"
-    //        + NL;
-   
-    
     /** Cabecera del plan NNG especifico PST. */
     private static final String CABECERA_PLAN_NNG_ESPECIFICO_PST = "ParticipanId, IDA, Non-Geographic_Number, Assignment_Date, "
     		+ "Assignment_ID"
@@ -135,6 +140,11 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
     /** Cabecera del plan NNG para IFT. */
     private static final String CABECERA_PLAN_NNG_IFT = "PST, CVE_SERVICIO, SERIE, "
             + "NUMERO_INICIAL, NUMERO_FINAL, OCUPACION, IDO/IDD, IDA, FECHA_ASIGNACION, OFICIO_ASIGNACION"
+            + NL;
+
+    /** Cabecera del plan NNG para IFT Nuevo. */
+    private static final String CABECERA_PLAN_NNG_IFT_NUEVO = "PST, CVE_SERVICIO, "
+            + "NUMERO_INICIAL(10_DÍGITOS), NUMERO_FINAL(10_DÍGITOS), OCUPACION, IDO/IDD, IDA, FECHA_ASIGNACION, OFICIO_ASIGNACION"
             + NL;
 
     /** Cabecera identificadores de operadores. */
@@ -329,12 +339,19 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
 
         File tmp = null;
         File tmp2 = null;
+        File tmp3 = null;
+        File tmp4 = null;
         try {
             tmp = FicheroTemporal.getTmpFileName();
             tmp2 = FicheroTemporal.getTmpFileName();
+            tmp3 = FicheroTemporal.getTmpFileName();
+            tmp4 = FicheroTemporal.getTmpFileName();
 
             FileOutputStream fileOutput = new FileOutputStream(tmp.getCanonicalPath());
+            FileOutputStream fileOutput2 = new FileOutputStream(tmp3.getCanonicalPath());
+
             fileOutput.write(CABECERA_REPORTE_ABD.getBytes());
+            fileOutput2.write(CABECERA_REPORTE_ABD_NUEVO.getBytes());
 
             long numRegistros = seriesServiceNg.getDetalleReporteAbdCount();
 
@@ -349,40 +366,70 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         /* ParticipantID, IDA, ASL, NumberFrom, NumberTo, IsMPP, Type */
 
                         StringBuilder b = new StringBuilder();
+                        StringBuilder sb = new StringBuilder();
+
                         b.append(addQuotes(detalle.getIdo() != null ? 
                         		IdentificadoresPST.BCDIDOIDAto30Charecters(detalle.getIdo().toString()) :
                         			IdentificadoresPST.BCDIDOIDAto30Charecters(VACIO)));
                         b.append(COMA);
 
+                        sb.append(addQuotes(detalle.getIdo() != null ?
+                        		IdentificadoresPST.BCDIDOIDAto30Charecters(detalle.getIdo().toString()) :
+                        			IdentificadoresPST.BCDIDOIDAto30Charecters(VACIO)));
+                        sb.append(COMA);
+
                         b.append(addQuotes(detalle.getIda() != null ? IdentificadoresPST.BCDIDOIDAto30Charecters(detalle.getIda().toString()) : IdentificadoresPST.BCDIDOIDAto30Charecters(VACIO)));
                         b.append(COMA);
+
+                        sb.append(addQuotes(detalle.getIda() != null ? IdentificadoresPST.BCDIDOIDAto30Charecters(detalle.getIda().toString()) : IdentificadoresPST.BCDIDOIDAto30Charecters(VACIO)));
+                        sb.append(COMA);
 
                         b.append(addQuotes(detalle.getIdAbn().toString()));
                         b.append(COMA);
 
+                        sb.append(addQuotes(String.valueOf(detalle.getId().charAt(0))));
+                        sb.append(COMA);
+
                         b.append(addQuotes(detalle.getId()));
                         b.append(COMA);
+
+                        sb.append(addQuotes(detalle.getId()));
+                        sb.append(COMA);
 
                         b.append(addQuotes(detalle.getNumFinal()));
                         b.append(COMA);
 
+                        sb.append(addQuotes(detalle.getNumFinal()));
+                        sb.append(COMA);
+
                         b.append(addQuotes(detalle.getIdTipoModalidad() != null ? detalle.getIdTipoModalidad() : ""));
                         b.append(COMA);
+
+                        sb.append(addQuotes(detalle.getIdTipoModalidad() != null ? detalle.getIdTipoModalidad() : ""));
+                        sb.append(COMA);
 
                         b.append(addQuotes(detalle.getIdTipoRed()));
                         b.append(COMA);
                         b.append(addQuotes(""));
 
+                        sb.append(addQuotes(detalle.getIdTipoRed()));
+                        sb.append(COMA);
+                        sb.append(addQuotes(""));
+
                         b.append(NL);
+                        sb.append(NL);
 
                         fileOutput.write(b.toString().getBytes());
+                        fileOutput2.write(sb.toString().getBytes());
                     }
                 }
             }
 
             fileOutput.close();
+            fileOutput2.close();
 
             crearPlan(tmp, tmp2, TipoPlan.TIPO_PLAN_ABD_PORTABILIDAD, null);
+            crearPlan(tmp3, tmp4, TipoPlan.TIPO_PLAN_ABD_PORTABILIDAD_NUEVO, null);
 
         } catch (ArchiveException e) {
             if (bitacora != null) {
@@ -404,6 +451,8 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
         } finally {
             FileUtils.deleteQuietly(tmp);
             FileUtils.deleteQuietly(tmp2);
+            FileUtils.deleteQuietly(tmp3);
+            FileUtils.deleteQuietly(tmp4);
         }
     }
 
@@ -646,17 +695,23 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
 
         File tmp = null;
         File tmp2 = null;
+        File tmp3 = null;
+        File tmp4 = null;
         try {
             tmp = FicheroTemporal.getTmpFileName();
             tmp2 = FicheroTemporal.getTmpFileName();
+            tmp3 = FicheroTemporal.getTmpFileName();
+            tmp4 = FicheroTemporal.getTmpFileName();
 
             // if (LOGGER.isDebugEnabled()) {
             // LOGGER.debug("tmp {} tmp2 {}", tmp.getAbsolutePath(), tmp2.getAbsolutePath());
             // }
 
             FileOutputStream fileOutput = new FileOutputStream(tmp.getCanonicalPath());
+            FileOutputStream fileOutput2 = new FileOutputStream(tmp3.getCanonicalPath());
 
             fileOutput.write(CABECERA_PLAN_NUMERACION_GEOGRAFICA_PST.getBytes());
+            fileOutput2.write(CABECERA_PLAN_NUMERACION_GEOGRAFICA_PST_NUEVO.getBytes());
 
             int n = seriesServiceNg.getNumRangosAsignados().intValue();
 
@@ -670,6 +725,8 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                     for (DetalleRangoAsignadoNg detalle : lista) {
 
                         StringBuilder b = new StringBuilder();
+                        StringBuilder sb = new StringBuilder();
+                        StringBuilder numeracion = new StringBuilder();
 
                         /* CLAVE_CENSAL */
                         b.append(addQuotes(detalle.getInegi()));
@@ -700,6 +757,9 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(detalle.getDescRegion() != null ? detalle.getDescRegion() : VACIO);
                         b.append(COMA);
 
+                        sb.append(detalle.getDescRegion() != null ? detalle.getDescRegion() : VACIO);
+                        sb.append(COMA);
+
                         /* ASL */
                         b.append(detalle.getIdAbn());
                         b.append(COMA);
@@ -716,14 +776,24 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(detalle.getNumInicio());
                         b.append(COMA);
 
+                        sb.append(detalle.getCodigoNir()).append(detalle.getSnaAsString()).append(StringUtils.leftPad(detalle.getNumInicio(), 4, "0"));
+                        sb.append(COMA);
+
                         /* NUMERACION FINAL */
                         b.append(detalle.getNumFinal());
                         b.append(COMA);
+
+                        sb.append(detalle.getCodigoNir()).append(detalle.getSnaAsString()).append(StringUtils.leftPad(detalle.getNumFinal(), 4, "0"));
+                        sb.append(COMA);
 
                         /* OCUPACION */
                         b.append((Integer.parseInt(detalle.getNumFinal())
                                 - Integer.parseInt(detalle.getNumInicio())) + 1);
                         b.append(COMA);
+
+                        sb.append((Integer.parseInt(detalle.getNumFinal())
+                                - Integer.parseInt(detalle.getNumInicio())) + 1);
+                        sb.append(COMA);
 
                         /* TIPO DE RED */
                         b.append(detalle.getDescTipoRed());
@@ -733,23 +803,38 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(TipoRed.MOVIL.equals(detalle.getCodTipoRed()) ? detalle.getIdTipoModalidad() : MODALIDAD_FIJO);
                         b.append(COMA);
 
+                        sb.append(TipoRed.MOVIL.equals(detalle.getCodTipoRed()) ? detalle.getIdTipoModalidad() : MODALIDAD_FIJO);
+                        sb.append(COMA);
+
                         /* ESTATUS */
                         b.append(detalle.getCodEstatusRango());
                         b.append(COMA);
+
+                        sb.append(detalle.getCodEstatusRango());
+                        sb.append(COMA);
 
                         /* RAZON SOCIAL */
                         b.append(addQuotes(detalle.getNombrePst()));
                         b.append(COMA);
 
+                        sb.append(addQuotes(detalle.getNombrePst()));
+                        sb.append(COMA);
+
                         /* NOMBRE_CORTO */
                         b.append(detalle.getNombreCortoPst());
                         b.append(COMA);
+
+                        sb.append(detalle.getNombreCortoPst());
+                        sb.append(COMA);
 
                         /* ID OPERADOR */
                         //b.append(detalle.getCodigoPst());
                         //Se cambia para ajustar el plan
                         b.append(detalle.getIdOperador());
                         b.append(COMA);
+
+                        sb.append(detalle.getIdOperador());
+                        sb.append(COMA);
 
                         /* OFICIO RESERVA */
                         b.append(detalle.getOficioReserva() != null ? detalle.getOficioReserva() : VACIO);
@@ -763,9 +848,15 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(detalle.getOficioSolAsig() != null ? detalle.getOficioSolAsig() : VACIO);
                         b.append(COMA);
 
+                        sb.append(detalle.getOficioSolAsig() != null ? detalle.getOficioSolAsig() : VACIO);
+                        sb.append(COMA);
+
                         /* FECHA ASIGNACION */
                         b.append(FechasUtils.fechaToString(detalle.getFechaSolAsig()));
                         b.append(COMA);
+
+                        sb.append(FechasUtils.fechaToString(detalle.getFechaSolAsig()));
+                        sb.append(COMA);
 
                         /* FECHA CONSOLIDACION */
                         b.append(FechasUtils.fechaToString(detalle.getFechaConsolidacion()));
@@ -798,19 +889,29 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(detalle.getIdoPnnAsString());
                         b.append(COMA);
 
+                        sb.append(detalle.getIdoPnnAsString());
+                        sb.append(COMA);
+
                         /* IDA */
                         b.append(detalle.getIdaPnnAsString());
                         b.append(COMA);
 
+                        sb.append(detalle.getIdaPnnAsString());
+                        sb.append(COMA);
+
                         b.append(NL);
+                        sb.append(NL);
 
                         fileOutput.write(b.toString().getBytes());
+                        fileOutput2.write(sb.toString().getBytes());
                     }
                 }
             }
             fileOutput.close();
+            fileOutput2.close();
 
             crearPlan(tmp, tmp2, TipoPlan.TIPO_PLAN_NG_PST, null);
+            crearPlan(tmp3, tmp4, TipoPlan.TIPO_PLAN_NG_PST_NUEVO, null);
 
         } catch (ArchiveException e) {
             if (bitacora != null) {
@@ -832,6 +933,8 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
         } finally {
             FileUtils.deleteQuietly(tmp);
             FileUtils.deleteQuietly(tmp2);
+            FileUtils.deleteQuietly(tmp3);
+            FileUtils.deleteQuietly(tmp4);
         }
 
     }
@@ -843,13 +946,19 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
 
         File tmp = null;
         File tmp2 = null;
+        File tmp3 = null;
+        File tmp4 = null;
         try {
             tmp = FicheroTemporal.getTmpFileName();
             tmp2 = FicheroTemporal.getTmpFileName();
+            tmp3 = FicheroTemporal.getTmpFileName();
+            tmp4 = FicheroTemporal.getTmpFileName();
 
             FileOutputStream fileOutput = new FileOutputStream(tmp.getCanonicalPath());
+            FileOutputStream fileOutput2 = new FileOutputStream(tmp3.getCanonicalPath());
 
             fileOutput.write(CABECERA_PLAN_NUMERACION_GEOGRAFICA_PUBLICO.getBytes());
+            fileOutput2.write(CABECERA_PLAN_NUMERACION_GEOGRAFICA_PUBLICO_NUEVO.getBytes());
 
             int n = seriesServiceNg.getNumRangosAsignados().intValue();
 
@@ -862,6 +971,7 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                     for (DetalleRangoAsignadoNg detalle : lista) {
 
                         StringBuilder b = new StringBuilder();
+                        StringBuilder sb = new StringBuilder();
 
                         /* CLAVE_CENSAL */
                         b.append(addQuotes(detalle.getInegi()));
@@ -887,6 +997,9 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(detalle.getDescRegion() != null ? detalle.getDescRegion() : VACIO);
                         b.append(COMA);
 
+                        sb.append(detalle.getDescRegion() != null ? detalle.getDescRegion() : VACIO);
+                        sb.append(COMA);
+
                         /* ASL */
                         b.append(detalle.getIdAbn());
                         b.append(COMA);
@@ -903,14 +1016,24 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(detalle.getNumInicio());
                         b.append(COMA);
 
+                        sb.append(detalle.getCodigoNir()).append(detalle.getSnaAsString()).append(StringUtils.leftPad(detalle.getNumInicio(), 4, "0"));
+                        sb.append(COMA);
+
                         /* NUMERACION FINAL */
                         b.append(detalle.getNumFinal());
                         b.append(COMA);
+
+                        sb.append(detalle.getCodigoNir()).append(detalle.getSnaAsString()).append(StringUtils.leftPad(detalle.getNumFinal(), 4, "0"));
+                        sb.append(COMA);
 
                         /* OCUPACION */
                         b.append((Integer.parseInt(detalle.getNumFinal())
                                 - Integer.parseInt(detalle.getNumInicio())) + 1);
                         b.append(COMA);
+
+                        sb.append((Integer.parseInt(detalle.getNumFinal())
+                                - Integer.parseInt(detalle.getNumInicio())) + 1);
+                        sb.append(COMA);
 
                         /* TIPO DE RED */
                         b.append(detalle.getDescTipoRed());
@@ -920,13 +1043,22 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(TipoRed.MOVIL.equals(detalle.getCodTipoRed()) ? detalle.getIdTipoModalidad() : MODALIDAD_FIJO);
                         b.append(COMA);
 
+                        sb.append(TipoRed.MOVIL.equals(detalle.getCodTipoRed()) ? detalle.getIdTipoModalidad() : MODALIDAD_FIJO);
+                        sb.append(COMA);
+
                         /* RAZON SOCIAL */
                         b.append(addQuotes(detalle.getNombrePst()));
                         b.append(COMA);
 
+                        sb.append(addQuotes(detalle.getNombrePst()));
+                        sb.append(COMA);
+
                         /* FECHA ASIGNACION */
                         b.append(FechasUtils.fechaToString(detalle.getFechaSolAsig()));
                         b.append(COMA);
+
+                        sb.append(FechasUtils.fechaToString(detalle.getFechaSolAsig()));
+                        sb.append(COMA);
 
                         /* FECHA CONSOLIDACION */
                         b.append(FechasUtils.fechaToString(detalle.getFechaConsolidacion()));
@@ -949,14 +1081,18 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(COMA);
 
                         b.append(NL);
+                        sb.append(NL);
 
                         fileOutput.write(b.toString().getBytes());
+                        fileOutput2.write(sb.toString().getBytes());
                     }
                 }
             }
             fileOutput.close();
+            fileOutput2.close();
 
             crearPlan(tmp, tmp2, TipoPlan.TIPO_PLAN_NG_PUBLICO, null);
+            crearPlan(tmp3, tmp4, TipoPlan.TIPO_PLAN_NG_PUBLICO_NUEVO, null);
 
         } catch (ArchiveException e) {
             if (bitacora != null) {
@@ -1427,13 +1563,19 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
 
         File tmp = null;
         File tmp2 = null;
+        File tmp3 = null;
+        File tmp4 = null;
         try {
             tmp = FicheroTemporal.getTmpFileName();
             tmp2 = FicheroTemporal.getTmpFileName();
+            tmp3 = FicheroTemporal.getTmpFileName();
+            tmp4 = FicheroTemporal.getTmpFileName();
 
             FileOutputStream fileOutput = new FileOutputStream(tmp.getCanonicalPath());
+            FileOutputStream fileOutput2 = new FileOutputStream(tmp2.getCanonicalPath());
 
             fileOutput.write(CABECERA_PLAN_NNG_IFT.getBytes());
+            fileOutput2.write(CABECERA_PLAN_NNG_IFT_NUEVO.getBytes());
 
             int n = seriesServiceNng.findAllRangosAsignadosCount();
 
@@ -1447,14 +1589,21 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                     for (DetalleRangoAsignadoNng detalle : lista) {
 
                         StringBuilder b = new StringBuilder();
+                        StringBuilder sb = new StringBuilder();
 
                         // PST
                         b.append(addQuotes(detalle.getNombrePst()));
                         b.append(COMA);
 
+                        sb.append(addQuotes(detalle.getNombrePst()));
+                        sb.append(COMA);
+
                         // CVE_SERVICIO
                         b.append(detalle.getIdClaveServicio().toString());
                         b.append(COMA);
+
+                        sb.append(detalle.getIdClaveServicio().toString());
+                        sb.append(COMA);
 
                         // SERIE
                         b.append(detalle.getSnaAsString());
@@ -1464,22 +1613,44 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(detalle.getNumInicio());
                         b.append(COMA);
 
+                        sb.append(detalle.getIdClaveServicio().toString()).
+                                append(StringUtils.leftPad(detalle.getSnaAsString(), 3, "0")).
+                                append(StringUtils.leftPad(detalle.getNumInicio(), 4, "0"));
+                        sb.append(COMA);
+
                         // NUMERO_FINAL
                         b.append(detalle.getNumFinal());
                         b.append(COMA);
+
+                        sb.append(detalle.getIdClaveServicio().toString()).
+                                append(StringUtils.leftPad(detalle.getSnaAsString(), 3, "0")).
+                                append(StringUtils.leftPad(detalle.getNumFinal(), 4, "0"));
+                        sb.append(COMA);
 
                         //OCUPACION
                         b.append((Integer.parseInt(detalle.getNumFinal())
                                 - Integer.parseInt(detalle.getNumInicio())) + 1);
                         b.append(COMA);
 
+                        sb.append((Integer.parseInt(detalle.getNumFinal())
+                                - Integer.parseInt(detalle.getNumInicio())) + 1);
+                        sb.append(COMA);
+
                         // BCD
                         b.append(detalle.getIdaAsString() != null && !detalle.getIdaAsString().equals("") ? 
                 		detalle.getIdaAsString() : detalle.getBcdAsString());
                         b.append(COMA);
 
+                        sb.append(detalle.getIdaAsString() != null && !detalle.getIdaAsString().equals("") ?
+                		detalle.getIdaAsString() : detalle.getBcdAsString());
+                        sb.append(COMA);
+
                         // IDA
                         b.append(
+                                detalle.getCodTipoPst().equals(TipoProveedor.COMERCIALIZADORA) ? detalle
+                                        .getIdaAsString() : detalle.getBcdAsString()).append(COMA);
+
+                        sb.append(
                                 detalle.getCodTipoPst().equals(TipoProveedor.COMERCIALIZADORA) ? detalle
                                         .getIdaAsString() : detalle.getBcdAsString()).append(COMA);
 
@@ -1487,18 +1658,26 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(FechasUtils.fechaToString(detalle.getFechaSolAsig()));
                         b.append(COMA);
 
+                        sb.append(FechasUtils.fechaToString(detalle.getFechaSolAsig()));
+                        sb.append(COMA);
+
                         // OFICIO_ASIGNACION
                         b.append(detalle.getOficioSolAsig() != null ? detalle.getOficioSolAsig() : VACIO);
+                        sb.append(detalle.getOficioSolAsig() != null ? detalle.getOficioSolAsig() : VACIO);
 
                         b.append(NL);
+                        sb.append(NL);
 
                         fileOutput.write(b.toString().getBytes());
+                        fileOutput2.write(sb.toString().getBytes());
                     }
                 }
             }
             fileOutput.close();
+            fileOutput2.close();
 
             crearPlan(tmp, tmp2, TipoPlan.TIPO_PLAN_NNG_IFT, null);
+            crearPlan(tmp3, tmp4, TipoPlan.TIPO_PLAN_NNG_IFT_NUEVO, null);
 
         } catch (ArchiveException e) {
             if (bitacora != null) {
@@ -1520,6 +1699,8 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
         } finally {
             FileUtils.deleteQuietly(tmp);
             FileUtils.deleteQuietly(tmp2);
+            FileUtils.deleteQuietly(tmp3);
+            FileUtils.deleteQuietly(tmp4);
         }
     }
 

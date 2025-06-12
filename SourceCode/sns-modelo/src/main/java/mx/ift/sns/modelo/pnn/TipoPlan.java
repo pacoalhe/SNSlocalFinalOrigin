@@ -63,6 +63,30 @@ public class TipoPlan implements Serializable {
     /** Plan de numeracion no geográfica Específica PST. */
     public static final String TIPO_PLAN_NNG_ESPECIFICA_PST = "M";
 
+    /** Matriz de enrutamiento 911 y 089. */
+    public static final String TIPO_MATRIZ_ENRUTAMIENTO_911_889 = "0";
+
+    /** Matriz de enrutamiento CSE 07x. */
+    public static final String TIPO_MATRIZ_ENRUTAMIENTO_CSE_07X = "P";
+
+    /** Matriz de enrutamiento 911 y 089 NUEVO. */
+    public static final String TIPO_MATRIZ_ENRUTAMIENTO_911_889_NUEVO = "Q";
+
+    /** Matriz de enrutamiento CSE 07x NUEVO. */
+    public static final String TIPO_MATRIZ_ENRUTAMIENTO_CSE_07X_NUEVO = "R";
+
+    /** Plan de numeración geográfica para los PSTs Nuevo. */
+    public static final String TIPO_PLAN_NG_PST_NUEVO = "S";
+
+    /** Plan de numeración geográfica público Nuevo. */
+    public static final String TIPO_PLAN_NG_PUBLICO_NUEVO = "T";
+
+    /** Plan de numeración no geográfica IFT Nuevo. */
+    public static final String TIPO_PLAN_NNG_IFT_NUEVO = "U";
+
+    /** Reporte ABD portabilidad. */
+    public static final String TIPO_PLAN_ABD_PORTABILIDAD_NUEVO = "V";
+
     /** Id del plan. */
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

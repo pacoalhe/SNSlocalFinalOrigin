@@ -36,6 +36,9 @@ public class PlanMaestroDetalle implements Serializable {
     @Column(name = "IDA")
     private Integer ida;
 
+    @Column(name = "ZONA")
+    private Integer zona;
+
     /**
      * @return the id
      */
@@ -120,11 +123,21 @@ public class PlanMaestroDetalle implements Serializable {
 	this.areaServicio = areaServicio;
     }
 
+    /**
+     * @return zona the zona to set
+     */
+    public Integer getZona() {return zona; }
+
+    /**
+     * @param zona the zona to set
+     */
+    public void setZona(Integer zona) { this.zona = zona; }
+
     @Override
     public String toString() {
 	String message = "Ido: " + getIdo() + ", NoInicial:" + getId().getNumeroInicial() + ", NoFinal: "
 		+ getId().getNumeroFinal() + ", TipoServicio: " + getTipoServicio() + ", Mpp: " + getMpp() + ", Ida: "
-		+ getIda() + ", AreaServicio: " + getAreaServicio();
+		+ getIda() + ", AreaServicio: " + getAreaServicio() + ", Zona: " + getZona();
 	return message;
     }
 }

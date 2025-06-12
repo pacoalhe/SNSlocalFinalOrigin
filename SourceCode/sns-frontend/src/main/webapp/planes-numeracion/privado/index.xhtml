@@ -23,34 +23,43 @@
 								style="padding:5%">
 								<p:dataTable id="TBL_planes" var="plan" styleClass="sombreado"
 									value="#{descargaPlanesBean.planes}">
+
 									<p:columnGroup type="header">
 										<p:row>
 											<p:column headerText="Archivo para la descarga" style="font-size:14px"/>
 											<p:column headerText="Fecha de generación del plan" style="font-size:14px"/>
-											<p:column
-												headerText="Pulse el botón correspondiente para iniciar la descarga del archivo"
-												style="font-size:14px">
-											</p:column>
-
+											<p:column headerText="Descarga principal" style="font-size:14px"/>
+											<p:column headerText="Descarga adicional" style="font-size:14px"/>
 										</p:row>
 									</p:columnGroup>
-									<p:column style="font-size:14px; padding-left: 15px">
+
+									<!-- Descripción -->
+									<p:column>
 										<p:outputLabel value="#{plan.tipoPlan.descripcion}" />
 									</p:column>
-									<p:column style="text-align:center; font-size:14px">
+
+									<!-- Fecha -->
+									<p:column>
 										<h:outputText value="#{descargaPlanesBean.getFechaPlanPrivadoGenerado(plan)}" />
 									</p:column>
-									<p:column style="text-align:center; padding-top: 12px; padding-bottom:15px">
-										<p:commandButton value="Descargar" ajax="false"
-											style="width: auto; heigth: auto; font-size: 11px"
-											icon="ui-icon-arrowthickstop-1-s" styleClass="sombreado">
-											<p:fileDownload
-												value="#{descargaPlanesBean.descargarPlan(plan)}" />
-										</p:commandButton>
 
+									<!-- Botón de descarga principal -->
+									<p:column style="text-align:center">
+										<p:commandButton value="Descargar" ajax="false"
+											icon="ui-icon-arrowthickstop-1-s" styleClass="sombreado">
+											<p:fileDownload value="#{descargaPlanesBean.descargarPlan(plan)}" />
+										</p:commandButton>
 									</p:column>
 
-
+									<!-- Botón de descarga adicional si hay coincidencia en la segunda lista -->
+									<p:column style="text-align:center">
+										<ui:param name="planExtra" value="#{descargaPlanesBean.getPlanExtraPorDescripcion(plan.tipoPlan.descripcion)}" />
+										<p:commandButton value="Descarga extra" ajax="false"
+											icon="ui-icon-arrowthickstop-1-s" styleClass="sombreado"
+											rendered="#{planExtra != null}">
+											<p:fileDownload value="#{descargaPlanesBean.descargarPlan(planExtra)}" />
+										</p:commandButton>
+									</p:column>
 								</p:dataTable>
 							</p:fieldset>
 						</div>

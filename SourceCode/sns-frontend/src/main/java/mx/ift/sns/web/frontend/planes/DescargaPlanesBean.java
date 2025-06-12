@@ -5,7 +5,9 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -22,6 +24,7 @@ import mx.ift.sns.modelo.usu.Usuario;
 import mx.ift.sns.negocio.IConsultaPublicaFacade;
 import mx.ift.sns.web.frontend.common.MensajesFrontBean;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.slf4j.Logger;
@@ -62,6 +65,23 @@ public class DescargaPlanesBean implements Serializable {
      * Listado con los planes de un rol para mostrar.
      */
     private List<Plan> planesRolMostrar = new ArrayList<Plan>();
+
+    /**
+     * Listado de tipos de planes adicionales de un rol para mostar.
+     */
+    private List<Plan> planesExtra = new ArrayList<>();
+
+
+    private final Map<String, String> reportes = new HashMap<String, String>() {{
+        put("O", "Q");
+        put("P", "R");
+        put("D", "S");
+        put("E", "T");
+        put("H", "U");
+        put("C", "V");
+    }};
+
+
 
     /**
      * Flag de activación de botón de descarga.
@@ -135,14 +155,49 @@ public class DescargaPlanesBean implements Serializable {
             planPublico = ngPublicService.getPlanByTipo(TipoPlan.TIPO_PLAN_NG_PUBLICO);
             if (planPublico != null) {
                 InputStream stream = new ByteArrayInputStream(planPublico.getFichero());
-                StringBuffer docName = new StringBuffer();
+                StringBuilder docName = new StringBuilder();
                 docName.append(planPublico.getNombre());
                 // Definición del tipo de archivo a descarcar.
                 String wordMimeType = "application/zip";
                 StreamedContent downFile = new DefaultStreamedContent(stream, wordMimeType, docName.toString());
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Archivo {} de longitud {} descargado correctamente", docName.toString(),
-                            docName.length());
+                    LOGGER.debug("Archivo {} de longitud {} descargado correctamente", docName, docName.length());
+                }
+                MensajesFrontBean.addInfoMsg(MSG_ID, "Plan descargado correctamente");
+                this.setBtnDescargaActivado(false);
+                return downFile;
+
+            } else {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("No existe achivo para la descarga");
+                    this.setBtnDescargaActivado(true);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error inesperado: el archivo de descarga es nulo o no existe " + e.getMessage());
+            MensajesFrontBean.addErrorMsg(MSG_ID, "Error en la descarga");
+        }
+        return null;
+    }
+
+    /**
+     * Método invocado al pulsar sobre el botón de descarga pública. Realiza la descarga del plan de numeración
+     * geográfica público.
+     * @return StreamedContent Fichero a Descargar
+     */
+    public StreamedContent descargarPlanPublicoNuevo() {
+        Plan planPublico = null;
+        try {
+            planPublico = ngPublicService.getPlanByTipo(TipoPlan.TIPO_PLAN_NG_PUBLICO_NUEVO);
+            if (planPublico != null) {
+                InputStream stream = new ByteArrayInputStream(planPublico.getFichero());
+                StringBuilder docName = new StringBuilder();
+                docName.append(planPublico.getNombre());
+                // Definición del tipo de archivo a descarcar.
+                String wordMimeType = "application/zip";
+                StreamedContent downFile = new DefaultStreamedContent(stream, wordMimeType, docName.toString());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Archivo {} de longitud {} descargado correctamente", docName, docName.length());
                 }
                 MensajesFrontBean.addInfoMsg(MSG_ID, "Plan descargado correctamente");
                 this.setBtnDescargaActivado(false);
@@ -213,10 +268,20 @@ public class DescargaPlanesBean implements Serializable {
                     plan = ngPublicService.getPlanByTipo(t);
                     if (plan != null) {
                         this.planesRolMostrar.add(plan);
+
+                        String value = reportes.get(plan.getTipoPlan().getId());
+                        if(value != null) {
+                            Plan copiaPlan = SerializationUtils.clone(plan); // Asumiendo que tienes un constructor copia
+                            TipoPlan nuevoTipoPlan = SerializationUtils.clone(plan.getTipoPlan());
+                            nuevoTipoPlan.setId(value);
+                            copiaPlan.setTipoPlan(nuevoTipoPlan);
+                            this.planesExtra.add(copiaPlan);
+                        }
                     }
                 }
             }
             this.setPlanesRolMostrar(this.planesRolMostrar);
+            this.setPlanesExtra(this.planesExtra);
         } catch (Exception e) {
             LOGGER.error("Error inesperado al optener los planes por rol " + e.getMessage());
             MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
@@ -267,6 +332,20 @@ public class DescargaPlanesBean implements Serializable {
         return fechaPlanPrivadoString;
     }
 
+    /**
+     * Obtiene el plan con el nuevo layout
+     * @param descripcion String
+     * @return Plan
+     */
+    public Plan getPlanExtraPorDescripcion(String descripcion) {
+        for (Plan p : planesExtra) {
+            if (p.getTipoPlan().getDescripcion().equals(descripcion)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
     // ///////////////////////////////////GETTERS Y SETTERS//////////////////////////////
 
     /**
@@ -315,6 +394,22 @@ public class DescargaPlanesBean implements Serializable {
      */
     public void setPlanesRolMostrar(List<Plan> planesRolMostrar) {
         this.planesRolMostrar = planesRolMostrar;
+    }
+
+    /**
+     * Listado con los planes de un rol para mostrar.
+     * @return the planesRolMostrar
+     */
+    public List<Plan> getPlanesExtra() {
+        return planesExtra;
+    }
+
+    /**
+     * Listado con los planes de un rol para mostrar.
+     * @param planesExtra the planesRolMostrar to set
+     */
+    public void setPlanesExtra(List<Plan> planesExtra) {
+        this.planesExtra = planesExtra;
     }
 
 }

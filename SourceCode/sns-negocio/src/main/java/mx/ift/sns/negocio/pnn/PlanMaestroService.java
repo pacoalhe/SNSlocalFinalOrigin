@@ -323,6 +323,7 @@ public class PlanMaestroService implements IPlanMaestroService {
                         pCSV.setMpp(datos[4].charAt(0)); // MPP
                         pCSV.setIda(Integer.parseInt(datos[5])); // IDA
                         pCSV.setAreaServicio(Integer.parseInt(datos[6])); // AREA SERVICIO
+                        pCSV.setZona(Integer.parseInt(datos[1].substring(0, 1))); // ZONA
                         pCSV.setId(pk);
                         int cData = datos.length;
                         if (cData > 7) {
@@ -344,6 +345,7 @@ public class PlanMaestroService implements IPlanMaestroService {
                                 pmd.setTipoServicio(pCSV.getTipoServicio());
                                 pmd.setIda(pCSV.getIda());
                                 pmd.setIdo(pCSV.getIdo());
+                                pmd.setZona(pCSV.getZona());
 
                                 listSyncronizados.add(pmd);
                             }
@@ -357,6 +359,7 @@ public class PlanMaestroService implements IPlanMaestroService {
                             pmdNvo.setTipoServicio(pCSV.getTipoServicio());
                             pmdNvo.setIda(pCSV.getIda());
                             pmdNvo.setIdo(pCSV.getIdo());
+                            pmdNvo.setZona(pCSV.getZona());
 
 							listSyncronizados.add(pmdNvo);
                         }
@@ -404,6 +407,7 @@ public class PlanMaestroService implements IPlanMaestroService {
                 pCSV.setMpp(fields[4].charAt(0));
                 pCSV.setIda(Integer.parseInt(fields[5]));
                 pCSV.setAreaServicio(Integer.parseInt(fields[6]));
+                pCSV.setZona(Integer.parseInt(fields[1].substring(0, 1)));
                 pCSV.setId(pk);
 
                 PlanMaestroDetalle pmd = getPlanMaestroDetalle(pk.getNumeroInicial(), pk.getNumeroFinal());

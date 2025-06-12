@@ -41,7 +41,7 @@ public final class PlanMaestroDao {
 	    if (count > 0) {
 
 		LOGGER.debug("<--Existe la numeracion, se ejecuta UPDATE---->");
-		String sqlUpdate = "update pnn_detalle set IDO =?, TIPO_SERVICIO =?, MPP =?, IDA =?, AREA_SERVICIO =? WHERE "
+		String sqlUpdate = "update pnn_detalle set IDO =?, TIPO_SERVICIO =?, MPP =?, IDA =?, AREA_SERVICIO =?, ZONA = ? WHERE "
 			+ "NUMERO_INICIAL =? AND NUMERO_FINAL =?";
 		ps1 = conn.prepareStatement(sqlUpdate);
 
@@ -50,10 +50,11 @@ public final class PlanMaestroDao {
 		ps1.setString(3, String.valueOf(numero.getMpp()));
 		ps1.setInt(4, numero.getIda());
 		ps1.setInt(5, numero.getAreaServicio());
+		ps1.setInt(6, numero.getZona());
 
 		// WHERE
-		ps1.setLong(6, numero.getId().getNumeroInicial());
-		ps1.setLong(7, numero.getId().getNumeroFinal());
+		ps1.setLong(7, numero.getId().getNumeroInicial());
+		ps1.setLong(8, numero.getId().getNumeroFinal());
 		ps1.executeQuery();
 
 		LOGGER.debug("<--Numero Inicial :" + numero.getId().getNumeroInicial() + ", numero final: "
@@ -66,7 +67,7 @@ public final class PlanMaestroDao {
 	    } else {
 		LOGGER.debug("<- -NoExiste la numeracion, se ejecuta INSERT---->");
 		String sqlInsert = "Insert into pnn_detalle (IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, "
-			+ "AREA_SERVICIO) values(?,?,?,?,?,?,?)";
+			+ "AREA_SERVICIO, ZONA) values(?,?,?,?,?,?,?,?)";
 		ps2 = conn.prepareStatement(sqlInsert);
 		ps2.setInt(1, numero.getIdo());
 		ps2.setLong(2, numero.getId().getNumeroInicial());
@@ -75,6 +76,7 @@ public final class PlanMaestroDao {
 		ps2.setString(5, String.valueOf(numero.getMpp()));
 		ps2.setInt(6, numero.getIda());
 		ps2.setInt(7, numero.getAreaServicio());
+		ps2.setInt(8, numero.getZona());
 
 		ps2.executeQuery();
 

@@ -49,6 +49,22 @@
 									style="font-size:13px; color: #cb410b" />
 							</p:column>
 						</p:row>
+						<p:row>
+							<p:column>
+								<p:commandButton id="BTN_planPublico1" value="Descargar"
+									disabled="#{descargaPlanesBean.btnDescargaActivado}"
+									ajax="false" icon="ui-icon-arrowthickstop-1-s"
+									style="width: auto; height: auto; font-size: 13px; padding:0px; margin-top:20px;"
+									styleClass="sombreado">
+									<p:fileDownload
+										value="#{descargaPlanesBean.descargarPlanPublicoNuevo()}"></p:fileDownload>
+								</p:commandButton>
+								<br></br>
+								<h:outputText value="El archivo no se encuentra disponible"
+									rendered="#{descargaPlanesBean.btnDescargaActivado}"
+									style="font-size:13px; color: #cb410b" />
+							</p:column>
+						</p:row>
 						<p:row >
 							<p:column>
 								<h:outputText rendered="#{!descargaPlanesBean.btnDescargaActivado}"

@@ -26,7 +26,7 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
     public PlanMaestroDetalle getDetalleNumero(Long numeroInicial, Long numeroFinal) {
         //final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO "
         //        + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= :numeroInicial AND NUMERO_FINAL >= :numeroFinal";
-        final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO "
+        final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO, ZONA "
                 + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= ?1 AND NUMERO_FINAL >= ?2";
 
         //FJAH 27.05.2025
@@ -72,7 +72,7 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
 
     @Override
     public PlanMaestroDetalle actualizaNumero(Long numeroInicial, Long numeroFinal, PlanMaestroDetalle registroActualizado) {
-        final String strQueryUpdate = "UPDATE PlanMaestroDetalle p SET p.tipoServicio = :tipoServicio, p.mpp = :mpp, p.areaServicio = :areaServicio, p.ido = :ido, p.ida = :ida "
+        final String strQueryUpdate = "UPDATE PlanMaestroDetalle p SET p.tipoServicio = :tipoServicio, p.mpp = :mpp, p.areaServicio = :areaServicio, p.ido = :ido, p.ida = :ida, p.zona = :zona "
                 + "WHERE ((p.id.numeroInicial = :noInicial AND p.id.numeroFinal = :noFinal))";
         // PlanMaestroDetalle planMaestroDetalle = null;
         LOGGER.info("Editar entidad: {}", registroActualizado.toString());
@@ -95,6 +95,7 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
             query.setParameter("mpp", registroActualizado.getMpp());
             query.setParameter("ida", registroActualizado.getIda());
             query.setParameter("areaServicio", registroActualizado.getAreaServicio());
+            query.setParameter("zona", registroActualizado.getZona());
 
             LOGGER.info("Query=> {}", query);
 			int updated = query.executeUpdate();
@@ -151,7 +152,7 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
 
     @Override
     public PlanMaestroDetalle getDetalleNumeroConsultaPublica(Long numeroInicial, Long numeroFinal) {
-        final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO "
+        final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO, ZONA "
                 + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= ? AND NUMERO_FINAL >= ?";
 
         try {
