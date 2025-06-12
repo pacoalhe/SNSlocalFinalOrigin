@@ -466,6 +466,7 @@ public class GeneracionOficiosTab extends TabWizard {
 
     /** Método invocado al pulsar sobre el botón 'Generar Oficio'. */
     public void generarOficio() {
+        LOGGER.info("INICIO generarOficio");
         try {
             if (oficioSeleccionado != null) {
                 if (LOGGER.isDebugEnabled()) {
@@ -475,12 +476,16 @@ public class GeneracionOficiosTab extends TabWizard {
                     LOGGER.debug(sbTrace.toString());
                 }
 
+                LOGGER.info("Valor del {} "+ oficioSeleccionado.getCdg());
+
                 boolean oficioGeneradoOk = false;
                 if (oficioSeleccionado.getCdg().equals(TipoDestinatario.PST_SOLICITANTE)) {
+                    LOGGER.info("Oficio PST_SOLICITANTE, ejecutar generarOficioPsts");
                     oficioGeneradoOk = this.generarOficioPsts();
                     if (oficioGeneradoOk) {
                         // Actualizamos el número de oficio del PST Solicitante para uso en el resto de oficios.
                         numOficioPstSolicitante = oficioGenerado.getNumOficio();
+                        LOGGER.info("Oficio generado {} " + numOficioPstSolicitante);
                     }
                 } else if (oficioSeleccionado.getCdg().equals(TipoDestinatario.RESTO_PST)) {
                     oficioGeneradoOk = this.generarOficioPsts();
@@ -492,15 +497,21 @@ public class GeneracionOficiosTab extends TabWizard {
 
                 if (oficioGeneradoOk) {
                     // Al guardar la solicitud se persiste el oficio generado.
+                    LOGGER.info("OficiogeneradoOk, Al guardar la solicitud se persiste el oficio generado.");
                     if (solicitud.getTipoSolicitud().getCdg().equals(TipoSolicitud.ASIGNACION)) {
+                        LOGGER.info("dentro del If solicitud.getTipoSolicitud().getCdg().equals(TipoSolicitud.ASIGNACION)");
                         if (oficioSeleccionado.getCdg().equals(TipoDestinatario.PST_SOLICITANTE)) {
+                            LOGGER.info("dentro del If oficioSeleccionado.getCdg().equals(TipoDestinatario.PST_SOLICITANTE)");
                             for (RangoSerie rangoAsignado : solicitud.getRangos()) {
+                                LOGGER.info("dentro del for RangoSerie rangoAsignado : solicitud.getRangos()");
                                 if (rangoAsignado.getEstadoRango().getCodigo().equals(EstadoRango.ASIGNADO)) {
                                     // Los cambios se registran al guardar la solicitud.
+                                    LOGGER.info("Los cambios se registran al guardar la solicitud.");
                                     rangoAsignado.setOficioAsignacion(solicitud.getNumOficioSolicitante());
                                 }
                             }
                         }
+                        LOGGER.info("Antes de realizar el this.solicitud = oficiosFacade.saveSolicitudAsignacion((SolicitudAsignacion) solicitud);");
                         this.solicitud = oficiosFacade.saveSolicitudAsignacion((SolicitudAsignacion) solicitud);
                     } else if (solicitud.getTipoSolicitud().getCdg().equals(TipoSolicitud.ASIGNACION_NNG)) {
                         if (oficioSeleccionado.getCdg().equals(TipoDestinatario.PST_SOLICITANTE)) {
@@ -560,7 +571,7 @@ public class GeneracionOficiosTab extends TabWizard {
                     // Actualizamos los botones del formulario y la instancia del oficio.
                     this.seleccionOficio();
                 }
-            }
+            }else {LOGGER.info("Oficio selecconado es igual a NULL");}
         } catch (RegistroModificadoException rme) {
             MensajesBean.addErrorMsg(MSG_ID, Errores.ERROR_0015);
         } catch (Exception e) {

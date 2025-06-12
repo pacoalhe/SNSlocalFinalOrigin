@@ -57,4 +57,5 @@ public interface IBaseDAO<T> {
     List<T> saveAll(List<T> entities);
 
     List<T> deleteAll(List<T> entities);
+
 }

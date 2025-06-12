@@ -569,9 +569,9 @@ public class Scheduler implements IScheduler {
      * Timer para ejecutar tareas a la hora requerida
      * FJAH 26MAR2025
      */
-    private boolean testMode = true; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
+    private boolean testMode = false; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
 
-    @Schedule(hour = "12", minute = "22", persistent = false)
+    @Schedule(hour = "15", minute = "28", persistent = false)
     void timeoutPruebas() {
         LOGGER.info("Inicio del timer timeoutPruebas");
 
@@ -597,6 +597,7 @@ public class Scheduler implements IScheduler {
     public void testGenerarPlanes() {
         LOGGER.info("Inicio de testGenerarPlanes");
 
+/*
         try {
             //timeoutDesbloqueoTareas();
             timeoutABD();
@@ -606,8 +607,6 @@ public class Scheduler implements IScheduler {
         } catch (Exception e) {
             LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: ", e);
         }
-
-		/*
 
 		try {
 			timeoutABD2();
@@ -624,10 +623,6 @@ public class Scheduler implements IScheduler {
 		} catch (Exception e) {
 			LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 26MAR2025", e);
 		}
-
-		 */
-
-/*
 
 		try {
 			timeoutPlanABD();
@@ -694,7 +689,10 @@ public class Scheduler implements IScheduler {
 		}
 
  */
-        LOGGER.info("Fin de testGenerarPlanes FJAH 22MAYO2025");
+
+        LOGGER.info("Fin de testGenerarPlanes FJAH");
+
+
     }
 
     private void ejecutarDesbloqueoDeTareas() {
