@@ -1572,7 +1572,7 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
             tmp4 = FicheroTemporal.getTmpFileName();
 
             FileOutputStream fileOutput = new FileOutputStream(tmp.getCanonicalPath());
-            FileOutputStream fileOutput2 = new FileOutputStream(tmp2.getCanonicalPath());
+            FileOutputStream fileOutput2 = new FileOutputStream(tmp3.getCanonicalPath());
 
             fileOutput.write(CABECERA_PLAN_NNG_IFT.getBytes());
             fileOutput2.write(CABECERA_PLAN_NNG_IFT_NUEVO.getBytes());

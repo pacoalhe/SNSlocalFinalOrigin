@@ -571,7 +571,7 @@ public class Scheduler implements IScheduler {
      */
     private boolean testMode = false; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
 
-    @Schedule(hour = "15", minute = "28", persistent = false)
+    @Schedule(hour = "11", minute = "53", persistent = false)
     void timeoutPruebas() {
         LOGGER.info("Inicio del timer timeoutPruebas");
 
@@ -599,9 +599,8 @@ public class Scheduler implements IScheduler {
 
 /*
         try {
-            //timeoutDesbloqueoTareas();
+            timeoutDesbloqueoTareas();
             timeoutABD();
-            //timeoutABD2();
             //FJAH 26032025 Modificación a logBitacora para persistincia
             logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutABD");
         } catch (Exception e) {
@@ -688,10 +687,17 @@ public class Scheduler implements IScheduler {
 			LOGGER.error("Error en timeoutReporteABD durante testGenerarPlanes: FJAH 26MAR2025", e);
 		}
 
- */
+		try {
+            timeoutConsolidaciones();
+            //FJAH 26032025 Modificación a logBitacora para persistincia
+            logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutConsolidaciones FJAH 13.06.2025.");
+        } catch (Exception e) {
+            LOGGER.error("Error en timeoutConsolidaciones durante testGenerarPlanes: FJAH 13.06.2025", e);
+        }
 
         LOGGER.info("Fin de testGenerarPlanes FJAH");
 
+ */
 
     }
 
@@ -716,6 +722,8 @@ public class Scheduler implements IScheduler {
             }
         }
     }
+
+
 
     // FJAH 26MAR2025: Método auxiliar para registrar en la bitácora en una nueva transacción
     private void logBitacora(String s) {

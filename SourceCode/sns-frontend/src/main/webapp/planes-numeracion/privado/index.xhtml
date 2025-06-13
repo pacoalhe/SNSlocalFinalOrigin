@@ -52,8 +52,9 @@
 									</p:column>
 
 									<!-- Botón de descarga adicional si hay coincidencia en la segunda lista -->
+									<!-- value="#{descargaPlanesBean.getPlanExtraPorDescripcion(plan.tipoPlan.descripcion)}" -->
 									<p:column style="text-align:center">
-										<ui:param name="planExtra" value="#{descargaPlanesBean.getPlanExtraPorDescripcion(plan.tipoPlan.descripcion)}" />
+										<ui:param name="planExtra" value="#{descargaPlanesBean.getPlanExtra(plan)}" />
 										<p:commandButton value="Descarga extra" ajax="false"
 											icon="ui-icon-arrowthickstop-1-s" styleClass="sombreado"
 											rendered="#{planExtra != null}">

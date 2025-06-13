@@ -95,6 +95,7 @@ public class LoginBean implements Serializable {
 
                     HttpSession session = (HttpSession) ec.getSession(true);
                     session.setAttribute(ATT_UID, uid);
+                    seteaRolesEnSesion(usuario);
 
                     LOGGER.info("Usuario real emulado en entorno local: {} ({})", uid, username);
                 } else {
@@ -145,6 +146,8 @@ public class LoginBean implements Serializable {
 
                         HttpSession session = (HttpSession) ec.getSession(false);
                         session.setAttribute(ATT_UID, uid);
+                        seteaRolesEnSesion(usuario);
+
                         // logueado = true;
                     }else{
                     	LOGGER.info("<--Usuario no encontrado-->");
@@ -334,5 +337,25 @@ public class LoginBean implements Serializable {
         LOGGER.info("LoginBean destruido");
     }
      */
+
+    /**
+     * Guarda en sesión los roles, el id_usuario y el usuario emulado.
+     * Puede llamarse después del login forzado/emulado.
+     */
+    private void seteaRolesEnSesion(Usuario usuario) {
+        if (usuario == null) {
+            LOGGER.error("No se puede setear roles en sesión porque el usuario es null");
+            return;
+        }
+        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+        HttpSession session = (HttpSession) ec.getSession(true);
+
+        session.setAttribute("ID_USUARIO", usuario.getId());
+        session.setAttribute("ROLES_USUARIO", usuario.getRoles());
+        session.setAttribute("USUARIO_OBJ", usuario);
+
+        LOGGER.info("Seteados en sesión: id_usuario={}, roles={}", usuario.getId(), usuario.getRoles());
+    }
+
 
 }

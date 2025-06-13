@@ -83,6 +83,8 @@ public class DescargaPlanesBean implements Serializable {
 
 
 
+
+
     /**
      * Flag de activación de botón de descarga.
      */
@@ -118,6 +120,11 @@ public class DescargaPlanesBean implements Serializable {
      */
     public StreamedContent descargarPlan(Plan planDescarga) {
         try {
+            if (planDescarga == null) {
+                LOGGER.info("[descargarPlan] planDescarga es null, no se puede descargar.");
+                MensajesFrontBean.addErrorMsg(MSG_ID, "No existe el plan seleccionado para descarga.");
+                return null;
+            }
             if (planDescarga != null) {
                 InputStream stream = new ByteArrayInputStream(planDescarga.getFichero());
                 StringBuffer docName = new StringBuffer();
@@ -128,6 +135,13 @@ public class DescargaPlanesBean implements Serializable {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Archivo descargado correctamente");
                 }
+
+                LOGGER.info("[DescargaPlanesBean] Descargar: plan={}, nombre={}, bytes={}",
+                        planDescarga.getTipoPlan().getDescripcion(), planDescarga.getNombre(), planDescarga.getFichero().length);
+
+                LOGGER.info("Descargando: planDescarga.nombre = {}, planDescarga.id = {}, tipo = {}",
+                        planDescarga.getNombre(), planDescarga.getId(), planDescarga.getTipoPlan().getDescripcion());
+
                 MensajesFrontBean.addInfoMsg(MSG_ID, "Plan descargado correctamente");
                 return downFile;
             } else {
@@ -219,6 +233,33 @@ public class DescargaPlanesBean implements Serializable {
     /**
      * Busca el usuario logueado en sesión y obtiene sus roles.
      */
+    //TODO FJAH Bloquear al termino de las pruebas 12.06.2025
+    private void getUserRol() {
+        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+        String uid = null;
+        if (((HttpServletRequest) ec.getRequest()).getUserPrincipal() != null) {
+            uid = ((HttpServletRequest) ec.getRequest()).getUserPrincipal().getName();
+        } else {
+            // Emulación en local: usa el hardcodeado si no hay Principal
+            uid = "dgtic.dds.ext196";
+        }
+        Usuario usu = ngPublicService.findUsuario(uid);
+        if (usu == null) {
+            LOGGER.error("No se encontró el usuario con UID '{}'.", uid);
+            return;
+        }
+        List<Rol> roles = usu.getRoles();
+        if (roles == null || roles.isEmpty()) {
+            LOGGER.warn("Usuario '{}' no tiene roles asignados.", uid);
+            return;
+        }
+        for (Rol r : roles) {
+            getTipoPlanes("" + r.getId());
+        }
+    }
+
+    //TODO FJAH DESBloquear al termino de las pruebas 12.06.2025
+    /*
     private void getUserRol() {
         ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
         String uid = null;
@@ -232,6 +273,8 @@ public class DescargaPlanesBean implements Serializable {
 
         }
     }
+
+     */
 
     /**
      * Setea la lista de tipos de planes en función del rol del usuario logueado.
@@ -261,27 +304,53 @@ public class DescargaPlanesBean implements Serializable {
      */
     public List<Plan> getPlanes() {
         try {
+            this.planesRolMostrar = new ArrayList<>();
+            this.planesExtra = new ArrayList<>();
             this.getUserRol();
             Plan plan = null;
             for (String t : this.tipoPlanMostrar) {
                 if (t != null) {
                     plan = ngPublicService.getPlanByTipo(t);
+                    LOGGER.info("[getPlanes] Buscando plan tipo: {} => Resultado: {}", t, (plan != null ? plan.getNombre() : "NULL"));
+
                     if (plan != null) {
                         this.planesRolMostrar.add(plan);
 
+                        // Aquí el truco: busca el tipo de extra correspondiente en el mapa
+                        String tipoExtra = reportes.get(plan.getTipoPlan().getId());
+                        LOGGER.info("[getPlanes] ¿Existe extra para tipo {}? => {}", plan.getTipoPlan().getId(), (tipoExtra != null ? tipoExtra : "No hay extra"));
+
+                        if (tipoExtra != null) {
+                            Plan planExtra = ngPublicService.getPlanByTipo(tipoExtra);
+                            LOGGER.info("[getPlanes] Buscando plan extra tipo: {} => Resultado: {}", tipoExtra, (planExtra != null ? planExtra.getNombre() : "NULL"));
+                            // Solo lo agregas si existe realmente
+                            if (planExtra != null) {
+                                this.planesExtra.add(planExtra);
+                                LOGGER.info("[getPlanes] Extra agregado REAL: plan con tipo {}, nombre {}", tipoExtra, planExtra.getNombre());
+                            }
+                        }
+
+/*
                         String value = reportes.get(plan.getTipoPlan().getId());
+                        LOGGER.info("[getPlanes] ¿Existe extra para tipo {}? => {}", plan.getTipoPlan().getId(), (value != null ? value : "No hay extra"));
+
                         if(value != null) {
                             Plan copiaPlan = SerializationUtils.clone(plan); // Asumiendo que tienes un constructor copia
                             TipoPlan nuevoTipoPlan = SerializationUtils.clone(plan.getTipoPlan());
                             nuevoTipoPlan.setId(value);
                             copiaPlan.setTipoPlan(nuevoTipoPlan);
                             this.planesExtra.add(copiaPlan);
+                            LOGGER.info("[getPlanes] Extra agregado: plan con tipo {}, nombre {}", value, copiaPlan.getNombre());
                         }
+
+ */
                     }
                 }
             }
             this.setPlanesRolMostrar(this.planesRolMostrar);
             this.setPlanesExtra(this.planesExtra);
+            LOGGER.info("[getPlanes] Total planesRolMostrar: {}", this.planesRolMostrar.size());
+            LOGGER.info("[getPlanes] Total planesExtra: {}", this.planesExtra.size());
         } catch (Exception e) {
             LOGGER.error("Error inesperado al optener los planes por rol " + e.getMessage());
             MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
@@ -337,12 +406,48 @@ public class DescargaPlanesBean implements Serializable {
      * @param descripcion String
      * @return Plan
      */
+
     public Plan getPlanExtraPorDescripcion(String descripcion) {
         for (Plan p : planesExtra) {
             if (p.getTipoPlan().getDescripcion().equals(descripcion)) {
                 return p;
             }
         }
+        return null;
+    }
+
+    /**
+     * FJAH 12.06.2025 Nuevo Metodo
+     * Devuelve el plan extra asociado, usando el ID_TIPO_PLAN y el mapa 'reportes'.
+     * @param plan Plan principal
+     * @return Plan extra, o null si no existe
+     */
+    public Plan getPlanExtra(Plan plan) {
+        if (plan == null || plan.getTipoPlan() == null) {
+            LOGGER.info("[getPlanExtra] plan o tipoPlan es null, retorno null.");
+            return null;
+        }
+        String idTipoPlan = plan.getTipoPlan().getId();
+        // Usa el mapa para encontrar el idTipoPlan extra asociado
+        String idTipoPlanExtra = reportes.get(idTipoPlan);
+        LOGGER.info("[getPlanExtra] plan.idTipoPlan = {} | Extra esperado = {}", idTipoPlan, (idTipoPlanExtra != null ? idTipoPlanExtra : "Sin mapeo extra"));
+        if (idTipoPlanExtra == null) {
+            return null;
+        }
+        // Busca en la lista de planes el que coincida con ese idTipoPlanExtra
+        for (Plan p : this.getPlanesExtra()) {
+            LOGGER.info("[getPlanExtra] Revisando planExtra.idTipoPlan = {}, nombre = {}, fichero = {}",
+                    (p != null && p.getTipoPlan() != null ? p.getTipoPlan().getId() : "null"),
+                    (p != null ? p.getNombre() : "null"),
+                    (p != null && p.getFichero() != null ? "OK" : "null"));
+            if (p != null && p.getTipoPlan() != null
+                    && idTipoPlanExtra.equals(p.getTipoPlan().getId())
+                    && p.getFichero() != null) {
+                LOGGER.info("[getPlanExtra] Extra encontrado: nombre = {}", p.getNombre());
+                return p;
+            }
+        }
+        LOGGER.info("[getPlanExtra] No se encontró plan extra para tipo: {}", idTipoPlanExtra);
         return null;
     }
 
