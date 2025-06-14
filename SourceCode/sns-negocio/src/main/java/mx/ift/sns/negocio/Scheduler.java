@@ -501,7 +501,7 @@ public class Scheduler implements IScheduler {
     }
 
 
-    @Schedule(hour = "21", minute = "17", persistent = false)
+    @Schedule(hour = "13", minute = "30", persistent = false)
     @TransactionAttribute( TransactionAttributeType.NOT_SUPPORTED)
     void portacionManual() {
 
@@ -571,7 +571,7 @@ public class Scheduler implements IScheduler {
      */
     private boolean testMode = false; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
 
-    @Schedule(hour = "11", minute = "53", persistent = false)
+    @Schedule(hour = "20", minute = "05", persistent = false)
     void timeoutPruebas() {
         LOGGER.info("Inicio del timer timeoutPruebas");
 
@@ -599,13 +599,25 @@ public class Scheduler implements IScheduler {
 
 /*
         try {
-            timeoutDesbloqueoTareas();
+            //timeoutDesbloqueoTareas();
             timeoutABD();
             //FJAH 26032025 Modificación a logBitacora para persistincia
             logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutABD");
         } catch (Exception e) {
             LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: ", e);
         }
+
+ */
+
+/*
+        try {
+			timeoutPlanABD();
+			//FJAH 26032025 Modificación a logBitacora para persistincia
+			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanABD FJAH 26MAR2025.");
+		} catch (Exception e) {
+			LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 26MAR2025", e);
+		}
+
 
 		try {
 			timeoutABD2();
@@ -617,14 +629,6 @@ public class Scheduler implements IScheduler {
 
 		try {
 			timeoutABD3();
-			//FJAH 26032025 Modificación a logBitacora para persistincia
-			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanABD FJAH 26MAR2025.");
-		} catch (Exception e) {
-			LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 26MAR2025", e);
-		}
-
-		try {
-			timeoutPlanABD();
 			//FJAH 26032025 Modificación a logBitacora para persistincia
 			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutPlanABD FJAH 26MAR2025.");
 		} catch (Exception e) {
