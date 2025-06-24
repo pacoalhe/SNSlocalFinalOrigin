@@ -81,10 +81,6 @@ public class DescargaPlanesBean implements Serializable {
         put("C", "V");
     }};
 
-
-
-
-
     /**
      * Flag de activación de botón de descarga.
      */
@@ -230,36 +226,6 @@ public class DescargaPlanesBean implements Serializable {
         return null;
     }
 
-    /**
-     * Busca el usuario logueado en sesión y obtiene sus roles.
-     */
-    //TODO FJAH Bloquear al termino de las pruebas 12.06.2025
-    private void getUserRol() {
-        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
-        String uid = null;
-        if (((HttpServletRequest) ec.getRequest()).getUserPrincipal() != null) {
-            uid = ((HttpServletRequest) ec.getRequest()).getUserPrincipal().getName();
-        } else {
-            // Emulación en local: usa el hardcodeado si no hay Principal
-            uid = "dgtic.dds.ext196";
-        }
-        Usuario usu = ngPublicService.findUsuario(uid);
-        if (usu == null) {
-            LOGGER.error("No se encontró el usuario con UID '{}'.", uid);
-            return;
-        }
-        List<Rol> roles = usu.getRoles();
-        if (roles == null || roles.isEmpty()) {
-            LOGGER.warn("Usuario '{}' no tiene roles asignados.", uid);
-            return;
-        }
-        for (Rol r : roles) {
-            getTipoPlanes("" + r.getId());
-        }
-    }
-
-    //TODO FJAH DESBloquear al termino de las pruebas 12.06.2025
-    /*
     private void getUserRol() {
         ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
         String uid = null;
@@ -273,8 +239,6 @@ public class DescargaPlanesBean implements Serializable {
 
         }
     }
-
-     */
 
     /**
      * Setea la lista de tipos de planes en función del rol del usuario logueado.
@@ -316,7 +280,7 @@ public class DescargaPlanesBean implements Serializable {
                     if (plan != null) {
                         this.planesRolMostrar.add(plan);
 
-                        // Aquí el truco: busca el tipo de extra correspondiente en el mapa
+                        // Busca el tipo de extra correspondiente en el mapa
                         String tipoExtra = reportes.get(plan.getTipoPlan().getId());
                         LOGGER.info("[getPlanes] ¿Existe extra para tipo {}? => {}", plan.getTipoPlan().getId(), (tipoExtra != null ? tipoExtra : "No hay extra"));
 

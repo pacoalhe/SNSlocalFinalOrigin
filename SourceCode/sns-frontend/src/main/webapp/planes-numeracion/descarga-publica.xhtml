@@ -33,55 +33,56 @@
 								<p:outputLabel style="font-size:13px; margin-top:20px">Pulse "descargar" para iniciar la descarga del Plan Nacional de Numeración</p:outputLabel>
 							</p:column>
 						</p:row>
-						<p:row>
-							<p:column>
-								<p:commandButton id="BTN_planPublico1" value="Descargar"
-									disabled="#{descargaPlanesBean.btnDescargaActivado}"
-									ajax="false" icon="ui-icon-arrowthickstop-1-s"
-									style="width: auto; height: auto; font-size: 13px; padding:0px; margin-top:20px;"
-									styleClass="sombreado">
-									<p:fileDownload
-										value="#{descargaPlanesBean.descargarPlanPublico()}"></p:fileDownload>
-								</p:commandButton>
-								<br></br>
-								<h:outputText value="El archivo no se encuentra disponible"
-									rendered="#{descargaPlanesBean.btnDescargaActivado}"
-									style="font-size:13px; color: #cb410b" />
-							</p:column>
-						</p:row>
-						<p:row>
-							<p:column>
-								<p:commandButton id="BTN_planPublico2" value="Descargar"
-									disabled="#{descargaPlanesBean.btnDescargaActivado}"
-									ajax="false" icon="ui-icon-arrowthickstop-1-s"
-									style="width: auto; height: auto; font-size: 13px; padding:0px; margin-top:20px;"
-									styleClass="sombreado">
-									<p:fileDownload
-										value="#{descargaPlanesBean.descargarPlanPublicoNuevo()}"></p:fileDownload>
-								</p:commandButton>
-								<br></br>
-								<div style="margin-top:8px; text-align:center;">
-        							<span style="display:block; font-size:13px; color:#000; font-weight:bold;">
-            							NUEVO LAYOUT DEL PLAN NACIONAL DE NUMERACIÓN
-        							</span>
-									<span style="display:block; font-size:12px; color:#000;">
-            							Vigencia a partir del 1 de julio de 2025
-        							</span>
-								</div>
-								<br></br>
-								<h:outputText value="El archivo no se encuentra disponible"
-									rendered="#{descargaPlanesBean.btnDescargaActivado}"
-									style="font-size:13px; color: #cb410b" />
-							</p:column>
-						</p:row>
-						<p:row >
-							<p:column>
-								<h:outputText rendered="#{!descargaPlanesBean.btnDescargaActivado}"
-									value="Plan nacional de numeración generado el #{descargaPlanesBean.fechaPlanPublicoGenerado}"
-									style="font-size: 13px;"></h:outputText><br></br>
 
-							</p:column>
-						</p:row>
+						<h:panelGroup layout="block" style="display: flex; justify-content: center; gap: 60px; margin-top: 10px; flex-wrap: wrap;">
+
+							<!-- Bloque Botón 1 -->
+							<h:panelGroup layout="block" style="text-align: center;">
+								<p:commandButton id="BTN_planPublico1" value="Descargar"
+												 disabled="#{descargaPlanesBean.btnDescargaActivado}"
+												 ajax="false" icon="ui-icon-arrowthickstop-1-s"
+												 style="width: auto; height: auto; font-size: 13px; padding:0px; margin-top:20px;"
+												 styleClass="sombreado">
+									<p:fileDownload value="#{descargaPlanesBean.descargarPlanPublico()}" />
+								</p:commandButton>
+								<br />
+								<h:outputText value="El archivo no se encuentra disponible"
+											  rendered="#{descargaPlanesBean.btnDescargaActivado}"
+											  style="font-size:13px; color: #cb410b" />
+								<br />
+								<h:outputText rendered="#{!descargaPlanesBean.btnDescargaActivado}"
+											  value="Plan nacional de numeración generado el #{descargaPlanesBean.fechaPlanPublicoGenerado}"
+											  style="font-size: 13px;" />
+							</h:panelGroup>
+
+							<!-- Bloque Botón 2 -->
+							<h:panelGroup layout="block" style="text-align: center;">
+								<p:commandButton id="BTN_planPublico2" value="Descargar"
+												 disabled="#{descargaPlanesBean.btnDescargaActivado}"
+												 ajax="false" icon="ui-icon-arrowthickstop-1-s"
+												 style="width: auto; height: auto; font-size: 13px; padding:0px; margin-top:20px;"
+												 styleClass="sombreado">
+									<p:fileDownload value="#{descargaPlanesBean.descargarPlanPublicoNuevo()}" />
+								</p:commandButton>
+								<br />
+								<div style="margin-top:8px; text-align:center;">
+            						<span style="display:block; font-size:13px; color:#000; font-weight:bold;">
+                						NUEVO LAYOUT DEL PLAN NACIONAL DE NUMERACIÓN
+            						</span>
+									<span style="display:block; font-size:12px; color:#000;">
+                						Vigencia a partir del 1 de julio de 2025
+            						</span>
+								</div>
+								<br />
+								<h:outputText value="El archivo no se encuentra disponible"
+											  rendered="#{descargaPlanesBean.btnDescargaActivado}"
+											  style="font-size:13px; color: #cb410b" />
+							</h:panelGroup>
+
+						</h:panelGroup>
+
+
+
 					</p:panelGrid>
 
 					<!-- Aquí, justo después del panelGrid -->

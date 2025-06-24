@@ -387,7 +387,8 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(addQuotes(detalle.getIdAbn().toString()));
                         b.append(COMA);
 
-                        sb.append(addQuotes(String.valueOf(detalle.getId().charAt(0))));
+						int zona = Integer.parseInt(detalle.getNumFinal().substring(1, 2)) == 0 ? 0 : Integer.parseInt(detalle.getNumFinal().substring(0, 1));
+                        sb.append(addQuotes(String.valueOf(zona)));
                         sb.append(COMA);
 
                         b.append(addQuotes(detalle.getId()));

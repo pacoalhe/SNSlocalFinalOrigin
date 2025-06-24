@@ -28,7 +28,7 @@
 										<p:row>
 											<p:column headerText="Archivo para la descarga" style="font-size:14px"/>
 											<p:column headerText="Fecha de generación del plan" style="font-size:14px"/>
-											<p:column headerText="Descarga principal" style="font-size:14px"/>
+											<p:column headerText="Pulse el botón correspondiente para iniciar la descarga del archivo" style="font-size:14px"/>
 											<p:column headerText="NUEVO LAYOUT DEL PLAN NACIONAL DE NUMERACIÓN Vigencia a partir del 1 de julio de 2025"
 													  style="text-align:center; font-size:10px; font-weight:bold;" />
 										</p:row>
@@ -56,7 +56,7 @@
 									<!-- value="#{descargaPlanesBean.getPlanExtraPorDescripcion(plan.tipoPlan.descripcion)}" -->
 									<p:column style="text-align:center">
 										<ui:param name="planExtra" value="#{descargaPlanesBean.getPlanExtra(plan)}" />
-										<p:commandButton value="Descarga extra" ajax="false"
+										<p:commandButton value="Descargar" ajax="false"
 											icon="ui-icon-arrowthickstop-1-s" styleClass="sombreado"
 											rendered="#{planExtra != null}">
 											<p:fileDownload value="#{descargaPlanesBean.descargarPlan(planExtra)}" />

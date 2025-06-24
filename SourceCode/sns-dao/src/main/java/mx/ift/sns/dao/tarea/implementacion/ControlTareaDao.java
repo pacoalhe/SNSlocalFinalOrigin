@@ -29,7 +29,14 @@ public class ControlTareaDao extends BaseDAO<ControlTarea> implements IControlTa
             tQuery.setParameter("fecha", fecha);
             tQuery.setParameter("tarea", tarea);
 
+            // Impresión directa a consola (útil si los logs no se ven en QA)
+            System.out.println("▶ Query ejecutado (JPQL): " + sbQuery.toString());
+            System.out.println("→ Param libre = 0");
+            System.out.println("→ Param fecha = " + (fecha != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(fecha) : "null"));
+            System.out.println("→ Param tarea = " + tarea);
+
             // tQuery.setLockMode(LockModeType.PESSIMISTIC_WRITE);
+
 
             return tQuery.getSingleResult();
         } catch (Exception e) {

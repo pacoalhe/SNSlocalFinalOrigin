@@ -571,7 +571,7 @@ public class Scheduler implements IScheduler {
      */
     private boolean testMode = false; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
 
-    @Schedule(hour = "20", minute = "05", persistent = false)
+    @Schedule(hour = "17", minute = "55", persistent = false)
     void timeoutPruebas() {
         LOGGER.info("Inicio del timer timeoutPruebas");
 
@@ -596,10 +596,25 @@ public class Scheduler implements IScheduler {
      */
     public void testGenerarPlanes() {
         LOGGER.info("Inicio de testGenerarPlanes");
-
 /*
         try {
-            //timeoutDesbloqueoTareas();
+            portacionSNS();
+            //FJAH 26032025 Modificación a logBitacora para persistincia
+            logBitacora("Ejecucion Prueba testGenerarPlanes: portacionSNS");
+        } catch (Exception e) {
+            LOGGER.error("Error en portacionSNS durante testGenerarPlanes: ", e);
+        }
+
+
+        try {
+            timeoutDesbloqueoTareas();
+            //FJAH 26032025 Modificación a logBitacora para persistincia
+            logBitacora("Ejecucion Prueba desbloqueo de tareas: timeoutABD");
+        } catch (Exception e) {
+            LOGGER.error("Error en desbloqueo durante testGenerarPlanes: ", e);
+        }
+
+        try {
             timeoutABD();
             //FJAH 26032025 Modificación a logBitacora para persistincia
             logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutABD");
@@ -608,8 +623,15 @@ public class Scheduler implements IScheduler {
         }
 
  */
-
 /*
+        try {
+            timeoutReporteABD();
+            //FJAH 26032025 Modificación a logBitacora para persistincia
+            logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutReporteABD()");
+        } catch (Exception e) {
+            LOGGER.error("Error en timeoutReporteABD() durante testGenerarPlanes: ", e);
+        }
+
         try {
 			timeoutPlanABD();
 			//FJAH 26032025 Modificación a logBitacora para persistincia
@@ -617,7 +639,6 @@ public class Scheduler implements IScheduler {
 		} catch (Exception e) {
 			LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 26MAR2025", e);
 		}
-
 
 		try {
 			timeoutABD2();
@@ -634,6 +655,7 @@ public class Scheduler implements IScheduler {
 		} catch (Exception e) {
 			LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 26MAR2025", e);
 		}
+*/
 
 		try {
 			timeoutPlanIFT();
@@ -684,14 +706,6 @@ public class Scheduler implements IScheduler {
 		}
 
 		try {
-			timeoutReporteABD();
-			//FJAH 26032025 Modificación a logBitacora para persistincia
-			logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutReporteABD FJAH 26MAR2025.");
-		} catch (Exception e) {
-			LOGGER.error("Error en timeoutReporteABD durante testGenerarPlanes: FJAH 26MAR2025", e);
-		}
-
-		try {
             timeoutConsolidaciones();
             //FJAH 26032025 Modificación a logBitacora para persistincia
             logBitacora("Ejecucion Prueba testGenerarPlanes: timeoutConsolidaciones FJAH 13.06.2025.");
@@ -700,8 +714,6 @@ public class Scheduler implements IScheduler {
         }
 
         LOGGER.info("Fin de testGenerarPlanes FJAH");
-
- */
 
     }
 

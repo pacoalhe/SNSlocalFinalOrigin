@@ -500,21 +500,31 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
      */
     private void parseAndSearchNationalNumber(String nationalNumber) {
 	try {
+		LOGGER.info(">>> parseAndSearchNationalNumber INICIO: nationalNumber=" + nationalNumber);
 	    this.setNumeroConsultado(ngPublicService.parseNumeracion(nationalNumber));
+		LOGGER.info("Valor de numeroConsultado: " + (this.numeroConsultado != null ? this.numeroConsultado.toString() : "null"));
 	    // Buscar por nationalNumber en números portados para comprobar si es portado.
 	    // Setear a true si es así.
 	    if (this.numeroConsultado != null) {
 		if (numeroConsultado.getRango() != null) {
 		    RangoSerie rango = numeroConsultado.getRango();
+			LOGGER.info("Rango encontrado para numeroConsultado: " + rango);
 		    this.getTipoRed(rango);
 		    this.setPoblacionNumero(rango.getPoblacion());
+			LOGGER.info("PoblacionNumero: " + this.getPoblacionNumero());
 		    this.setPrestadoresServicioPoblacionNumero(
 			    ngPublicService.findAllPrestadoresServicioBy(null, null, this.poblacionNumero, null, null));
+			//LOGGER.info("PrestadoresServicioPoblacionNumero: " + this.getPrestadoresServicioPoblacionNumero());
 		    this.setAbn(ngPublicService.getAbnByCodigoNir(numeroConsultado.getCodigoNir()));
-		    this.setNirsAbn(this.getAbn().getNirs());
+			LOGGER.info("ABN para codigoNir " + this.getAbn());
+			this.setNirsAbn(this.getAbn().getNirs());
+			LOGGER.info("NIRs en ABN: " + this.getNirsAbn());
 		    this.setNirsPoblacion(ngPublicService.findAllNirByPoblacion(this.poblacionNumero));
+			LOGGER.info("NIRs para Poblacion: " + this.getNirsPoblacion());
 		    this.setNir(ngPublicService.getNirByCodigo(Integer.valueOf(numeroConsultado.getCodigoNir())));
+			LOGGER.info("NIR recuperado por codigo: " + this.nir);
 		    this.chequeaNumeroDigitos(numeroConsultado.getCodigoNir());
+			LOGGER.info("chequea numeros digitos: " + numeroConsultado.getCodigoNir());
 		    if (this.abn.getPresuscripcion() != null) {
 			if (this.abn.getPresuscripcion().compareTo("P") == 0) {
 			    this.setPresuscripcion("Sí");
@@ -524,21 +534,31 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 		    } else {
 			this.setPresuscripcion("No");
 		    }
+			LOGGER.info("Presuscripcion: " + this.getPresuscripcion());
 		    if (this.getNir() != null && this.getAbn() != null) {
 			this.setProveedoresNir(
 				ngPublicService.findAllPrestadoresServicioBy(this.getNir(), null, null, null, null));
+			//LOGGER.info("Proveedores asociados a NIR: " + this.getProveedoresNir());
 			this.setPoblacionesNir(
 				ngPublicService.findALLPoblacionesNumeracionAsignadaByNir(this.getNir()));
+			LOGGER.info("Poblaciones a NIR: " + this.getPoblacionesNir());
 			this.setMunicipiosNir(ngPublicService.findAllMunicipiosByNir(this.getNir(), true));
+			LOGGER.info("Municipios a NIR: " + this.getPoblacionesNir());
 			BigDecimal bg = new BigDecimal(ngPublicService.findNumeracionesAsignadasNir(this.getNir()));
 			this.setNumeracionNirFormat(this.formatoNumeracionAsignada(bg));
+			LOGGER.info("NumeracionNirFormat: " + bg);
 			this.setNumeracionAsignadaPobFormat((this.formatoNumeracionAsignada(ngPublicService
 				.getTotalNumRangosAsignadosByPoblacion("", "", null, this.poblacionNumero))));
+			LOGGER.info("NumeracionAsignadaPobFormat: " + this.getNumeracionAsignadaPobFormat());
 			this.setPoblacionAbnMaxNumAsignada(
 				ngPublicService.getPoblacionWithMaxNumAsignadaByAbn(this.getAbn()));
+			LOGGER.info("Poblacion Abn Max NumAsignada: " + this.getPoblacionAbnMaxNumAsignada());
 		    }
 		    // Aqui se llama método para quitar el NIR al número consultado
 		    getNumSinNir(this.numeroConsultado.getNumero());
+			LOGGER.info("getNumSinNir: " + this.numeroConsultado.getNumero());
+			LOGGER.info("Enviar a findProveedorPrestador rango: " + rango);
+			LOGGER.info("Enviar a findProveedorPrestador nationalnumber: " + nationalNumber);
 		    this.findProveedorPrestador(rango, nationalNumber);
 		    this.setLocalServiceTableActivated(true);
 		    this.setMexicoInfoTableActivated(true);
@@ -667,30 +687,40 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 		try {
 			LOGGER.info("===> findProveedorPrestador ejecutado para número " + numeroConsultado);
 
+			LOGGER.info("Se realiza la busqueda del numero en Portados ******");
 			NumeroPortado numeroPortado = ngPublicService.findNumeroPortado(numeroConsultado);
 			String action = ngPublicService.getActionPorted(ACTION_REVERSE);
-
-			LOGGER.info("Se realiza la busqueda del numero en el plan maestro ******");
 
 			LOGGER.info("===> Resultado findNumeroPortado: " + (numeroPortado != null ? "Sí" : "No"));
 			if (numeroPortado != null) {
 				LOGGER.info("    RIDA: " + numeroPortado.getRida() + ", DIDA: " + numeroPortado.getDida() + ", ACTION: " + numeroPortado.getAction());
 			}
 
+			LOGGER.info("Se realiza la busqueda del numero en Plan Maestro PNN_DETALLE ******");
 			PlanMaestroDetalle planEncontrado = planNumeracionService.getDetalleNumeroConsultaPublica(
 					Long.valueOf(numeroConsultado), Long.valueOf(numeroConsultado));
 			LOGGER.info("===> Resultado planService.getPlanMaestroDetalle: " + (planEncontrado != null ? "Sí" : "No"));
+			if (planEncontrado != null) {
+				LOGGER.info("    ID: " + planEncontrado.getId() + ", DIDA: " + planEncontrado.getIda() + ", IDO: " + planEncontrado.getIdo());
+			}
 
 			boolean numIni = false;
 			boolean numFin = false;
 
+			LOGGER.info(" Busqueda del NIR del Rango: " + rango.getId().getIdNir());
 			Nir nir = ngPublicService.getNirById(rango.getId().getIdNir());
+			LOGGER.info(" Valor del NIR obtenido: " + nir);
 
 			if (nir != null && rango != null && rango.getId() != null) {
+				LOGGER.info(" INICIO validaciones");
 				int codigo = nir.getCodigo();
+				LOGGER.info("  Valor codigo " +codigo);
 				BigDecimal sna = rango.getId().getSna();
+				LOGGER.info("  Valor sna " +sna);
 				String numInicio = rango.getNumInicio();
+				LOGGER.info("  Valor numinicio " +numInicio);
 				String numFinal = rango.getNumFinal();
+				LOGGER.info("  Valor numfinal " +numFinal);
 
 				if (sna != null && numInicio != null && numFinal != null) {
 					Long numeroIni = Long.valueOf(codigo + sna.toString() + numInicio);
@@ -758,20 +788,65 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 				}
 
 			} else {
+
+				LOGGER.info("Valores del proveedor rango: ");
 				Proveedor proveedorAux = rango.getArrendatario();
+				LOGGER.info("Valor proveedorAux arrendatario: " + proveedorAux);
 				if (proveedorAux == null) {
 					proveedorAux = rango.getAsignatario();
+					LOGGER.info("Valor proveedorAux asignatario: " + proveedorAux);
 				}
 				this.setPrestadorNumero(proveedorAux);
+				LOGGER.info("Valor proveedorAux: " + proveedorAux);
+				LOGGER.info("Valores del rango: " + rango);
+
+				//FJAH 07.06.2025 Refactorización para busqueda del asignatario/arrendador en IDA->IDO PST
+				/*
+				LOGGER.info("Valores del proveedor rango: ");
+				Proveedor proveedorAux = rango.getArrendatario();
+				LOGGER.info("Valor proveedorAux arrendatario: " + proveedorAux);
+				if (proveedorAux == null) {
+					proveedorAux = rango.getAsignatario();
+					LOGGER.info("Valor proveedorAux asignatario: " + proveedorAux);
+				}
+				this.setPrestadorNumero(proveedorAux);
+
+				BigDecimal idAsignatario = proveedorAux.getId();
+				LOGGER.info("ID_PST_ASIGNATARIO del rango: " + idAsignatario);
+				List<Proveedor> pstIDOListAux = new ArrayList<>();
+
+				pstIDOListAux = ngPublicService.getProveedorByIDA(idAsignatario);
+
+				if (pstIDOListAux.isEmpty()) {
+					pstIDOListAux = ngPublicService.getProveedorByIDO(idAsignatario);
+				}
+
+				LOGGER.info("Lista de proveedores encontrados: " + pstIDOListAux);
+
+				if (!pstIDOListAux.isEmpty()) {
+					for (Proveedor pst : pstIDOListAux) {
+						if (pstIDOListAux.size() == 1) {
+							this.setPrestadorNumero(pst);
+						}
+					}
+				}
+
+				 */
+
+				LOGGER.info("Valor PrestadorNumero: " + this.getPrestadorNumero());
+
+				LOGGER.info("Valor proveedorAux: " + proveedorAux);
+				LOGGER.info("Valores del rango: " + rango);
 			}
 
 			if (this.prestadorNumero != null) {
 				this.setNumeracionAsignadaProveedor(ngPublicService.getTotalNumeracionAginadaProveedor(this.prestadorNumero.getId()));
+				LOGGER.info("numeracion asignada proveedor: " + this.getNumeracionAsignadaProveedor());
 			}
 
 		} catch (Exception e) {
 			LOGGER.info("===> [ERROR] Excepción en findProveedorPrestador: " + e.getMessage());
-			LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
+			LOGGER.error("Error en la carga de datos del PST valor: " + e.getMessage());
 		}
 	}
 	/*
