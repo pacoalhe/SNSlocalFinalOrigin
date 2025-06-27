@@ -943,7 +943,8 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         // Obtener la base del query
         StringBuffer sbquery = getNativeQueryBase();
         // Agregar la condición WHERE
-        sbquery.append("WHERE PST.IDA = ?1");
+        //sbquery.append("WHERE PST.IDA = ?1");
+        sbquery.append("WHERE PST.IDA = ?1 AND PST.ID_ESTATUS = 1");
 
         // Convertir a String para la consulta
         String nativeQuery = sbquery.toString();
@@ -1017,7 +1018,8 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         // Obtener la base del query
         StringBuffer sbquery = getNativeQueryBase();
         // Agregar la condición WHERE
-        sbquery.append("WHERE PST.IDO = ?1");
+        //sbquery.append("WHERE PST.IDO = ?1");
+        sbquery.append("WHERE PST.IDO = ?1 AND PST.ID_ESTATUS = 1");
 
         // Convertir a String para la consulta
         String nativeQuery = sbquery.toString();
@@ -1040,7 +1042,7 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         // Log de la lista recibida
         LOGGER.info("Lista IDO :::::::::::::::::::::::::::: {}", pstListIdo.size());
 
-        // Si hay más de un proveedor, seleccionamos el principal
+        // Si hay más de un proveedor, seleccionamos el activo
         if (pstListIdo.size() > 1) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Varios proveedores encontrados");
@@ -1086,7 +1088,8 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         // Obtener la base del query
         StringBuffer sbquery = getNativeQueryBase();
         // Agregar la condición WHERE
-        sbquery.append("WHERE PST.BCD = ?1");
+        //sbquery.append("WHERE PST.BCD = ?1");
+        sbquery.append("WHERE PST.BCD = ?1 AND PST.ID_ESTATUS = 1");
 
         // Convertir a String para la consulta
         String nativeQuery = sbquery.toString();
