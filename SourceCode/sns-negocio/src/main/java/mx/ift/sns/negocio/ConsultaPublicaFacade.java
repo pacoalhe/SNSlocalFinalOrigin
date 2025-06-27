@@ -15,14 +15,7 @@ import mx.ift.sns.modelo.abn.Abn;
 import mx.ift.sns.modelo.ng.RangoSerie;
 import mx.ift.sns.modelo.nng.ClaveServicio;
 import mx.ift.sns.modelo.nng.RangoSerieNng;
-import mx.ift.sns.modelo.ot.Estado;
-import mx.ift.sns.modelo.ot.EstadoArea;
-import mx.ift.sns.modelo.ot.EstadoNumeracion;
-import mx.ift.sns.modelo.ot.Municipio;
-import mx.ift.sns.modelo.ot.MunicipioPK;
-import mx.ift.sns.modelo.ot.NirNumeracion;
-import mx.ift.sns.modelo.ot.Poblacion;
-import mx.ift.sns.modelo.ot.PoblacionNumeracion;
+import mx.ift.sns.modelo.ot.*;
 import mx.ift.sns.modelo.pnn.Plan;
 import mx.ift.sns.modelo.port.NumeroPortado;
 import mx.ift.sns.modelo.pst.Proveedor;
@@ -456,6 +449,11 @@ public class ConsultaPublicaFacade implements IConsultaPublicaFacade {
     public List<Poblacion> findPoblacionByNombreAndMunicipioAndEstado(String nombrePob, Municipio mun) {
         LOGGER.debug("");
         return otService.findPoblacionByNombreAndMunicipioAndEstado(nombrePob, mun);
+    }
+
+    //FJAH 05.06.2025 Refactorización para region -> zona
+    public List<Region> getRegiones() {
+        return otService.findAllRegiones();
     }
 
 }

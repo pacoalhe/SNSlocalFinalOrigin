@@ -10,14 +10,11 @@ import java.util.Locale;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
 import javax.persistence.NoResultException;
 
-import mx.ift.sns.negocio.pnn.IPlanNumeracionService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,9 +77,6 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 
     @EJB(mappedName = "PlanMaestroService")
     private IPlanMaestroService planService;
-
-	@EJB(mappedName = "PlanNumeracionService")
-	private IPlanNumeracionService planNumeracionService;
 
     /** Campo poblacion buscada. */
     private Poblacion poblacion;
@@ -298,10 +292,10 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    Collections.sort(poblacionesNameAux);
 	} catch (NoResultException e) {
 	    LOGGER.error("Error al buscar todas las poblaciones" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
 	} catch (Exception e) {
 	    LOGGER.error("Error al buscar todas las poblaciones" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
 	}
 	return poblacionesNameAux;
     }
@@ -331,7 +325,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.setMunicipioInfoTableActivated(false);
 	} catch (Exception e) {
 	    LOGGER.error("Error al limpiar todo" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
 	}
     }
 
@@ -376,7 +370,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 		setNationalNumberInputActivated(false);
 		setLocalNumberInputActivated(false);
 		setPopulationInputActivated(false);
-		if (getCodigoNir().length() >= 2) {
+		if (getCodigoNir().length() == 1) {
 		    setNirInputActivated(true);
 		    setFormButtonActivated(true);
 		} else {
@@ -400,7 +394,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
 	}
     }
 
@@ -423,7 +417,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado de carga de datos al buscar por número local" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
 	}
     }
 
@@ -461,12 +455,13 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 		}
 	    }
 	    if (this.getNirInputActivated() == true) {
+			String regexZona = "[2-9]+";
 		this.setFormButtonActivated(false);
 		this.setNirInputActivated(false);
-		if (this.codigoNir.matches(regex)) {
+		if (this.codigoNir.matches(regexZona)) {
 		    this.searchNir();
 		} else {
-		    MensajesFrontBean.addErrorMsg(MSG_ID, "Introduzca sólo caracteres del 0 al 9");
+		    MensajesFrontBean.addErrorMsg(MSG_ID, "Introduzca sólo caracteres del 2 al 9");
 		}
 	    }
 	    if (this.getPopulationInputActivated() == true) {
@@ -489,7 +484,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado al buscar por alguno de los cuatro inputs" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
 	}
     }
 
@@ -500,31 +495,21 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
      */
     private void parseAndSearchNationalNumber(String nationalNumber) {
 	try {
-		LOGGER.info(">>> parseAndSearchNationalNumber INICIO: nationalNumber=" + nationalNumber);
 	    this.setNumeroConsultado(ngPublicService.parseNumeracion(nationalNumber));
-		LOGGER.info("Valor de numeroConsultado: " + (this.numeroConsultado != null ? this.numeroConsultado.toString() : "null"));
 	    // Buscar por nationalNumber en números portados para comprobar si es portado.
 	    // Setear a true si es así.
 	    if (this.numeroConsultado != null) {
 		if (numeroConsultado.getRango() != null) {
 		    RangoSerie rango = numeroConsultado.getRango();
-			LOGGER.info("Rango encontrado para numeroConsultado: " + rango);
 		    this.getTipoRed(rango);
 		    this.setPoblacionNumero(rango.getPoblacion());
-			LOGGER.info("PoblacionNumero: " + this.getPoblacionNumero());
 		    this.setPrestadoresServicioPoblacionNumero(
 			    ngPublicService.findAllPrestadoresServicioBy(null, null, this.poblacionNumero, null, null));
-			//LOGGER.info("PrestadoresServicioPoblacionNumero: " + this.getPrestadoresServicioPoblacionNumero());
 		    this.setAbn(ngPublicService.getAbnByCodigoNir(numeroConsultado.getCodigoNir()));
-			LOGGER.info("ABN para codigoNir " + this.getAbn());
-			this.setNirsAbn(this.getAbn().getNirs());
-			LOGGER.info("NIRs en ABN: " + this.getNirsAbn());
+		    this.setNirsAbn(this.getAbn().getNirs());
 		    this.setNirsPoblacion(ngPublicService.findAllNirByPoblacion(this.poblacionNumero));
-			LOGGER.info("NIRs para Poblacion: " + this.getNirsPoblacion());
 		    this.setNir(ngPublicService.getNirByCodigo(Integer.valueOf(numeroConsultado.getCodigoNir())));
-			LOGGER.info("NIR recuperado por codigo: " + this.nir);
 		    this.chequeaNumeroDigitos(numeroConsultado.getCodigoNir());
-			LOGGER.info("chequea numeros digitos: " + numeroConsultado.getCodigoNir());
 		    if (this.abn.getPresuscripcion() != null) {
 			if (this.abn.getPresuscripcion().compareTo("P") == 0) {
 			    this.setPresuscripcion("Sí");
@@ -534,31 +519,21 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 		    } else {
 			this.setPresuscripcion("No");
 		    }
-			LOGGER.info("Presuscripcion: " + this.getPresuscripcion());
 		    if (this.getNir() != null && this.getAbn() != null) {
 			this.setProveedoresNir(
 				ngPublicService.findAllPrestadoresServicioBy(this.getNir(), null, null, null, null));
-			//LOGGER.info("Proveedores asociados a NIR: " + this.getProveedoresNir());
 			this.setPoblacionesNir(
 				ngPublicService.findALLPoblacionesNumeracionAsignadaByNir(this.getNir()));
-			LOGGER.info("Poblaciones a NIR: " + this.getPoblacionesNir());
 			this.setMunicipiosNir(ngPublicService.findAllMunicipiosByNir(this.getNir(), true));
-			LOGGER.info("Municipios a NIR: " + this.getPoblacionesNir());
 			BigDecimal bg = new BigDecimal(ngPublicService.findNumeracionesAsignadasNir(this.getNir()));
 			this.setNumeracionNirFormat(this.formatoNumeracionAsignada(bg));
-			LOGGER.info("NumeracionNirFormat: " + bg);
 			this.setNumeracionAsignadaPobFormat((this.formatoNumeracionAsignada(ngPublicService
 				.getTotalNumRangosAsignadosByPoblacion("", "", null, this.poblacionNumero))));
-			LOGGER.info("NumeracionAsignadaPobFormat: " + this.getNumeracionAsignadaPobFormat());
 			this.setPoblacionAbnMaxNumAsignada(
 				ngPublicService.getPoblacionWithMaxNumAsignadaByAbn(this.getAbn()));
-			LOGGER.info("Poblacion Abn Max NumAsignada: " + this.getPoblacionAbnMaxNumAsignada());
 		    }
 		    // Aqui se llama método para quitar el NIR al número consultado
 		    getNumSinNir(this.numeroConsultado.getNumero());
-			LOGGER.info("getNumSinNir: " + this.numeroConsultado.getNumero());
-			LOGGER.info("Enviar a findProveedorPrestador rango: " + rango);
-			LOGGER.info("Enviar a findProveedorPrestador nationalnumber: " + nationalNumber);
 		    this.findProveedorPrestador(rango, nationalNumber);
 		    this.setLocalServiceTableActivated(true);
 		    this.setMexicoInfoTableActivated(true);
@@ -670,186 +645,16 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
-	/**
-	 * FJAH 16042025-05052025
-	 * Refactorización del proveedor
-	 * Busca el proveedor a partir de un rangoSerie.
-	 *
-	 * @param rango            RangoSerie
-	 * @param numeroConsultado Strings
-	 */
-	private void findProveedorPrestador(RangoSerie rango, String numeroConsultado) {
-		Boolean numeroPortadoBool = false;
-		try {
-			LOGGER.info("===> findProveedorPrestador ejecutado para número " + numeroConsultado);
-
-			LOGGER.info("Se realiza la busqueda del numero en Portados ******");
-			NumeroPortado numeroPortado = ngPublicService.findNumeroPortado(numeroConsultado);
-			String action = ngPublicService.getActionPorted(ACTION_REVERSE);
-
-			LOGGER.info("===> Resultado findNumeroPortado: " + (numeroPortado != null ? "Sí" : "No"));
-			if (numeroPortado != null) {
-				LOGGER.info("    RIDA: " + numeroPortado.getRida() + ", DIDA: " + numeroPortado.getDida() + ", ACTION: " + numeroPortado.getAction());
-			}
-
-			LOGGER.info("Se realiza la busqueda del numero en Plan Maestro PNN_DETALLE ******");
-			PlanMaestroDetalle planEncontrado = planNumeracionService.getDetalleNumeroConsultaPublica(
-					Long.valueOf(numeroConsultado), Long.valueOf(numeroConsultado));
-			LOGGER.info("===> Resultado planService.getPlanMaestroDetalle: " + (planEncontrado != null ? "Sí" : "No"));
-			if (planEncontrado != null) {
-				LOGGER.info("    ID: " + planEncontrado.getId() + ", DIDA: " + planEncontrado.getIda() + ", IDO: " + planEncontrado.getIdo());
-			}
-
-			boolean numIni = false;
-			boolean numFin = false;
-
-			LOGGER.info(" Busqueda del NIR del Rango: " + rango.getId().getIdNir());
-			Nir nir = ngPublicService.getNirById(rango.getId().getIdNir());
-			LOGGER.info(" Valor del NIR obtenido: " + nir);
-
-			if (nir != null && rango != null && rango.getId() != null) {
-				LOGGER.info(" INICIO validaciones");
-				int codigo = nir.getCodigo();
-				LOGGER.info("  Valor codigo " +codigo);
-				BigDecimal sna = rango.getId().getSna();
-				LOGGER.info("  Valor sna " +sna);
-				String numInicio = rango.getNumInicio();
-				LOGGER.info("  Valor numinicio " +numInicio);
-				String numFinal = rango.getNumFinal();
-				LOGGER.info("  Valor numfinal " +numFinal);
-
-				if (sna != null && numInicio != null && numFinal != null) {
-					Long numeroIni = Long.valueOf(codigo + sna.toString() + numInicio);
-					Long numeroFinal = Long.valueOf(codigo + sna.toString() + numFinal);
-
-					Long numeroLong = Long.valueOf(numeroConsultado != null ? numeroConsultado : "0");
-					numIni = numeroIni <= numeroLong;
-					numFin = numeroFinal >= numeroLong;
-				}
-			}
-
-			LOGGER.info("===> Dentro de rango? " + (numIni && numFin));
-
-			if (numeroPortado != null || (planEncontrado != null && numIni && numFin)) {
-				List<Proveedor> pstIDOListAux = new ArrayList<>();
-				String actionPorted = "";
-
-				if (numeroPortado != null) {
-					numeroPortadoBool = true;
-					actionPorted = numeroPortado.getAction();
-
-					LOGGER.info("===> Buscando PST por RIDA de Portados...");
-					pstIDOListAux = ngPublicService.getProveedorByIDO(numeroPortado.getRida());
-
-					if (pstIDOListAux.isEmpty()) {
-						LOGGER.info("No se encontró por IDO. Buscando por IDA: {}", numeroPortado.getRida());
-						pstIDOListAux = ngPublicService.getProveedorByIDA(numeroPortado.getRida());
-
-						if (pstIDOListAux.isEmpty()) {
-							LOGGER.info("No se encontró por RIDA. Buscando por DIDA como IDA: {}", numeroPortado.getDida());
-							pstIDOListAux = ngPublicService.getProveedorByIDA(numeroPortado.getDida());
-
-							if (pstIDOListAux.isEmpty()) {
-								LOGGER.info("No se encontró por DIDA en IDA. Buscando por DIDA como IDO: {}", numeroPortado.getDida());
-								pstIDOListAux = ngPublicService.getProveedorByIDO(numeroPortado.getDida());
-							}
-						}
-					}
-				} else if (planEncontrado != null && !numeroPortadoBool) {
-					pstIDOListAux = ngPublicService.getProveedorByIDA(BigDecimal.valueOf(planEncontrado.getIda()));
-
-					if (pstIDOListAux.isEmpty()) {
-						pstIDOListAux = ngPublicService.getProveedorByIDO(BigDecimal.valueOf(planEncontrado.getIda()));
-
-						if (pstIDOListAux.isEmpty()) {
-							pstIDOListAux = ngPublicService.getProveedorByIDO(BigDecimal.valueOf(planEncontrado.getIdo()));
-						}
-					}
-				}
-
-				if (!pstIDOListAux.isEmpty()) {
-					for (Proveedor pst : pstIDOListAux) {
-						if (pstIDOListAux.size() == 1 || (pst.getConsultaPublicaSns() != null
-								&& pst.getConsultaPublicaSns().equals(NUMERACION_GEOGRAFICA))) {
-							this.setPrestadorNumero(pst);
-						}
-					}
-				} else {
-					this.setPrestadorNumero(null);
-					LOGGER.info("===> No se encontró proveedor actual en CAT_PST para RIDA/DIDA. Se mantiene valor anterior o se deja en null.");
-					FacesContext.getCurrentInstance().addMessage(null,
-							new FacesMessage(FacesMessage.SEVERITY_WARN,
-									"Proveedor no encontrado",
-									"Proveedor actual no registrado en el catálogo"));
-				}
-
-			} else {
-
-				LOGGER.info("Valores del proveedor rango: ");
-				Proveedor proveedorAux = rango.getArrendatario();
-				LOGGER.info("Valor proveedorAux arrendatario: " + proveedorAux);
-				if (proveedorAux == null) {
-					proveedorAux = rango.getAsignatario();
-					LOGGER.info("Valor proveedorAux asignatario: " + proveedorAux);
-				}
-				this.setPrestadorNumero(proveedorAux);
-				LOGGER.info("Valor proveedorAux: " + proveedorAux);
-				LOGGER.info("Valores del rango: " + rango);
-
-				//FJAH 07.06.2025 Refactorización para busqueda del asignatario/arrendador en IDA->IDO PST
-				/*
-				LOGGER.info("Valores del proveedor rango: ");
-				Proveedor proveedorAux = rango.getArrendatario();
-				LOGGER.info("Valor proveedorAux arrendatario: " + proveedorAux);
-				if (proveedorAux == null) {
-					proveedorAux = rango.getAsignatario();
-					LOGGER.info("Valor proveedorAux asignatario: " + proveedorAux);
-				}
-				this.setPrestadorNumero(proveedorAux);
-
-				BigDecimal idAsignatario = proveedorAux.getId();
-				LOGGER.info("ID_PST_ASIGNATARIO del rango: " + idAsignatario);
-				List<Proveedor> pstIDOListAux = new ArrayList<>();
-
-				pstIDOListAux = ngPublicService.getProveedorByIDA(idAsignatario);
-
-				if (pstIDOListAux.isEmpty()) {
-					pstIDOListAux = ngPublicService.getProveedorByIDO(idAsignatario);
-				}
-
-				LOGGER.info("Lista de proveedores encontrados: " + pstIDOListAux);
-
-				if (!pstIDOListAux.isEmpty()) {
-					for (Proveedor pst : pstIDOListAux) {
-						if (pstIDOListAux.size() == 1) {
-							this.setPrestadorNumero(pst);
-						}
-					}
-				}
-
-				 */
-
-				LOGGER.info("Valor PrestadorNumero: " + this.getPrestadorNumero());
-
-				LOGGER.info("Valor proveedorAux: " + proveedorAux);
-				LOGGER.info("Valores del rango: " + rango);
-			}
-
-			if (this.prestadorNumero != null) {
-				this.setNumeracionAsignadaProveedor(ngPublicService.getTotalNumeracionAginadaProveedor(this.prestadorNumero.getId()));
-				LOGGER.info("numeracion asignada proveedor: " + this.getNumeracionAsignadaProveedor());
-			}
-
-		} catch (Exception e) {
-			LOGGER.info("===> [ERROR] Excepción en findProveedorPrestador: " + e.getMessage());
-			LOGGER.error("Error en la carga de datos del PST valor: " + e.getMessage());
-		}
-	}
-	/*
+    /**
+     * Busca el proveedor a partir de un rangoSerie.
+     * 
+     * @param rango            RangoSerie
+     * @param numeroConsultado Strings
+     */
     private void findProveedorPrestador(RangoSerie rango, String numeroConsultado) {
 	Boolean numeroPortadoBool = false;
 	try {
@@ -970,11 +775,9 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
-
-	 */
 
     /**
      * Obtiene las poblaciones y la numeracion asignada del proveedor del numero
@@ -989,7 +792,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.nirsProveedorTabla = false;
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
@@ -1013,7 +816,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
@@ -1029,7 +832,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.nirsProveedorTabla = false;
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
@@ -1045,7 +848,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.nirsProveedorTabla = true;
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
@@ -1068,7 +871,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
@@ -1086,7 +889,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    numeroStr = numFormato.format(num);
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado al dar formato a la numeración asignada" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
 	return numeroStr;
     }
@@ -1120,7 +923,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.setTipoModalidadRed(resultado);
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado al devolver el tipo de red de la numeración consultada" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
@@ -1135,7 +938,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.setNirsPoblacion(ngPublicService.findAllNirByPoblacion(poblacion));
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado de carga de datos" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
 	return this.nirsPoblacion;
     }
@@ -1161,7 +964,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado de carga de datos" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
@@ -1221,7 +1024,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado de carga de datos de la población seleccionada" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
@@ -1271,7 +1074,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error insesperado de carga de datos de la población seleccionada" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
@@ -1298,7 +1101,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error al crear el inegio del municipio" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
 	return inegiMunicipio;
     }
@@ -1399,7 +1202,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("error en la carga de datos" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 
@@ -1438,7 +1241,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    }
 	} catch (Exception e) {
 	    LOGGER.error("Error al cargar datos" + e.getMessage());
-	    //MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado"); //FJAH se retira por no ofrecer valor al usuario final
+	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 	}
     }
 

@@ -80,12 +80,10 @@ public class NirDaoImpl extends BaseDAO<Nir> implements INirDao {
                 LOGGER.debug("Buscando NIRs con código {}", pCodigoNir);
             }
         } else {
-            StringBuilder sbQuery = new StringBuilder();
-            sbQuery.append("SELECT n FROM Nir n ");
-            sbQuery.append("WHERE n.codigo LIKE '").append(pCodigoNir).append("%' ");
-            sbQuery.append("AND n.estatus.cdg = :estatusActivo ");
-            sbQuery.append("ORDER BY n.codigo");
-            query = sbQuery.toString();
+            query = "SELECT n FROM Nir n " +
+                    "WHERE n.codigo LIKE '" + pCodigoNir + "%' " +
+                    "AND n.estatus.cdg = :estatusActivo " +
+                    "ORDER BY n.codigo";
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Buscando NIRs que empiecen con el código {}", pCodigoNir);
             }

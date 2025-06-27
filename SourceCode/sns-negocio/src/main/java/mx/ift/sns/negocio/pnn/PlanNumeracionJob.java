@@ -99,7 +99,7 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
             + "PUNTO_ENTREGA, IDO, IDA" + NL;
 
     /** Cabecera del plan NG para PST Nuevo. */
-    private static final String CABECERA_PLAN_NUMERACION_GEOGRAFICA_PST_NUEVO = "ZONA, NUMERACION_INICIAL(10_DÍGITOS), NUMERACION_FINAL(10_DÍGITOS), "
+    private static final String CABECERA_PLAN_NUMERACION_GEOGRAFICA_PST_NUEVO = "ZONA, NUMERACION_INICIAL, NUMERACION_FINAL, "
             + "OCUPACION, MODALIDAD, ESTATUS, RAZON_SOCIAL, NOMBRE_CORTO, ID_OPERADOR, OFICIO_ASIGNACION, FECHA_ASIGNACION, IDO, IDA" + NL;
 
     /** Cabecera del plan NG publico. */
@@ -109,7 +109,7 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
             + "FECHA_MIGRACION, NIR_ANTERIOR" + NL;
 
     /** Cabecera del plan NG publico Nuevo. */
-    private static final String CABECERA_PLAN_NUMERACION_GEOGRAFICA_PUBLICO_NUEVO = "ZONA, NUMERACION_INICIAL(10_DÍGITOS), NUMERACION_FINAL(10_DÍGITOS), "
+    private static final String CABECERA_PLAN_NUMERACION_GEOGRAFICA_PUBLICO_NUEVO = "ZONA, NUMERACION_INICIAL, NUMERACION_FINAL, "
             + "OCUPACION, MODALIDAD, RAZON_SOCIAL, FECHA_ASIGNACION" + NL;
 
     /** Cabecera del plan NNG especifico. */
@@ -144,7 +144,7 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
 
     /** Cabecera del plan NNG para IFT Nuevo. */
     private static final String CABECERA_PLAN_NNG_IFT_NUEVO = "PST, CVE_SERVICIO, "
-            + "NUMERO_INICIAL(10_DÍGITOS), NUMERO_FINAL(10_DÍGITOS), OCUPACION, IDO/IDD, IDA, FECHA_ASIGNACION, OFICIO_ASIGNACION"
+            + "NUMERO_INICIAL, NUMERO_FINAL, OCUPACION, IDO/IDD, IDA, FECHA_ASIGNACION, OFICIO_ASIGNACION"
             + NL;
 
     /** Cabecera identificadores de operadores. */
@@ -387,8 +387,7 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(addQuotes(detalle.getIdAbn().toString()));
                         b.append(COMA);
 
-						int zona = Integer.parseInt(detalle.getNumFinal().substring(1, 2)) == 0 ? 0 : Integer.parseInt(detalle.getNumFinal().substring(0, 1));
-                        sb.append(addQuotes(String.valueOf(zona)));
+                        sb.append(addQuotes(String.valueOf(detalle.getId().charAt(0))));
                         sb.append(COMA);
 
                         b.append(addQuotes(detalle.getId()));
@@ -1573,7 +1572,7 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
             tmp4 = FicheroTemporal.getTmpFileName();
 
             FileOutputStream fileOutput = new FileOutputStream(tmp.getCanonicalPath());
-            FileOutputStream fileOutput2 = new FileOutputStream(tmp3.getCanonicalPath());
+            FileOutputStream fileOutput2 = new FileOutputStream(tmp2.getCanonicalPath());
 
             fileOutput.write(CABECERA_PLAN_NNG_IFT.getBytes());
             fileOutput2.write(CABECERA_PLAN_NNG_IFT_NUEVO.getBytes());

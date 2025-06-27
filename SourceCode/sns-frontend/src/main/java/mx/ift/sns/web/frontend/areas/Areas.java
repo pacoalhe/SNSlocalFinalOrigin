@@ -512,4 +512,93 @@ public class Areas implements Serializable {
         this.nombreEstado = nombreEstado;
     }
 
+    /**
+     * Genera la lista de zonas vectorizadas en lugar de estados.
+     */
+    public List<Areas> getListaZonas() {
+        return generaListaZonas();
+    }
+
+    public List<Areas> generaListaZonas() {
+        List<Areas> zonas = new ArrayList<>();
+
+        // Zona 6 - Noroeste
+        Areas zona6 = new Areas();
+        zona6.setIdEstado("ZONA_6");
+        zona6.setShape("poly");
+        zona6.setNombreEstado("Zona 6");
+        zona6.setCoordenadas("150,75,205,75,205,105,150,105");
+        zonas.add(zona6); //index0
+
+        // Zona 8 - Noreste
+        Areas zona8 = new Areas();
+        zona8.setIdEstado("ZONA_8");
+        zona8.setShape("poly");
+        zona8.setNombreEstado("Zona 8");
+        zona8.setCoordenadas("290,145,345,45,345,175,290,175");
+        zonas.add(zona8); //index1
+
+        // Zona 4 - Centro Norte
+        Areas zona4 = new Areas();
+        zona4.setIdEstado("ZONA_4");
+        zona4.setShape("poly");
+        zona4.setNombreEstado("Zona 4");
+        zona4.setCoordenadas("275,210,325,210,325,240,275,240");
+        //zona4.setCoordenadas("380,260,400,250,420,260,430,275,415,285,390,275,380,260");
+        zonas.add(zona4); //index2
+
+        // Zona 5 - Centro
+        Areas zona5 = new Areas();
+        zona5.setIdEstado("ZONA_5");
+        zona5.setShape("poly");
+        zona5.setNombreEstado("Zona 5");
+        zona5.setCoordenadas("60,235,80,220,100,215,120,220,140,235,150,255,150,280,145,300,130,310,110,315,90,310,70,295,60,275,55,255,60,235");
+        //zona5.setCoordenadas("210,220,230,215,250,220,270,230,260,250,230,250,210,240,210,220");
+        zonas.add(zona5); //index3
+
+        // Zona 3 - Occidente Sur
+        Areas zona3 = new Areas();
+        zona3.setIdEstado("ZONA_3");
+        zona3.setShape("poly");
+        zona3.setNombreEstado("Zona 3");
+        zona3.setCoordenadas("225,235,275,235,325,265,225,265");
+        //zona3.setCoordenadas("340,280,360,270,380,275,400,290,390,310,370,310,350,300,340,280");
+        zonas.add(zona3); //index4
+
+        // Zona 7 - Sur
+        Areas zona7 = new Areas();
+        zona7.setIdEstado("ZONA_7");
+        zona7.setShape("poly");
+        zona7.setNombreEstado("Zona 7");
+        zona7.setCoordenadas("295,290,350,290,350,320,295,320");
+        zonas.add(zona7); //index5
+
+        // Zona 9 - Sureste COLUMNA-RENGLON / COLUMNA-RENGLON / COLUMNA-RENGLON / COLUMNA-RENGLON
+        Areas zona9 = new Areas();
+        zona9.setIdEstado("ZONA_9");
+        zona9.setShape("poly");
+        zona9.setNombreEstado("Zona 9");
+        zona9.setCoordenadas("440,300,500,300,500,330,440,330");
+        //zona9.setCoordenadas("520,330,550,330,570,340,565,360,540,360,520,340,520,330");
+        zonas.add(zona9); //index6
+
+        // Zona 2 - Oriente Parece que esta es la Zona 9
+        Areas zona2 = new Areas();
+        zona2.setIdEstado("ZONA_2");
+        zona2.setShape("poly");
+        zona2.setNombreEstado("Zona 2");
+        //zona2.setCoordenadas("460,320,475,295,500,290,525,310,530,330,510,340,480,340,460,320");
+        zona2.setCoordenadas("360,265,410,265,410,295,360,295");
+        zonas.add(zona2); //index7
+
+        // Asignar idLink según posición real
+        for (int i = 0; i < zonas.size(); i++) {
+            zonas.get(i).setIdLink(i);
+        }
+
+        return zonas;
+    }
+
+
+
 }

@@ -19,17 +19,17 @@
 		styleClass="mycustomtablesa">
 
 		<f:facet name="header">
-           			INFORMACIÓN DEL ÁREA GEOGRÁFICA DE NUMERACIÓN 
+           			INFORMACIÓN DE LA ZONA
        			</f:facet>
 		<p:row>
 			<h:outputText
-				value="Número(s) Identificador(es) de Región (Claves de larga distancia)" />
+				value="Zona" />
 		</p:row>
 		<p:row>
 			<ui:repeat var="nir" value="#{consultaPublicaMarcacionBean.abn.nirs}"
 				varStatus="status">
 				<h:outputText styleClass="nirs #{status.last?'last':''}"
-					value="#{nir.codigo}" />
+					value="#{nir.zona}" />
 			</ui:repeat>
 		</p:row>
 		<h:outputText value="Longitud del número nacional" />
@@ -63,20 +63,8 @@
 			<h:outputText value="+52 " />
 			<h:outputText value="+ Número nacional (#{consultaPublicaMarcacionBean.numeroDigitos} dígitos)" />
 		</p:row>
-		<h:outputText value="Ciudad con mayor cantidad de numeración asignada"
-			rendered="#{consultaPublicaMarcacionBean.poblacionAbnMaxNumAsignada != null}" />
-		<h:outputText
-			value="#{consultaPublicaMarcacionBean.poblacionAbnMaxNumAsignada.nombre}"
-			rendered="#{consultaPublicaMarcacionBean.poblacionAbnMaxNumAsignada != null}" />
-		<h:outputText value="Poblaciones con numeración asignada" />
-		<p:commandLink
-			actionListener="#{detallePoblacionBean.activateAndSetPoblacion(consultaPublicaMarcacionBean.nir)}"
-			update=":DLG_detallePoblacionMunicipioProveedor"
-			oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
-			<h:outputText
-				value="#{consultaPublicaMarcacionBean.poblacionesNumeracionAsignadaNir.size()}" />
-		</p:commandLink>
-		<h:outputText value="Municipios que conforman el Área Geográfica de Numeración" />
+
+		<h:outputText value="Municipios que conforman e la Zona" />
 		<p:commandLink
 			actionListener="#{detallePoblacionBean.activateAndSetMunicipio(consultaPublicaMarcacionBean.abn, consultaPublicaMarcacionBean.nir)}"
 			update=":DLG_detallePoblacionMunicipioProveedor"
@@ -87,7 +75,7 @@
 		</p:commandLink>
 
 		<h:outputText
-			value="Empresas de telefonía que prestan el servicio dentro del Área Geográfica de Numeración" />
+			value="Empresas de telefonía que prestan el servicio dentro de la Zona" />
 
 		<p:commandLink
 			actionListener="#{detallePoblacionBean.activateAndSetConcesionario(consultaPublicaMarcacionBean.abn, consultaPublicaMarcacionBean.nir)}"
@@ -104,11 +92,5 @@
 
 	</p:panelGrid>
 </h:form>
-<!-- Modal 'Asignacion' -->
-<!-- <p:dialog id="paginated-results2" widgetVar="paginatedResults2"
-	header="RESULTADOS DE LA CONSULTA" modal="true" scrollable="true"
-	resizable="false" appendTo="@(body)" height="500" width="95%">
-	<ui:include
-		src="/consulta-numeracion/detalle-numero-identificador.xhtml" />
-</p:dialog> -->
+
 </html>

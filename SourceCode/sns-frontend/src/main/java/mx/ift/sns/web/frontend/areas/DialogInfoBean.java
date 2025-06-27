@@ -96,7 +96,9 @@ public class DialogInfoBean implements Serializable {
             PaginatorUtil.resetPaginacion(":TBL_proveedoresEstado", numeroRegistro);
             this.setNumeroRegistros(PaginatorUtil.getGruposRegistrosPorPagina(numeroRegistro));
 
+            LOGGER.debug("== setAndActivatedProveedorEstado: recibido " + (proveedoresEstado != null ? proveedoresEstado.size() : 0) + " elementos ==");
             this.setConcesionariosEstado(proveedoresEstado);
+
             this.setTablaProvEstadoActivated(true);
             this.setTablaProvAbnActivated(false);
             this.setTableMunicipioActivated(false);

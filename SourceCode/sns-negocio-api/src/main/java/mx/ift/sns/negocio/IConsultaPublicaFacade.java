@@ -22,6 +22,7 @@ import mx.ift.sns.modelo.series.EstadoRango;
 import mx.ift.sns.modelo.series.Nir;
 import mx.ift.sns.modelo.usu.Usuario;
 import mx.ift.sns.negocio.num.model.Numero;
+import mx.ift.sns.modelo.ot.*;
 
 /**
  * Interfaz de la parte publica.
@@ -543,5 +544,8 @@ public interface IConsultaPublicaFacade {
     Municipio findMunicipioByNombreAndEstado(String nombreMun, String nombreEst) throws Exception;
 
     List<Poblacion> findPoblacionByNombreAndMunicipioAndEstado(String nombrePob, Municipio mun);
+
+    List<Region> getRegiones();
+
 
 }

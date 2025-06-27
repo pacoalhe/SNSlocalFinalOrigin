@@ -12,8 +12,8 @@
 		paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
 		rowsPerPageTemplate="#{dialogInfoBean.numeroRegistros}" 
 		paginatorPosition="bottom" styleClass="mycustomtable">
-		<f:facet name="header">EMPRESAS DE TELEFONÍA LOCAL CON PRESENCIA EN EL ESTADO DE <h:outputText
-				value="#{areasGeoNumeracionMainBean.estado.nombre}" />
+		<f:facet name="header">EMPRESAS DE TELEFONÍA LOCAL CON PRESENCIA EN LA ZONA <h:outputText
+				value="#{dialogoInfoBean.zonaActual}" />
 		</f:facet>
 		<p:columnGroup type="header">
 			<p:row>

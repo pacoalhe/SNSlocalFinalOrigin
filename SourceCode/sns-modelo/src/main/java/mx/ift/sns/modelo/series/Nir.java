@@ -78,6 +78,10 @@ public class Nir extends Auditoria implements Serializable {
     @Version
     private long version;
 
+    /** Zona */
+    @Column(name = "ZONA", nullable = false)
+    private int zona;
+
     /** Constructor por defecto. */
     public Nir() {
     }
@@ -266,6 +270,10 @@ public class Nir extends Auditoria implements Serializable {
         this.estatus = estatus;
     }
 
+    public int getZona() { return zona; }
+
+    public void setZona(int zona) { this.zona = zona; }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -277,6 +285,8 @@ public class Nir extends Auditoria implements Serializable {
             builder.append(" estado=");
             builder.append(estatus.getCdg());
         }
+        builder.append(" zona=");
+        builder.append(zona);
         builder.append("}");
         return builder.toString();
     }

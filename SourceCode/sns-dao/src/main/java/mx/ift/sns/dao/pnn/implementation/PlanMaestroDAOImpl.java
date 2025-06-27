@@ -40,8 +40,9 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
         PlanMaestroDetalle planMaestroDetalle = null;
         //Fin FJAH
 
+        Query consulta = null;
         try {
-            Query consulta = getEntityManager().createNativeQuery(strQuery, PlanMaestroDetalle.class);
+            consulta = getEntityManager().createNativeQuery(strQuery, PlanMaestroDetalle.class);
 
             // FJAH 27.05.2025 *** Setteo parámetros ***
             consulta.setParameter(1, numeroInicial);
@@ -49,6 +50,7 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
             //Fin FJAH
 
             LOGGER.info("Se realiza la búsqueda del número {} en el plan maestro", numeroInicial);
+
             //Uncheked
             @SuppressWarnings("unchecked")
             List<PlanMaestroDetalle> listPlanMaestroDetalle = consulta.getResultList();
@@ -65,8 +67,11 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
             //return null;
         } catch (Exception e) {
             LOGGER.error("Error inesperado en getDetalleNumero: " + e.getMessage(), e);
+        } finally {
+            consulta = null;
         }
         //Fin FJAH
+
         return planMaestroDetalle;
     }
 
