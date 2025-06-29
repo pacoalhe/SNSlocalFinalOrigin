@@ -24,7 +24,6 @@ import mx.ift.sns.modelo.usu.Usuario;
 import mx.ift.sns.negocio.IConsultaPublicaFacade;
 import mx.ift.sns.web.frontend.common.MensajesFrontBean;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.slf4j.Logger;
@@ -59,18 +58,12 @@ public class DescargaPlanesBean implements Serializable {
     /**
      * Listado de tipos de planes para mostrar.
      */
-    private List<String> tipoPlanMostrar = new ArrayList<String>();
+    private final List<String> tipoPlanMostrar = new ArrayList<>();
 
     /**
      * Listado con los planes de un rol para mostrar.
      */
-    private List<Plan> planesRolMostrar = new ArrayList<Plan>();
-
-    /**
-     * Listado de tipos de planes adicionales de un rol para mostar.
-     */
-    private List<Plan> planesExtra = new ArrayList<>();
-
+    private List<Plan> planesRolMostrar = new ArrayList<>();
 
     private final Map<String, String> reportes = new HashMap<String, String>() {{
         put("O", "Q");
@@ -123,11 +116,11 @@ public class DescargaPlanesBean implements Serializable {
             }
             if (planDescarga != null) {
                 InputStream stream = new ByteArrayInputStream(planDescarga.getFichero());
-                StringBuffer docName = new StringBuffer();
-                docName.append(planDescarga.getNombre());
                 // Definición del tipo de archivo
                 String wordMimeType = "application/zip";
-                StreamedContent downFile = new DefaultStreamedContent(stream, wordMimeType, docName.toString());
+                StreamedContent downFile = new DefaultStreamedContent(stream, wordMimeType, planDescarga.getNombre()
+                        // Definición del tipo de archivo
+                );
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Archivo descargado correctamente");
                 }
@@ -160,43 +153,7 @@ public class DescargaPlanesBean implements Serializable {
      * @return StreamedContent Fichero a Descargar
      */
     public StreamedContent descargarPlanPublico() {
-        Plan planPublico = null;
-        try {
-            planPublico = ngPublicService.getPlanByTipo(TipoPlan.TIPO_PLAN_NG_PUBLICO);
-            if (planPublico != null) {
-                InputStream stream = new ByteArrayInputStream(planPublico.getFichero());
-                StringBuilder docName = new StringBuilder();
-                docName.append(planPublico.getNombre());
-                // Definición del tipo de archivo a descarcar.
-                String wordMimeType = "application/zip";
-                StreamedContent downFile = new DefaultStreamedContent(stream, wordMimeType, docName.toString());
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Archivo {} de longitud {} descargado correctamente", docName, docName.length());
-                }
-                MensajesFrontBean.addInfoMsg(MSG_ID, "Plan descargado correctamente");
-                this.setBtnDescargaActivado(false);
-                return downFile;
-
-            } else {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("No existe achivo para la descarga");
-                    this.setBtnDescargaActivado(true);
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.error("Error inesperado: el archivo de descarga es nulo o no existe " + e.getMessage());
-            MensajesFrontBean.addErrorMsg(MSG_ID, "Error en la descarga");
-        }
-        return null;
-    }
-
-    /**
-     * Método invocado al pulsar sobre el botón de descarga pública. Realiza la descarga del plan de numeración
-     * geográfica público.
-     * @return StreamedContent Fichero a Descargar
-     */
-    public StreamedContent descargarPlanPublicoNuevo() {
-        Plan planPublico = null;
+        Plan planPublico;
         try {
             planPublico = ngPublicService.getPlanByTipo(TipoPlan.TIPO_PLAN_NG_PUBLICO_NUEVO);
             if (planPublico != null) {
@@ -269,17 +226,13 @@ public class DescargaPlanesBean implements Serializable {
     public List<Plan> getPlanes() {
         try {
             this.planesRolMostrar = new ArrayList<>();
-            this.planesExtra = new ArrayList<>();
             this.getUserRol();
-            Plan plan = null;
+            Plan plan;
             for (String t : this.tipoPlanMostrar) {
                 if (t != null) {
                     plan = ngPublicService.getPlanByTipo(t);
                     LOGGER.info("[getPlanes] Buscando plan tipo: {} => Resultado: {}", t, (plan != null ? plan.getNombre() : "NULL"));
-
                     if (plan != null) {
-                        this.planesRolMostrar.add(plan);
-
                         // Busca el tipo de extra correspondiente en el mapa
                         String tipoExtra = reportes.get(plan.getTipoPlan().getId());
                         LOGGER.info("[getPlanes] ¿Existe extra para tipo {}? => {}", plan.getTipoPlan().getId(), (tipoExtra != null ? tipoExtra : "No hay extra"));
@@ -289,32 +242,17 @@ public class DescargaPlanesBean implements Serializable {
                             LOGGER.info("[getPlanes] Buscando plan extra tipo: {} => Resultado: {}", tipoExtra, (planExtra != null ? planExtra.getNombre() : "NULL"));
                             // Solo lo agregas si existe realmente
                             if (planExtra != null) {
-                                this.planesExtra.add(planExtra);
+                                this.planesRolMostrar.add(planExtra);
                                 LOGGER.info("[getPlanes] Extra agregado REAL: plan con tipo {}, nombre {}", tipoExtra, planExtra.getNombre());
                             }
+                        } else {
+                            this.planesRolMostrar.add(plan);
                         }
-
-/*
-                        String value = reportes.get(plan.getTipoPlan().getId());
-                        LOGGER.info("[getPlanes] ¿Existe extra para tipo {}? => {}", plan.getTipoPlan().getId(), (value != null ? value : "No hay extra"));
-
-                        if(value != null) {
-                            Plan copiaPlan = SerializationUtils.clone(plan); // Asumiendo que tienes un constructor copia
-                            TipoPlan nuevoTipoPlan = SerializationUtils.clone(plan.getTipoPlan());
-                            nuevoTipoPlan.setId(value);
-                            copiaPlan.setTipoPlan(nuevoTipoPlan);
-                            this.planesExtra.add(copiaPlan);
-                            LOGGER.info("[getPlanes] Extra agregado: plan con tipo {}, nombre {}", value, copiaPlan.getNombre());
-                        }
-
- */
                     }
                 }
             }
             this.setPlanesRolMostrar(this.planesRolMostrar);
-            this.setPlanesExtra(this.planesExtra);
             LOGGER.info("[getPlanes] Total planesRolMostrar: {}", this.planesRolMostrar.size());
-            LOGGER.info("[getPlanes] Total planesExtra: {}", this.planesExtra.size());
         } catch (Exception e) {
             LOGGER.error("Error inesperado al optener los planes por rol " + e.getMessage());
             MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
@@ -365,56 +303,6 @@ public class DescargaPlanesBean implements Serializable {
         return fechaPlanPrivadoString;
     }
 
-    /**
-     * Obtiene el plan con el nuevo layout
-     * @param descripcion String
-     * @return Plan
-     */
-
-    public Plan getPlanExtraPorDescripcion(String descripcion) {
-        for (Plan p : planesExtra) {
-            if (p.getTipoPlan().getDescripcion().equals(descripcion)) {
-                return p;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * FJAH 12.06.2025 Nuevo Metodo
-     * Devuelve el plan extra asociado, usando el ID_TIPO_PLAN y el mapa 'reportes'.
-     * @param plan Plan principal
-     * @return Plan extra, o null si no existe
-     */
-    public Plan getPlanExtra(Plan plan) {
-        if (plan == null || plan.getTipoPlan() == null) {
-            LOGGER.info("[getPlanExtra] plan o tipoPlan es null, retorno null.");
-            return null;
-        }
-        String idTipoPlan = plan.getTipoPlan().getId();
-        // Usa el mapa para encontrar el idTipoPlan extra asociado
-        String idTipoPlanExtra = reportes.get(idTipoPlan);
-        LOGGER.info("[getPlanExtra] plan.idTipoPlan = {} | Extra esperado = {}", idTipoPlan, (idTipoPlanExtra != null ? idTipoPlanExtra : "Sin mapeo extra"));
-        if (idTipoPlanExtra == null) {
-            return null;
-        }
-        // Busca en la lista de planes el que coincida con ese idTipoPlanExtra
-        for (Plan p : this.getPlanesExtra()) {
-            LOGGER.info("[getPlanExtra] Revisando planExtra.idTipoPlan = {}, nombre = {}, fichero = {}",
-                    (p != null && p.getTipoPlan() != null ? p.getTipoPlan().getId() : "null"),
-                    (p != null ? p.getNombre() : "null"),
-                    (p != null && p.getFichero() != null ? "OK" : "null"));
-            if (p != null && p.getTipoPlan() != null
-                    && idTipoPlanExtra.equals(p.getTipoPlan().getId())
-                    && p.getFichero() != null) {
-                LOGGER.info("[getPlanExtra] Extra encontrado: nombre = {}", p.getNombre());
-                return p;
-            }
-        }
-        LOGGER.info("[getPlanExtra] No se encontró plan extra para tipo: {}", idTipoPlanExtra);
-        return null;
-    }
-
     // ///////////////////////////////////GETTERS Y SETTERS//////////////////////////////
 
     /**
@@ -463,22 +351,6 @@ public class DescargaPlanesBean implements Serializable {
      */
     public void setPlanesRolMostrar(List<Plan> planesRolMostrar) {
         this.planesRolMostrar = planesRolMostrar;
-    }
-
-    /**
-     * Listado con los planes de un rol para mostrar.
-     * @return the planesRolMostrar
-     */
-    public List<Plan> getPlanesExtra() {
-        return planesExtra;
-    }
-
-    /**
-     * Listado con los planes de un rol para mostrar.
-     * @param planesExtra the planesRolMostrar to set
-     */
-    public void setPlanesExtra(List<Plan> planesExtra) {
-        this.planesExtra = planesExtra;
     }
 
 }

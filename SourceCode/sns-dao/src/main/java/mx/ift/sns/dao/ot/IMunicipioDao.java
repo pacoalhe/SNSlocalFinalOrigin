@@ -57,4 +57,18 @@ public interface IMunicipioDao extends IBaseDAO<Municipio> {
 
     Municipio findMunicipioByNombreAndEstado(String nombreMun, String nombreEst) throws Exception;
 
+    /**
+     * FJAH 27.06.2025
+     * @param idZona
+     * @return
+     */
+    List<Object[]> findMunicipiosByZona(Integer idZona);
+
+    /**
+     * FJAH 27.06.2025
+     * @param idZona zona geográfica
+     * @return total de municipios únicos en esa zona
+     */
+    Long countMunicipiosByZona(Integer idZona);
+
 }

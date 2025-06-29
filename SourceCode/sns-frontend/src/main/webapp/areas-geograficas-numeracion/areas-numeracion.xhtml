@@ -184,12 +184,12 @@
 											<h:outputText value="#{areasGeoNumeracionMainBean.region.descripcion}" />
 
 											<h:outputText value="Municipios que conforman la Zona" />
-											<h:outputText value="#{areasGeoNumeracionMainBean.cantidadMunicipiosZona}" />
+											<h:outputText value="#{areasGeoNumeracionMainBean.totalMunicipiosZona}" />
 
 											<h:outputText value="Numeración asignada (no representa líneas en servicio)" />
 											<h:outputText value="#{areasGeoNumeracionMainBean.numeracionZona}" />
 
-											<h:outputText value="Empresas que prestan el servicio telefónico" />
+											<h:outputText value="Empresas que prestan el servicio en la zona" />
 											<p:commandLink
 													update=":MDL_infoProveedor P_containerVista2"
 													oncomplete="PF('infoProveedor').show();"
@@ -197,16 +197,18 @@
 												<h:outputText value="#{areasGeoNumeracionMainBean.numeroConcesionariosZona}" style="text-decoration: underline; cursor: pointer;" />
 											</p:commandLink>
 
-											<h:outputText value="Listado de Municipios que conforman la Zona" />
+											<h:outputText value="Definición geográfica de la zona" />
+											<h:panelGroup>
+												<a href="#{request.contextPath}/pdf/ZONA#{areasGeoNumeracionMainBean.region.idRegion}.pdf"
+												   download="ZONA#{areasGeoNumeracionMainBean.region.idRegion}.pdf"
+												   class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only"
+												   style="padding: .4em 1em; text-decoration: none;">
+												   <span class="ui-button-text">
+            												Descargar PDF de Zona #{areasGeoNumeracionMainBean.region.idRegion}
+												   </span>
+												</a>
+											</h:panelGroup>
 
-											<p:commandButton value="↓ Descargar Municipios"
-															 ajax="false"
-															 icon="pi pi-download"
-															 styleClass="btnDescargar"
-															 rendered="#{not empty areasGeoNumeracionMainBean.municipiosZona}"
-															 onclick="PrimeFaces.monitorDownload(start, stop);">
-												<p:fileDownload value="#{areasGeoNumeracionMainBean.archivoMunicipios}" />
-											</p:commandButton>
 
 											<p:remoteCommand name="start" />
 											<p:remoteCommand name="stop" />

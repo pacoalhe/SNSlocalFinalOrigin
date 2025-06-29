@@ -359,7 +359,14 @@ public class AreasGeoNumeracionMainBean implements Serializable {
         // FJAH 06.06.2025 Hardcodeo ejemplo, pon los IDs reales aquí
     }
 
+    private Integer totalMunicipiosZona;
+
+
     // --- Getters y setters solo para zonas/agregados ---
+
+    public Integer getTotalMunicipiosZona() {
+        return totalMunicipiosZona;
+    }
 
     public Region getRegion() { return region; }
     public void setRegion(Region region) { this.region = region; }
@@ -389,6 +396,17 @@ public class AreasGeoNumeracionMainBean implements Serializable {
         return (concesionariosZona != null ? concesionariosZona.size() : 0);
     }
 
+    private List<Municipio> municipiosZonaTmp = new ArrayList<>();
+
+    public List<Municipio> getMunicipiosZonaTmp() {
+        return municipiosZonaTmp;
+    }
+
+    public void setMunicipiosZonaTmp(List<Municipio> municipiosZonaTmp) {
+        this.municipiosZonaTmp = municipiosZonaTmp;
+    }
+
+
 
 
 
@@ -400,7 +418,16 @@ public class AreasGeoNumeracionMainBean implements Serializable {
     //FJAH 06.06.2025 refactorizacion para zonas
     @PostConstruct
     public void init() {
-        listaRegiones = ngPublicService.getRegiones();
+        //listaRegiones = ngPublicService.getRegiones();
+        List<Region> todasLasRegiones = ngPublicService.getRegiones();
+        listaRegiones = new ArrayList<Region>();
+
+        for (Region r : todasLasRegiones) {
+            if (!"Zona 1".equalsIgnoreCase(r.getDescripcion())) {
+                listaRegiones.add(r);
+            }
+        }
+
         region = null;
 
         // NUEVO: cargar zonas vectorizadas
@@ -438,38 +465,20 @@ public class AreasGeoNumeracionMainBean implements Serializable {
 
     // /////////////////////////////MÉTODOS//////////////////////////////////////////////
 
-    //FJAH 06.06.2025 refactorizacion para zonas
     // FJAH 10.06.2025 refactorización para zonas y visibilidad de la tabla
     public void onChangeRegion() {
         System.out.println("== INICIA onChangeRegion ==");
         LOGGER.info("Listener ejecutado ONCHANGE REGION, id=" + idRegionSelected);
         limpiarDatosZona();
 
-        // === DEPURACIÓN INICIAL ===
-        System.out.println("== INICIA onChangeRegion ==");
-        System.out.println("idRegionSelected=" + idRegionSelected);
-        System.out.println("listaRegiones (size): " + (listaRegiones != null ? listaRegiones.size() : "null"));
-        if (listaRegiones != null) {
-            for (Region reg : listaRegiones) {
-                System.out.println("Region: " + reg.getIdRegion());
-            }
-        }
-        System.out.println("estadosPorRegion keys:");
-        for (Integer key : estadosPorRegion.keySet()) System.out.println(key);
-
         if (idRegionSelected == null) {
-            System.out.println("idRegionSelected es null");
-            this.setEstateTable(false); // Oculta la tabla si no hay región seleccionada
+            this.setEstateTable(false);
             return;
         }
 
-        // Busca la región seleccionada
-        System.out.println("IDs en listaRegiones:");
+        // Buscar región seleccionada
+        this.region = null;
         for (Region reg : listaRegiones) {
-            System.out.println(
-                    "Comparando region: " + reg.getIdRegion() + " (" + reg.getIdRegion().getClass().getName() + ")"
-                            + " con idRegionSelected=" + idRegionSelected + " (" + idRegionSelected.getClass().getName() + ")"
-            );
             if (reg.getIdRegion().toString().equals(idRegionSelected.toString())) {
                 this.region = reg;
                 break;
@@ -477,104 +486,86 @@ public class AreasGeoNumeracionMainBean implements Serializable {
         }
 
         if (this.region == null) {
-            System.out.println("region es null");
             this.setEstateTable(false);
             return;
         }
 
-        LOGGER.debug("== INICIA carga de carga de datos agregados ==");
-        // Tu lógica para cargar datos agregados...
-        List<Integer> idsEstadosZona = estadosPorRegion.get(region.getIdRegion().intValue());
-        if (idsEstadosZona == null) {
-            System.out.println("idsEstadosZona es null para region: " + region.getIdRegion());
-            this.setEstateTable(false);
-            return;
-        }
+        LOGGER.debug("== INICIA carga de datos agregados ==");
 
         Set<Municipio> municipiosZonaTmp = new HashSet<>();
         Set<Proveedor> empresasZonaTmp = new HashSet<>();
-        BigDecimal numeracionTmp = BigDecimal.ZERO;
-        Set<String> clavesInegiTmp = new HashSet<>();
 
-        LOGGER.debug("== INICIA carga de concesionariosZona ==");
-        for (Integer idEstado : idsEstadosZona) {
-            try {
-                Estado estado = ngPublicService.findEstadoById(String.valueOf(idEstado));
-                if (estado == null) continue;
+        // Municipios por zona (nueva lógica) y lista de muncipios para descargar archivo excel.
+        try {
+            LOGGER.debug("== Carga de Municipios por Zona desde NIR ==");
 
-                // Municipios
-                LOGGER.debug("== Carga de Municipios ==");
-                List<Municipio> municipiosEstado = ngPublicService.findMunicipiosByEstado(estado.getCodEstado());
-                if (municipiosEstado != null) municipiosZonaTmp.addAll(municipiosEstado);
+            Integer zona = region.getIdRegion().intValue();
 
-                // Empresas (Proveedores)
-                //LOGGER.debug("== Carga de Proveedores ==");
-                //List<Proveedor> proveedoresEstado = ngPublicService.findAllPrestadoresServicioBy(null, null, null, null, estado);
-                //if (proveedoresEstado != null) empresasZonaTmp.addAll(proveedoresEstado);
-                LOGGER.debug("== Carga de Proveedores ==" + estado.getNombre());
-                long start = System.currentTimeMillis();
-                List<Proveedor> proveedoresEstado = ngPublicService.findAllPrestadoresServicioBy(null, null, null, null, estado);
-                long duration = System.currentTimeMillis() - start;
-                LOGGER.debug("Tiempo consulta proveedores (" + estado.getNombre() + "): " + duration + "ms");
+            List<Municipio> municipiosZona = ngPublicService.findMunicipiosByZona(zona);
+            Long total = ngPublicService.getTotalMunicipiosByZona(zona);
 
-                if (proveedoresEstado != null) empresasZonaTmp.addAll(proveedoresEstado);
-
-                // Numeración
-                LOGGER.debug("== Carga de NUmeracion ==");
-                Integer numAsignadaInt = ngPublicService.getTotalNumeracionAsignadaByEstado(estado);
-                BigDecimal numAsignada = (numAsignadaInt != null) ? new BigDecimal(numAsignadaInt) : BigDecimal.ZERO;
-                numeracionTmp = numeracionTmp.add(numAsignada);
-
-                // Clave INEGI
-                //if (estado.getCodEstado() != null) clavesInegiTmp.add(estado.getCodEstado());
-
-            } catch (Exception e) {
-                LOGGER.error("Error al obtener estado " + idEstado + ": " + e.getMessage());
-                continue;
+            if (municipiosZona != null) {
+                municipiosZonaTmp.clear(); // Limpiar antes por si es recarga
+                municipiosZonaTmp.addAll(municipiosZona);
             }
+
+            totalMunicipiosZona = total != null ? total.intValue() : 0;
+
+            // Validación opcional
+            if (municipiosZonaTmp.size() != totalMunicipiosZona) {
+                LOGGER.warn("¡Inconsistencia! Lista trae " + municipiosZonaTmp.size() +
+                        " pero el total reportado es " + totalMunicipiosZona);
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Error al obtener municipios por zona " + region.getIdRegion() + ": " + e.getMessage(), e);
         }
 
+        // Carga de Proveedores por zona
+        try {
+            LOGGER.debug("== Carga de Proveedores ==");
+            List<Proveedor> proveedoresZona = ngPublicService.findAllPrestadoresServicioByZona(region.getIdRegion().intValue());
+            if (proveedoresZona != null) empresasZonaTmp.addAll(proveedoresZona);
+        } catch (Exception e) {
+            LOGGER.error("Error al obtener Proveedores de la zona " + region.getIdRegion() + ": " + e.getMessage());
+            numeracionZona = BigDecimal.ZERO;
+        }
+
+        // Carga de numeración por zona
+        try {
+            LOGGER.debug("== Carga de Numeración ==");
+            Integer total = ngPublicService.getTotalNumeracionAsignadaPorZona(region.getIdRegion().intValue());
+            numeracionZona = new BigDecimal(total != null ? total : 0);
+        } catch (Exception e) {
+            LOGGER.error("Error al obtener numeración de la zona " + region.getIdRegion() + ": " + e.getMessage());
+            numeracionZona = BigDecimal.ZERO;
+        }
 
         this.municipiosZona = new ArrayList<>(municipiosZonaTmp);
         this.empresasZona = empresasZonaTmp;
-        this.numeracionZona = numeracionTmp;
-        if (empresasZonaTmp != null) {
-            this.concesionariosZona = new ArrayList<>(empresasZonaTmp);
-            LOGGER.debug("concesionariosZona cargados: " + this.concesionariosZona.size());
-        } else {
-            this.concesionariosZona = new ArrayList<>();
-            LOGGER.warn("empresasZonaTmp venía null, se asignó lista vacía a concesionariosZona.");
-        }
+        this.concesionariosZona = new ArrayList<>(empresasZonaTmp);
+        this.numeracionZona = numeracionZona;
 
-        // Java 7 compatible join
-        StringBuilder sb = new StringBuilder();
-        for (String clave : clavesInegiTmp) {
-            if (sb.length() > 0) sb.append(", ");
-            sb.append(clave);
-        }
-        this.clavesInegiZona = sb.toString();
-        this.cantidadMunicipiosZona = (municipiosZona != null) ? municipiosZona.size() : 0;
-        this.cantidadEmpresasZona = (empresasZona != null) ? empresasZona.size() : 0;
+        this.clavesInegiZona = ""; // Reservado por si luego se requiere
+        this.cantidadMunicipiosZona = this.municipiosZona.size();
+        this.cantidadEmpresasZona = this.empresasZona.size();
 
-        // Cargar ruta de imagen de la zona reutilizando pathMapaNir (sin refactor de vista)
         String rutaImagenZona = "/img/mapas/" + region.getIdRegion() + ".gif";
         this.setPathMapaNir(rutaImagenZona);
         LOGGER.debug("Imagen asignada para zona: " + rutaImagenZona);
 
-        // Activa Panel de información de la zona
         this.setEstateTable(true);
         this.setActivateMap(false);
-        //this.pathMapaNir = "/img/mapas/" + region.getIdRegion() + ".gif";
 
-        // Opcional: imprime valores en consola para depuración
-        System.out.println("municipiosZona: " + (municipiosZona != null ? municipiosZona.size() : "null"));
-        System.out.println("empresasZona: " + (empresasZona != null ? empresasZona.size() : "null"));
+        // Consola depuración
+        System.out.println("municipiosZona: " + this.municipiosZona.size());
+        System.out.println("empresasZona: " + this.empresasZona.size());
         System.out.println("numeracionZona: " + numeracionZona);
         System.out.println("estateTable: " + estateTable);
     }
 
     private void limpiarDatosZona() {
-        this.municipiosZona = new ArrayList<>();
+        this.municipiosZonaTmp = new ArrayList<>();
         this.empresasZona = new HashSet<>();
         this.numeracionZona = BigDecimal.ZERO;
         this.clavesInegiZona = "";
@@ -1023,7 +1014,7 @@ public class AreasGeoNumeracionMainBean implements Serializable {
         this.activateMap = true;
         //FJAH 06.06.2025 Refactorización por la Zona
         this.region = null; // Limpia la zona seleccionada en vez del estado
-        //this.estadoSelected = null;
+        this.idRegionSelected = null; // Esto limpia el combo
     }
 
     /**
@@ -1805,28 +1796,36 @@ public class AreasGeoNumeracionMainBean implements Serializable {
     }
 
     /**
-     * FJAH 18.06.2005
-     * Descarga de archivo excel de municipios por zona
+     * FJAH 27.06.2025
+     * Descarga de archivo Excel de municipios por zona
      */
     public StreamedContent getArchivoMunicipios() {
         try {
             HSSFWorkbook workbook = new HSSFWorkbook();
             HSSFSheet sheet = workbook.createSheet("Municipios");
 
-            // Crear encabezados
+            // Encabezados
             HSSFRow header = sheet.createRow(0);
             header.createCell(0).setCellValue("Estado");
             header.createCell(1).setCellValue("Municipio");
             header.createCell(2).setCellValue("Clave INEGI");
 
             int rowIndex = 1;
-            for (Municipio m : municipiosZona) {
+
+            for (Municipio m : municipiosZonaTmp) {
                 HSSFRow row = sheet.createRow(rowIndex++);
-                row.createCell(0).setCellValue(m.getEstado().getNombre()); // Asegúrate que no sea null
+
+                // Estado (usamos el código del estado)
+                row.createCell(0).setCellValue(m.getId().getCodEstado());
+
+                // Nombre del municipio
                 row.createCell(1).setCellValue(m.getNombre());
-                //row.createCell(2).setCellValue(m.getClaveInegi());
+
+                // Clave INEGI de 5 dígitos
+                row.createCell(2).setCellValue(m.getClaveInegi5());
             }
 
+            // Convertir a stream
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             workbook.write(out);
             workbook.close();

@@ -234,6 +234,26 @@ public class AbnDaoImpl extends BaseDAO<Abn> implements IAbnDao {
     }
 
     @Override
+    public List<Abn> getAbnByZona(int zona) {
+        String query = "SELECT n.abn FROM Nir n LEFT JOIN FETCH n.abn.nirs where n.zona = :zona";
+        TypedQuery<Abn> consulta = getEntityManager().createQuery(query, Abn.class);
+        consulta.setParameter("zona", zona);
+
+        List<Abn> abnresult = consulta.getResultList();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("ABNz con zona {} encontrados.", zona);
+        }
+
+        // Es necesario hacer una llamada explicita a la lista indirecta para que se creen las instancias en la
+        // sesion de jsf
+        if (abnresult != null) {
+            abnresult.size();
+        }
+
+        return abnresult;
+    }
+
+    @Override
     public Abn changeAbnCode(Abn pViejoAbn, Abn pNuevoAbn) throws Exception {
 
         // Las relaciones de ABN con el resto de tablas son LAZY y no se utiliza ningún tipo de actualización por

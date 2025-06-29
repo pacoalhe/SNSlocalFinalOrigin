@@ -68,6 +68,8 @@ public class Numero implements Serializable {
     /** Es numero nacional (10 digitos). */
     private boolean nacional;
 
+    private String zona;
+
     /**
      * @return the numero
      */
@@ -214,6 +216,14 @@ public class Numero implements Serializable {
      */
     public boolean existe() {
         return (nir != null) || (clave != null);
+    }
+
+    public String getZona() {
+        return zona;
+    }
+
+    public void setZona(String zona) {
+        this.zona = zona;
     }
 
     @Override

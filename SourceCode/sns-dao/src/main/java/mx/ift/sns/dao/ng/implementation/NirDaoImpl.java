@@ -58,9 +58,19 @@ public class NirDaoImpl extends BaseDAO<Nir> implements INirDao {
             TypedQuery<Nir> tQuery = getEntityManager().createQuery(sql, Nir.class);
             tQuery.setParameter("cdgNir", cdgNir);
 
-            Nir nir = tQuery.getSingleResult();
-            return nir;
+            return tQuery.getSingleResult();
 
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public List<Nir> getNirByZona(int zona) {
+        String query = "SELECT n FROM Nir n WHERE n.zona = :zona";
+        try {
+            TypedQuery<Nir> tQuery = getEntityManager().createQuery(query, Nir.class);
+            return tQuery.getResultList();
         } catch (NoResultException e) {
             return null;
         }
@@ -133,6 +143,16 @@ public class NirDaoImpl extends BaseDAO<Nir> implements INirDao {
         String squery = "SELECT COUNT(n) FROM Nir n WHERE n.codigo = :nir";
         TypedQuery<Long> query = getEntityManager().createQuery(squery, Long.class);
         query.setParameter("nir", Integer.parseInt(nir));
+        Long resultado = query.getSingleResult();
+
+        return (resultado != null && resultado > 0);
+    }
+
+    @Override
+    public boolean existsZona(String zona) {
+        String squery = "SELECT COUNT(n) FROM Nir n WHERE n.zona = :zona";
+        TypedQuery<Long> query = getEntityManager().createQuery(squery, Long.class);
+        query.setParameter("zona", Integer.parseInt(zona));
         Long resultado = query.getSingleResult();
 
         return (resultado != null && resultado > 0);

@@ -171,6 +171,11 @@ public class ConsultaPublicaFacade implements IConsultaPublicaFacade {
     }
 
     @Override
+    public List<Abn> getAbnByZona(int zona) throws Exception {
+        return otService.getAbnByZona(zona);
+    }
+
+    @Override
     public Numero parseNumeracion(String numeracion) {
         return numeracionService.parseNumeracion(numeracion);
     }
@@ -219,6 +224,11 @@ public class ConsultaPublicaFacade implements IConsultaPublicaFacade {
     @Override
     public boolean existsNir(String nir) {
         return otService.existsNir(nir);
+    }
+
+    @Override
+    public boolean existsZona(String zona) {
+        return otService.existsZona(zona);
     }
 
     @Override
@@ -352,6 +362,11 @@ public class ConsultaPublicaFacade implements IConsultaPublicaFacade {
     }
 
     @Override
+    public List<Nir> getNirByZona(int zona) {
+        return seriesService.getNirByZona(zona);
+    }
+
+    @Override
     public List<PoblacionNumeracion>
             findALLPoblacionesNumeracionByProveedorEstado(Proveedor proveedorServ, Estado estado) {
         return seriesService.findALLPoblacionesNumeracionByProveedorEstado(proveedorServ, estado);
@@ -454,6 +469,38 @@ public class ConsultaPublicaFacade implements IConsultaPublicaFacade {
     //FJAH 05.06.2025 Refactorización para region -> zona
     public List<Region> getRegiones() {
         return otService.findAllRegiones();
+    }
+
+    @Override
+    public Integer getTotalNumeracionAsignadaPorZona(Integer idZona) {
+        return seriesService.getTotalNumeracionAsignadaPorZona(idZona);
+    }
+
+    //FJAH 27.05.2025 Refactorizando para zona
+    @Override
+    public List<Municipio> findMunicipiosByZona(Integer idZona) throws Exception {
+        return otService.findMunicipiosByZona(idZona);
+    }
+
+    /**
+     * FJAH 27.0532026
+     * @param idZona
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public Long getTotalMunicipiosByZona(Integer idZona) throws Exception {
+        return otService.countMunicipiosByZona(idZona);
+    }
+
+    /**
+     * FJAH 29.05.2025
+     * @param idRegion
+     * @return
+     */
+    @Override
+    public List<Proveedor> findAllPrestadoresServicioByZona(Integer idRegion) {
+        return seriesService.findAllPrestadoresServicioByZona(idRegion);
     }
 
 }

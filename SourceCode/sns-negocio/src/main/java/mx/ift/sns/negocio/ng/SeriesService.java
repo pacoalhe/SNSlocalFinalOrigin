@@ -1621,6 +1621,11 @@ public class SeriesService implements ISeriesService {
     }
 
     @Override
+    public List<Nir> getNirByZona(int zona) {
+        return nirDAO.getNirByZona(zona);
+    }
+
+    @Override
     public List<PoblacionNumeracion>
             findALLPoblacionesNumeracionByProveedorEstado(Proveedor proveedorServ, Estado estado) {
         return rangoSerieDAO.findALLPoblacionesNumeracionByProveedorEstado(proveedorServ, estado);
@@ -1896,4 +1901,22 @@ public class SeriesService implements ISeriesService {
     public boolean isRangosPentientesByNir(Nir nir) {
         return rangoSerieDAO.isRangosPentientesByNir(nir);
     }
+
+    /**
+     * FJAH refactorizacion de totales por zona
+     */
+    public Integer getTotalNumeracionAsignadaPorZona(Integer idZona) {
+        return rangoSerieDAO.getTotalNumeracionAsignadaPorZona(idZona);
+    }
+
+    /**
+     * FJAH 29.06.2025
+     * @param idRegion
+     * @return
+     */
+    @Override
+    public List<Proveedor> findAllPrestadoresServicioByZona(Integer idRegion) {
+        return rangoSerieDAO.findAllPrestadoresServicioByZona(idRegion);
+    }
+
 }

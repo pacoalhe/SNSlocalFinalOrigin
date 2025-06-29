@@ -455,4 +455,14 @@ public interface IRangoSerieDao extends IBaseDAO<RangoSerie> {
      * @return boolean
      */
     boolean isRangosPentientesByNir(Nir nir);
+
+    /**
+     * FJAH 27.06.2025
+     * @param idZona
+     * @return
+     */
+    Integer getTotalNumeracionAsignadaPorZona(Integer idZona);
+
+    List<Proveedor> findAllPrestadoresServicioByZona(Integer idRegion);
+
 }

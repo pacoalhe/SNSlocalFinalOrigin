@@ -3,15 +3,7 @@ package mx.ift.sns.modelo.ot;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Version;
+import javax.persistence.*;
 
 import mx.ift.sns.modelo.central.Estatus;
 import mx.ift.sns.modelo.usu.Auditoria;
@@ -221,5 +213,44 @@ public class Municipio extends Auditoria implements Serializable {
     public void setEstatus(Estatus estatus) {
         this.estatus = estatus;
     }
+
+    /**
+     * FJAH 27.06.2025
+     * Campos Transitorios no mapeados en la BD JPA
+     */
+    @Transient
+    private String inegi;
+
+    @Transient
+    private String poblacion;
+
+    @Transient
+    private String claveInegi5;
+
+    public String getInegi() {
+        return inegi;
+    }
+
+    public void setInegi(String inegi) {
+        this.inegi = inegi;
+    }
+
+    public String getPoblacion() {
+        return poblacion;
+    }
+
+    public void setPoblacion(String poblacion) {
+        this.poblacion = poblacion;
+    }
+
+    public String getClaveInegi5() {
+        return claveInegi5;
+    }
+
+    public void setClaveInegi5(String claveInegi5) {
+        this.claveInegi5 = claveInegi5;
+    }
+
+
 
 }

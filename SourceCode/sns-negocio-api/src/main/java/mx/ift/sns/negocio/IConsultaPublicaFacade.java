@@ -166,6 +166,8 @@ public interface IConsultaPublicaFacade {
      */
     Abn getAbnByCodigoNir(String nir) throws Exception;
 
+    List<Abn> getAbnByZona(int zona) throws Exception;
+
     /**
      * Parseo de un número.
      * @param numeracion String
@@ -222,6 +224,8 @@ public interface IConsultaPublicaFacade {
      * @return true, false
      */
     boolean existsNir(String nir);
+
+    boolean existsZona(String zona);
 
     /**
      * Devuelve el número de poblaciones de un estado.
@@ -414,6 +418,13 @@ public interface IConsultaPublicaFacade {
     Nir getNirByCodigo(int cdgNir);
 
     /**
+     * Recupera una lista de nirs por su zona.
+     * @param zona zona
+     * @return la lista de nirs
+     */
+    List<Nir> getNirByZona(int zona);
+
+    /**
      * Obtiene una lista de población numeració filtrada por proveedor y estado.
      * @param proveedorServ Proveedor
      * @param estado Estado
@@ -547,5 +558,34 @@ public interface IConsultaPublicaFacade {
 
     List<Region> getRegiones();
 
+    /**
+     * FJAH 27.05.2025
+     * @param idZona
+     * @return total de numeración asignada por zona
+     */
+    Integer getTotalNumeracionAsignadaPorZona(Integer idZona);
+
+
+    /**
+     * FJAH 27.06.2025
+     * @param idZona zona geográfica
+     * @return total de municipios únicos
+     */
+    Long getTotalMunicipiosByZona(Integer idZona) throws Exception;
+
+    /**
+     * FJAH 27.05.2025
+     * @param idZona
+     * @return
+     * @throws Exception
+     */
+    List<Municipio> findMunicipiosByZona(Integer idZona) throws Exception;
+
+    /**
+     * FJAH 29.05.2025
+     * @param idRegion
+     * @return
+     */
+    List<Proveedor> findAllPrestadoresServicioByZona(Integer idRegion);
 
 }

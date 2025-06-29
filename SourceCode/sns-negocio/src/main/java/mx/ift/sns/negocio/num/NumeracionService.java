@@ -1,6 +1,7 @@
 package mx.ift.sns.negocio.num;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 import javax.ejb.EJB;
 import javax.ejb.Remote;
@@ -115,6 +116,7 @@ public class NumeracionService implements INumeracionService {
                             num.setRango(rango);
                             num.setSna(numero.substring(ordenNirs[i], 6));
                             num.setCodigoNir(String.valueOf(cdg));
+                            num.setZona(String.valueOf(nir.getZona()));
                         }
                         if (rangoSerieDAO.existeNumeracionAsignada(nir, sna, numero.substring(6, 10))) {
                             encontrado = true;
@@ -156,7 +158,7 @@ public class NumeracionService implements INumeracionService {
     }
 
     /**
-     * Función que parse el numero nacional.
+     * Función que parse el número nacional.
      * @param numeracion String
      * @return Numero
      */
@@ -174,106 +176,40 @@ public class NumeracionService implements INumeracionService {
             throw new IllegalArgumentException("La numeracion no puede tener mas de " + LENGTH_NUM + " digitos.");
         }
 
-        /*
-         * if (numeracion.length() < LENGTH_NUM) { throw new
-         * IllegalArgumentException("La numeracion no puede tener menos de " + LENGTH_NUM + " digitos."); }
-         */
-
         if (numeracion.length() < LENGTH_NUM) {
-            while (numeracion.length() < LENGTH_NUM) {
-                numeracion = "0" + numeracion;
+            StringBuilder numeracionBuilder = new StringBuilder(numeracion);
+            while (numeracionBuilder.length() < LENGTH_NUM) {
+                numeracionBuilder.insert(0, "0");
             }
+            numeracion = numeracionBuilder.toString();
         }
 
         Numero num = new Numero();
-        String nirS = null;
-        String snaS = null;
-        String numS = null;
 
         ClaveServicio clave = adivinarClave(numeracion);
-        if (clave != null) {
-            ;
-        } else {
+        if (clave == null) {
             adivinarNir(numeracion, num);
-            // if (nirCalculado != null) {
-            // if (nirCalculado.getCodigo() <= 9) {
-            // /* ejemplo 2 52213 9000 */
-            // nirS = numeracion.substring(0, 1);
-            // snaS = numeracion.substring(1, 6);
-            // numS = numeracion.substring(6, 10);
-            //
-            // } else if (nirCalculado.getCodigo() <= 99) {
-            // /* ejemplo 22 2213 9000 */
-            // nirS = numeracion.substring(0, 2);
-            // snaS = numeracion.substring(2, 6);
-            // numS = numeracion.substring(6, 10);
-            // } else {
-            // /* ejemplo 222 213 9000 */
-            // nirS = numeracion.substring(0, 3);
-            // snaS = numeracion.substring(3, 6);
-            // numS = numeracion.substring(6, 10);
-            // }
-            // }
         }
-
-        /*
-         * IF (SUBSTR(cnumero,1,2) = 55) OR (SUBSTR(cnumero,1,2) = 33) OR (SUBSTR(cnumero,1,2) = 81) THEN Toma 2
-         * caracteres para el nir esto es magia
-         */
-        /*
-         * if (numeracion.startsWith("55") || numeracion.startsWith("33") || numeracion.startsWith("81")) { ejemplo 22
-         * 2213 9000 * nirS = numeracion.substring(0, 2); snaS = numeracion.substring(2, 6); numS =
-         * numeracion.substring(6, 10); } else { ejemplo 222 213 9000 * nirS = numeracion.substring(0, 3); snaS =
-         * numeracion.substring(3, 6); numS = numeracion.substring(6, 10); }
-         */
 
         if (num.getRango() != null) {
             return num;
         }
 
-        num.setCodigoNir(nirS);
-        num.setSna(snaS);
+        num.setCodigoNir(null);
+        num.setSna(null);
 
         LOGGER.debug("numeracion '{}' long= {} codigo nir '{}' sna '{}' num '{}'", numeracion, numeracion.length(),
-                nirS, snaS, numS);
-
-        Nir nir = null;
-        Serie serie = null;
-        RangoSerie rango = null;
-
-        // if (nirS != null) {
-        // try {
-        //
-        // nir = nirDAO.getNirByCodigo(Integer.parseInt(nirS));
-        // LOGGER.debug("{}", nir);
-        //
-        // if (nir != null) {
-        // serie = serieDAO.getSerie(new BigDecimal(snaS), nir.getId());
-        // LOGGER.debug("{}", serie);
-        //
-        // if (serie != null) {
-        // rango = rangoSerieDAO.getRangoPerteneceNumeracion(nir, serie.getId().getSna(), numS);
-        // LOGGER.debug("{}", rango);
-        // }
-        // }
-        // } catch (NoResultException e) {
-        // LOGGER.debug(" no encontrada");
-        //
-        // } catch (NonUniqueResultException e) {
-        // LOGGER.debug(" no es unica");
-        // } catch (Exception e) {
-        // LOGGER.debug("esta no deberia ser", e);
-        // }
-        // }
+                null, null, null);
 
         num.setNumero(numeracion);
-        num.setNir(nir);
-        num.setSerie(serie);
-        num.setNumeroInterno(numS);
+        num.setNir(null);
+        num.setSerie(null);
+        num.setNumeroInterno(null);
         num.setLocal(false);
         num.setNacional(true);
         num.setClave(clave);
-        num.setRango(rango);
+        num.setRango(null);
+        num.setZona(null);
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("{}", num);
@@ -309,6 +245,7 @@ public class NumeracionService implements INumeracionService {
         }
 
         num.setCodigoNir(null);
+        num.setZona(null);
         num.setSna(snaS);
 
         if (LOGGER.isDebugEnabled()) {
@@ -318,7 +255,7 @@ public class NumeracionService implements INumeracionService {
         Serie serie = new Serie();
         SeriePK idSerie = new SeriePK();
 
-        idSerie.setSna(new BigDecimal(snaS));
+        idSerie.setSna(new BigDecimal(Objects.requireNonNull(snaS)));
         serie.setId(idSerie);
 
         num.setNumero(numeracion);

@@ -61,6 +61,8 @@ public interface IAbnDao extends IBaseDAO<Abn> {
      */
     Abn getAbnByCodigoNir(String codigoNir);
 
+    List<Abn> getAbnByZona(int zona);
+
     /**
      * Cambia el Código de un ABN actualizando todas las tablas que hacen referencia a ése ABN.
      * @param pViejoAbn Información del ABN a modificar.

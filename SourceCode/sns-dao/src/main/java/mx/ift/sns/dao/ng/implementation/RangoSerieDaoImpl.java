@@ -2,9 +2,7 @@ package mx.ift.sns.dao.ng.implementation;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
 
 import javax.inject.Named;
@@ -1711,4 +1709,55 @@ public class RangoSerieDaoImpl extends BaseDAO<RangoSerie> implements IRangoSeri
         Query query = getEntityManager().createNamedQuery("generarPnnAux");
         query.executeUpdate();
     }
+
+    /**
+     * Metodo que recupera el total de NIR asignados a traves de la Zona.
+     */
+    @Override
+    public Integer getTotalNumeracionAsignadaPorZona(Integer idZona) {
+        String squery =
+                "SELECT SUM((rs.N_FINAL - rs.N_INICIO) + 1) " +
+                        "FROM RANGO_SERIE rs " +
+                        "JOIN CAT_NIR nir ON rs.ID_NIR = nir.ID_NIR " +
+                        "WHERE rs.ID_STATUS_RANGO != 'P' " +
+                        "AND nir.ZONA = ?1";
+
+        Object result = getEntityManager()
+                .createNativeQuery(squery)
+                .setParameter(1, idZona)
+                .getSingleResult();
+
+        return result != null ? ((Number) result).intValue() : 0;
+    }
+
+    /**
+     * FJAH 29.06.2025
+     * @param idZona
+     * @return
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Proveedor> findAllPrestadoresServicioByZona(Integer idZona) {
+        String sql =
+                "SELECT * FROM (" +
+                        "    SELECT DISTINCT p.* " +
+                        "    FROM RANGO_SERIE rs " +
+                        "    JOIN CAT_NIR n ON rs.ID_NIR = n.ID_NIR " +
+                        "    JOIN CAT_PST p ON rs.ID_PST_ARRENDATARIO = p.ID_PST " +
+                        "    WHERE n.ZONA = ? AND rs.ID_STATUS_RANGO != 'P' " +
+                        "    UNION " +
+                        "    SELECT DISTINCT p.* " +
+                        "    FROM RANGO_SERIE rs " +
+                        "    JOIN CAT_NIR n ON rs.ID_NIR = n.ID_NIR " +
+                        "    JOIN CAT_PST p ON rs.ID_PST_ASIGNATARIO = p.ID_PST " +
+                        "    WHERE n.ZONA = ? AND rs.ID_STATUS_RANGO != 'P' " +
+                        ") ORDER BY NOMBRE_CORTO";
+
+        return getEntityManager()
+                .createNativeQuery(sql, Proveedor.class)
+                .setParameter(1, idZona)
+                .setParameter(2, idZona)
+                .getResultList();
+    }
+
 }

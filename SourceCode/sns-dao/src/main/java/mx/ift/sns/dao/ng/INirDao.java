@@ -27,6 +27,8 @@ public interface INirDao extends IBaseDAO<Nir> {
      */
     Nir getNirByCodigo(int cdgNir);
 
+    List<Nir> getNirByZona(int zona);
+
     /**
      * Devuelve la lista de nirs a partir del ABN.
      * @param numAbn numAbn
@@ -61,6 +63,8 @@ public interface INirDao extends IBaseDAO<Nir> {
      * @return boolean
      */
     boolean existsNir(String nir);
+
+    boolean existsZona(String zona);
 
     /**
      * Comprueba que un NIR existe con un ABN dado.

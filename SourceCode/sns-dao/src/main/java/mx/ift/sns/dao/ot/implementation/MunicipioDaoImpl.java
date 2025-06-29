@@ -196,4 +196,51 @@ public class MunicipioDaoImpl extends BaseDAO<Municipio> implements IMunicipioDa
         return result;
     }
 
+    /**
+     * FJAH 27.06.2025
+     * @param idZona
+     * @return
+     */
+    @Override
+    public List<Object[]> findMunicipiosByZona(Integer idZona) {
+        String sql =
+                "SELECT DISTINCT " +
+                        "m.ID_MUNICIPIO, m.NOMBRE, cp.ID_ESTADO, cp.ID_INEGI, cp.ID_POBLACION, " +
+                        "SUBSTR(TO_CHAR(cp.ID_INEGI), 1, 5) AS CLAVE_INEGI_5 " +
+                        "FROM RANGO_SERIE rs " +
+                        "JOIN CAT_NIR cn ON rs.ID_NIR = cn.ID_NIR " +
+                        "JOIN CAT_POBLACION cp ON rs.ID_POBLACION = cp.ID_INEGI " +
+                        "JOIN CAT_MUNICIPIO m ON cp.ID_MUNICIPIO = m.ID_MUNICIPIO " +
+                        "WHERE cn.ZONA = ? " +
+                        "ORDER BY m.NOMBRE";
+
+        return getEntityManager()
+                .createNativeQuery(sql)
+                .setParameter(1, idZona)
+                .getResultList();
+    }
+    @Override
+    public Long countMunicipiosByZona(Integer idZona) {
+        String sql =
+                "SELECT SUM(TOTAL_MUNICIPIOS) AS TOTAL_MUNICIPIOS_ZONA " +
+                        "FROM ( " +
+                        "   SELECT COUNT(DISTINCT cm.ID_MUNICIPIO) AS TOTAL_MUNICIPIOS " +
+                        "   FROM RANGO_SERIE rs " +
+                        "   JOIN CAT_NIR cn ON rs.ID_NIR = cn.ID_NIR " +
+                        "   JOIN CAT_POBLACION cp ON rs.ID_POBLACION = cp.ID_INEGI " +
+                        "   JOIN CAT_MUNICIPIO cm ON cp.ID_MUNICIPIO = cm.ID_MUNICIPIO " +
+                        "   JOIN CAT_ESTADO ce ON cp.ID_ESTADO = ce.ID_ESTADO " +
+                        "   WHERE cn.ZONA = ? " +
+                        "   GROUP BY ce.NOMBRE " +
+                        ")";
+
+        Object result = getEntityManager()
+                .createNativeQuery(sql)
+                .setParameter(1, idZona)
+                .getSingleResult();
+
+        return result != null ? ((Number) result).longValue() : 0L;
+    }
+
+
 }

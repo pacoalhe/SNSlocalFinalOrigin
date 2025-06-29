@@ -708,6 +708,13 @@ public interface ISeriesService {
     Nir getNirByCodigo(int cdgNir);
 
     /**
+     * Recupera una lista de nir por su codigo.
+     * @param zona zona
+     * @return la lista de nir
+     */
+    List<Nir> getNirByZona(int zona);
+
+    /**
      * Obtiene una lista de población numeració filtrada por proveedor y estado.
      * @param proveedorServ Proveedor
      * @param estado Estado
@@ -872,4 +879,19 @@ public interface ISeriesService {
      * @return boolean
      */
     boolean isRangosPentientesByNir(Nir nir);
+
+    /**
+     * FJAH 27.06.2025
+     * @param idZona
+     * @return
+     */
+    Integer getTotalNumeracionAsignadaPorZona(Integer idZona);
+
+    /**
+     * FJAH 29.06.2025
+     * @param idRegion
+     * @return
+     */
+    List<Proveedor> findAllPrestadoresServicioByZona(Integer idRegion);
+
 }

@@ -1114,6 +1114,8 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
         } finally {
             FileUtils.deleteQuietly(tmp);
             FileUtils.deleteQuietly(tmp2);
+            FileUtils.deleteQuietly(tmp3);
+            FileUtils.deleteQuietly(tmp4);
         }
     }
 

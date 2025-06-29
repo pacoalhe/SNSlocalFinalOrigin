@@ -288,6 +288,11 @@ public class OrganizacionTerritorialService implements IOrganizacionTerritorialS
     }
 
     @Override
+    public  List<Abn> getAbnByZona(int zona) {
+        return abnDao.getAbnByZona(zona);
+    }
+
+    @Override
     public Region getRegionById(BigDecimal id) {
         return regionDao.getRegionById(id);
     }
@@ -599,6 +604,11 @@ public class OrganizacionTerritorialService implements IOrganizacionTerritorialS
     }
 
     @Override
+    public boolean existsZona(String zona) {
+        return nirDao.existsZona(zona);
+    }
+
+    @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public List<Nir> findNirsByDigitos(int pCdgNir) {
         return nirDao.findNirsByDigitos(pCdgNir);
@@ -741,6 +751,43 @@ public class OrganizacionTerritorialService implements IOrganizacionTerritorialS
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public List<Poblacion> findPoblacionByNombreAndMunicipioAndEstado(String nombrePob, Municipio mun){
         return poblacionDao.findPoblacionByNombreAndMunicipioAndEstado(nombrePob, mun.getId().getCodMunicipio());
+    }
+
+    /**
+     * FJAH 27.05.2025
+     * @param idZona
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public List<Municipio> findMunicipiosByZona(Integer idZona) throws Exception {
+        List<Object[]> resultados = municipioDao.findMunicipiosByZona(idZona);
+        List<Municipio> municipios = new ArrayList<>();
+
+        for (Object[] row : resultados) {
+            Municipio m = new Municipio();
+
+            MunicipioPK pk = new MunicipioPK();
+            pk.setCodMunicipio(String.valueOf(row[0])); // ID_MUNICIPIO
+            pk.setCodEstado(String.valueOf(row[2]));    // ID_ESTADO
+            m.setId(pk);
+
+            m.setNombre((String) row[1]);               // NOMBRE del municipio
+            m.setClaveInegi5((String) row[5]);          // CLAVE_INEGI_5 (SUBSTR del ID_INEGI)
+
+            Estado estado = new Estado();
+            estado.setNombre((String) row[4]);          // NOMBRE del estado
+            m.setEstado(estado);
+
+            municipios.add(m);
+        }
+
+        return municipios;
+    }
+
+    @Override
+    public Long countMunicipiosByZona(Integer idZona) throws Exception {
+        return municipioDao.countMunicipiosByZona(idZona);
     }
 
 }

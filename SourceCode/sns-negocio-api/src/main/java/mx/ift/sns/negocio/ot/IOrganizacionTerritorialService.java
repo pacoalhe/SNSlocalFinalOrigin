@@ -235,6 +235,8 @@ public interface IOrganizacionTerritorialService {
      */
     Abn getAbnByCodigoNir(String codigoNir);
 
+    List<Abn> getAbnByZona(int zona);
+
     /**
      * Obtiene la region por su id.
      * @param id region
@@ -490,6 +492,8 @@ public interface IOrganizacionTerritorialService {
      */
     boolean existsNir(String nir);
 
+    boolean existsZona(String zona);
+
     /**
      * Método que devuelve todos los Nirs de tres cifras que cuyas dos primeras cifras coinciden con el código pasado
      * por parámetros.
@@ -666,5 +670,22 @@ public interface IOrganizacionTerritorialService {
     Municipio findMunicipioByNombreAndEstado(String nombreMun, String nombreEst) throws Exception;
 
     List<Poblacion> findPoblacionByNombreAndMunicipioAndEstado(String nombrePob, Municipio mun);
+
+    /**
+     * FJAH 27.06.2025
+     * @param idZona zona seleccionada
+     * @return lista de municipios por zona
+     * @throws Exception excepcion
+     */
+    List<Municipio> findMunicipiosByZona(Integer idZona) throws Exception;
+
+    /**
+     * FJAH 27.06.2025
+     * @param idZona zona seleccionada
+     * @return total de municipios por zona
+     * @throws Exception en caso de error
+     */
+    Long countMunicipiosByZona(Integer idZona) throws Exception;
+
 
 }
