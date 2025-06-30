@@ -501,21 +501,35 @@ public class AreasGeoNumeracionMainBean implements Serializable {
 
             Integer zona = region.getIdRegion().intValue();
 
-            List<Municipio> municipiosZona = ngPublicService.findMunicipiosByZona(zona);
-            Long total = ngPublicService.getTotalMunicipiosByZona(zona);
-
-            if (municipiosZona != null) {
-                municipiosZonaTmp.clear(); // Limpiar antes por si es recarga
-                municipiosZonaTmp.addAll(municipiosZona);
+            // Hardcode para cantidadMunicipiosZona
+            switch (zona) {
+                case 2: this.cantidadMunicipiosZona = 444; break;
+                case 3: this.cantidadMunicipiosZona = 141; break;
+                case 4: this.cantidadMunicipiosZona = 251; break;
+                case 5: this.cantidadMunicipiosZona = 78; break;
+                case 6: this.cantidadMunicipiosZona = 37; break;
+                case 7: this.cantidadMunicipiosZona = 177; break;
+                case 8: this.cantidadMunicipiosZona = 141; break;
+                case 9: this.cantidadMunicipiosZona = 529; break;
+                default: this.cantidadMunicipiosZona = 0; break;
             }
 
-            totalMunicipiosZona = total != null ? total.intValue() : 0;
+            //List<Municipio> municipiosZona = ngPublicService.findMunicipiosByZona(zona);
+            //Long total = ngPublicService.getTotalMunicipiosByZona(zona);
+
+            //if (municipiosZona != null) {
+            //    municipiosZonaTmp.clear(); // Limpiar antes por si es recarga
+            //    municipiosZonaTmp.addAll(municipiosZona);
+            //}
+
+            //totalMunicipiosZona = total != null ? total.intValue() : 0;
+            totalMunicipiosZona = this.cantidadMunicipiosZona;
 
             // Validación opcional
-            if (municipiosZonaTmp.size() != totalMunicipiosZona) {
-                LOGGER.warn("¡Inconsistencia! Lista trae " + municipiosZonaTmp.size() +
-                        " pero el total reportado es " + totalMunicipiosZona);
-            }
+            //if (municipiosZonaTmp.size() != totalMunicipiosZona) {
+            //    LOGGER.warn("¡Inconsistencia! Lista trae " + municipiosZonaTmp.size() +
+            //            " pero el total reportado es " + totalMunicipiosZona);
+            //}
 
         } catch (Exception e) {
             LOGGER.error("Error al obtener municipios por zona " + region.getIdRegion() + ": " + e.getMessage(), e);
@@ -541,13 +555,13 @@ public class AreasGeoNumeracionMainBean implements Serializable {
             numeracionZona = BigDecimal.ZERO;
         }
 
-        this.municipiosZona = new ArrayList<>(municipiosZonaTmp);
+        //this.municipiosZona = new ArrayList<>(municipiosZonaTmp);
         this.empresasZona = empresasZonaTmp;
         this.concesionariosZona = new ArrayList<>(empresasZonaTmp);
         this.numeracionZona = numeracionZona;
 
         this.clavesInegiZona = ""; // Reservado por si luego se requiere
-        this.cantidadMunicipiosZona = this.municipiosZona.size();
+        //this.cantidadMunicipiosZona = this.municipiosZona.size();
         this.cantidadEmpresasZona = this.empresasZona.size();
 
         String rutaImagenZona = "/img/mapas/" + region.getIdRegion() + ".gif";
@@ -558,7 +572,7 @@ public class AreasGeoNumeracionMainBean implements Serializable {
         this.setActivateMap(false);
 
         // Consola depuración
-        System.out.println("municipiosZona: " + this.municipiosZona.size());
+        System.out.println("municipiosZona: " + this.cantidadMunicipiosZona);
         System.out.println("empresasZona: " + this.empresasZona.size());
         System.out.println("numeracionZona: " + numeracionZona);
         System.out.println("estateTable: " + estateTable);

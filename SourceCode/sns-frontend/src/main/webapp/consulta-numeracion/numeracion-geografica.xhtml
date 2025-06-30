@@ -22,7 +22,9 @@
 				  closable="false" resizable="false" showHeader="false">
 			<ui:include src="/componentes/loader.xhtml"/>
 		</p:dialog>
-
+		<!-- <p:blockUI block="FORM_myform" widgetVar="FORM_myform_BUI" >
+            <ui:include src="/componentes/loader.xhtml"/>
+        </p:blockUI> -->
 		<p:panel id="P_main" styleClass="mycustompanel">
 			<h:form id="FORM_myform">
 
@@ -49,11 +51,13 @@
 											 disabled="#{!consultaPublicaMarcacionBean.nationalNumberInputActivated}"
 											 autocomplete="off">
 
+
 									<p:ajax event="keyup"
 											listener="#{consultaPublicaMarcacionBean.checkFormStatus}"
-											update="BTN_publicSearch TXT_Zona "
+											update="BTN_publicSearch TXT_LocalNumber"
 											global="false">
 									</p:ajax>
+
 
 								</p:inputText>
 								<p style="font-size: 11px">Ingresar los 10 dígitos del número nacional</p>
@@ -63,22 +67,38 @@
 							<h:panelGrid>
 								<p:outputLabel for="TXT_Zona" value="Zona:"/>
 								<p:inputText id="TXT_Zona"
-											 value="#{consultaPublicaMarcacionBean.zona}"
-											 disabled="#{!consultaPublicaMarcacionBean.zonaInputActivated}"
+											 value="#{consultaPublicaMarcacionBean.codigoNir}"
+											 disabled="#{!consultaPublicaMarcacionBean.nirInputActivated}"
 											 maxlength="1" autocomplete="off">
 
 									<p:ajax event="keyup"
 											listener="#{consultaPublicaMarcacionBean.checkFormStatus}"
-											update="BTN_publicSearch  TXT_NationalNumber"
+											update="BTN_publicSearch TXT_LocalNumber TXT_NationalNumber"
 											global="false">
 									</p:ajax>
 
 
 								</p:inputText>
-								<p style="font-size: 11px">Ingresar un dígito del 2 al 9</p>
 							</h:panelGrid>
 
-							<h:outputText value="" style="visibility:hidden" />
+							<h:panelGrid>
+
+								<!-- p:outputLabel for="TXT_LocalNumber" value="Número Local:" / -->
+
+
+								<p:inputText id="TXT_LocalNumber" maxlength="8" type="hidden"
+											 value="#{consultaPublicaMarcacionBean.localNumber}"
+											 disabled="#{!consultaPublicaMarcacionBean.localNumberInputActivated}"
+											 autocomplete="off">
+									<p:ajax event="keyup"
+											listener="#{consultaPublicaMarcacionBean.checkFormStatus}"
+											update="BTN_publicSearch TXT_Zona TXT_NationalNumber"
+											global="false">
+									</p:ajax>
+
+								</p:inputText>
+
+							</h:panelGrid>
 
 
 						</p:panelGrid>
@@ -88,7 +108,7 @@
 						<p:commandButton value="Buscar" id="BTN_publicSearch"
 										 disabled="#{!consultaPublicaMarcacionBean.formButtonActivated}"
 										 actionListener="#{consultaPublicaMarcacionBean.publicSearch}"
-										 update="P_containerConsulta P_containerpoblaciones P_containernumeracion P_containerLocal "
+										 update="P_containerConsulta P_containerpoblaciones P_containernumeracion P_containerLocal P_containerDesplegable P_containerZona"
 										 style="width: auto; height: auto; font-size: 13px;"
 										 icon="ui-icon-search" styleClass="sombreado">
 
@@ -97,12 +117,34 @@
 						<p:commandButton value="Limpiar" id="LINK_CLEAR"
 										 actionListener="#{consultaPublicaMarcacionBean.resetSearch}"
 										 update="P_containerConsulta P_containerpoblaciones P_containernumeracion
-							P_containerLocal  P_containerinfoMunicipio P_containerinfopobNoNir"
+							P_containerLocal P_containerDesplegable P_containerinfoMunicipio P_containerinfopobNoNir"
 										 style="width: auto; height: auto; font-size: 13px; "
 										 icon="ui-icon-arrowrefresh-1-e" styleClass="sombreado">
 						</p:commandButton>
 
-						<br/>
+						<br></br>
+						<br></br>
+					</p:panel>
+					<p:panel id="P_containerDesplegable" styleClass="mycustompanel">
+						<!-- Lista desplegable de selección de NIR -->
+						<p:selectOneMenu
+								rendered="#{consultaPublicaMarcacionBean.comboNumeroLocalNirsActivated}"
+								id="COMBO_nirsNumLocal"
+								value="#{consultaPublicaMarcacionBean.nirNumeroLocalSelected}">
+
+							<p:ajax event="change"
+									listener="#{consultaPublicaMarcacionBean.searchLocalNumberWithNir}"
+									update="P_containernumeracion P_containerLocal P_containerDesplegable P_containerConsulta P_containerinfopobNoNir P_containerinfoMunicipio"></p:ajax>
+
+							<f:selectItem itemLabel="Seleccionar Zona" selected="true"/>
+							<f:selectItems
+									value="#{consultaPublicaMarcacionBean.nirsNumeroLocal}"
+									var="nirNumeroLocal"
+									itemLabel="ZONA : #{nirNumeroLocal.zona} | #{nirNumeroLocal.codigo} | #{nirNumeroLocal.abn.nombre}, #{nirNumeroLocal.abn.poblacionAncla.municipio.estado.abreviatura}"
+									itemValue="#{nirNumeroLocal.zona}">
+							</f:selectItems>
+
+						</p:selectOneMenu>
 						<br/>
 					</p:panel>
 				</p:panel>
@@ -111,59 +153,60 @@
 					<!-- Tabla resultados poblaciones -->
 
 					<p:dataTable id="TBL_populationsTable"
-						rendered="#{consultaPublicaMarcacionBean.populationsTableActivated}"
-						var="poblacion"
-						value="#{consultaPublicaMarcacionBean.poblaciones}"
-						paginator="true"
-						paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-						rowsPerPageTemplate="#{consultaPublicaMarcacionBean.numeroRegistros}"
-						paginatorPosition="bottom" style="font-size:14px"
-						styleClass="mycustomtable">
+								 rendered="#{consultaPublicaMarcacionBean.populationsTableActivated}"
+								 var="poblacion"
+								 value="#{consultaPublicaMarcacionBean.poblaciones}"
+								 paginator="true"
+								 paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+								 rowsPerPageTemplate="#{consultaPublicaMarcacionBean.numeroRegistros}"
+								 paginatorPosition="bottom" style="font-size:14px"
+								 styleClass="mycustomtable">
 						<f:facet name="header">CIUDADES Y POBLACIONES ENCONTRADAS</f:facet>
 						<p:columnGroup type="header">
 							<p:row>
-								<p:column headerText="Nombre" />
-								<p:column headerText="Municipio" />
-								<p:column headerText="EDO" />
-								<p:column headerText="AGN" />
-								<p:column headerText="NIR" />
-								<p:column headerText="Clave INEGI" />
+								<p:column headerText="Nombre"/>
+								<p:column headerText="Municipio"/>
+								<p:column headerText="EDO"/>
+								<p:column headerText="AGN"/>
+								<p:column headerText="ZONA"/>
+								<p:column headerText="Clave INEGI"/>
 							</p:row>
 						</p:columnGroup>
 						<p:column style="text-align:center;">
 							<p:commandLink update=":ML_infopoblacion"
-								actionListener="#{detallePoblacionBean.setDetallePoblacionData(poblacion)}"
-								oncomplete="PF('infopoblacion').show();">
-								<h:outputText value="#{poblacion.nombre}" />
+										   actionListener="#{detallePoblacionBean.setDetallePoblacionData(poblacion)}"
+										   oncomplete="PF('infopoblacion').show();">
+								<h:outputText value="#{poblacion.nombre}"/>
 							</p:commandLink>
 
 						</p:column>
 						<p:column style="text-align:center">
-							<h:outputText value="#{poblacion.municipio.nombre}" />
+							<h:outputText value="#{poblacion.municipio.nombre}"/>
 						</p:column>
 
 						<p:column style="text-align:center">
-							<h:outputText value="#{poblacion.municipio.estado.abreviatura}" />
+							<h:outputText value="#{poblacion.municipio.estado.abreviatura}"/>
 						</p:column>
 						<p:column style="text-align:center">
-							<h:outputText value="#{poblacion.abn.nombre}" />
+							<h:outputText value="#{poblacion.abn.nombre}"/>
 						</p:column>
 						<p:column style="text-align:center">
 
 							<ui:repeat var="nir" value="#{poblacion.abn.nirs}"
-								varStatus="status">
+									   varStatus="status">
 								<p:commandLink update=":ML_infogeo"
-									oncomplete="PF('infogeo').show();">
-									<h:outputText value="#{nir.codigo} " />
+											   actionListener="#{consultaPublicaMarcacionBean.setAndSearchNir(nir.codigo)}"
+											   oncomplete="PF('infogeo').show();">
+									<h:outputText value="#{nir.zona} "/>
 								</p:commandLink>
 								<br></br>
 							</ui:repeat>
 
 						</p:column>
 						<p:column style="text-align:center">
-							<h:outputText value="#{poblacion.inegi}" />
+							<h:outputText value="#{poblacion.inegi}"/>
 						</p:column>
-						<p:effect type="clip" event="render" />
+						<p:effect type="clip" event="render"/>
 					</p:dataTable>
 				</p:panel>
 				<p:panel id="P_containernumeracion" styleClass="mycustompanel">
@@ -191,7 +234,7 @@
 						<p:row>
 							<h:outputText
 									rendered="#{consultaPublicaMarcacionBean.nir != null}"
-									value="#{consultaPublicaMarcacionBean.numeroConsultado.zona}"/>
+									value="#{consultaPublicaMarcacionBean.nir.zona}"/>
 						</p:row>
 
 						<p:row>
@@ -203,7 +246,10 @@
 
 								<h:outputText value=" #{consultaPublicaMarcacionBean.numeroConsultado.numero}"/>
 							</h:panelGroup>
+
+
 						</p:row>
+
 
 						<p:row>
 							<h:outputText value="Marcación desde los Estados Unidos y Canadá"/>
@@ -239,12 +285,14 @@
 
 					</p:panelGrid>
 				</p:panel>
+
 				<p:panel id="P_containerLocal" styleClass="mycustompanel">
 					<p:panelGrid id="TBL_localServiceTable"
-								 rendered="#{consultaPublicaMarcacionBean.zonaInfoTableActivated}"
+								 rendered="#{consultaPublicaMarcacionBean.localServiceTableActivated}"
 								 columns="2" layout="grid" styleClass="mycustomtablesa">
 						<f:facet name="header">
-							INFORMACIÓN DE LA ZONA
+
+							INFORMACIÓN DEL ÁREA GEOGRÁFICA DE NUMERACIÓN
 						</f:facet>
 						<p:row>
 							<h:outputText
@@ -252,7 +300,8 @@
 						</p:row>
 						<p:row>
 
-							<h:outputText value="#{consultaPublicaMarcacionBean.numeroConsultado.zona}"/>
+							<h:outputText value="#{consultaPublicaMarcacionBean.nir != null ? consultaPublicaMarcacionBean.nir.zona : consultaPublicaMarcacionBean.zona}" />
+
 						</p:row>
 						<p:row>
 							<h:outputText value="Longitud del número nacional"/>
@@ -266,8 +315,10 @@
 						<p:row>
 							<h:panelGroup style="display:block;">
 								<h:outputText styleClass="greenText" value=" "/>
-								<h:outputText value="Número nacional (10 dígitos)"/>
+								<h:outputText
+										value="Número nacional (10 dígitos)"/>
 							</h:panelGroup>
+
 						</p:row>
 
 
@@ -276,7 +327,9 @@
 						</p:row>
 						<p:row>
 							<h:outputText value="011 52 "/>
-							<h:outputText value=" " rendered="#{consultaPublicaMarcacionBean.tipoModalidadRed eq 'Móvil-CPP'}"/>
+							<h:outputText value=" "
+										  rendered="#{consultaPublicaMarcacionBean.tipoModalidadRed eq 'Móvil-CPP'}"/>
+							<!-- h:outputText value="#{consultaPublicaMarcacionBean.nir.codigo} " / -->
 							<h:outputText value=" + Número nacional (10 dígitos)"/>
 						</p:row>
 						<p:row>
@@ -284,7 +337,9 @@
 						</p:row>
 						<p:row>
 							<h:outputText value="+52 "/>
-							<h:outputText value="" rendered="#{consultaPublicaMarcacionBean.tipoModalidadRed eq 'Móvil-CPP'}"/>
+							<h:outputText value=""
+										  rendered="#{consultaPublicaMarcacionBean.tipoModalidadRed eq 'Móvil-CPP'}"/>
+							<!-- h:outputText value="#{consultaPublicaMarcacionBean.nir.codigo}" / -->
 							<h:outputText value=" + Número nacional (10 dígitos)"/>
 						</p:row>
 
@@ -293,23 +348,18 @@
 						</p:row>
 						<p:row>
 
-							<p:commandLink
-									actionListener="#{detallePoblacionBean.activateAndSetMunicipio(consultaPublicaMarcacionBean.abn, consultaPublicaMarcacionBean.nir)}"
-									update=":DLG_detallePoblacionMunicipioProveedor"
-									oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
-								<h:outputText
-										value="#{consultaPublicaMarcacionBean.municipiosNir.size()}"/>
-							</p:commandLink>
+							<h:outputText value="#{consultaPublicaMarcacionBean.municipiosNir.size()}" />
+
 						</p:row>
 
 						<p:row>
 							<h:outputText
-									value="Proveedores que prestan el servicio dentro de la zona"/>
+									value="Proveedores de telefonía que prestan el servicio dentro de la zona"/>
 						</p:row>
 						<p:row>
 
 							<p:commandLink
-									actionListener="#{detallePoblacionBean.activateAndSetConcesionario(consultaPublicaMarcacionBean.abn, consultaPublicaMarcacionBean.nir)}"
+									actionListener="#{consultaPublicaMarcacionBean.cargarProveedoresZonaParaDialogo}"
 									update=":DLG_detallePoblacionMunicipioProveedor"
 									oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
 								<h:outputText
@@ -330,89 +380,41 @@
 
 
 				<p:panel id="P_containerinfoMunicipio" styleClass="mycustompanel">
-					<p:panelGrid id="TBL_municipioInfoTable"
-						rendered="#{consultaPublicaMarcacionBean.municipioInfoTableActivated}"
-						columns="2" layout="grid" styleClass="mycustomtablesa">
+
+					<p:panelGrid id="TBL_localServiceTableMunicipio"
+								 rendered="#{consultaPublicaMarcacionBean.municipioInfoTableActivated}"
+								 columns="2" layout="grid" styleClass="mycustomtablesa">
 
 						<f:facet name="header">
-           			INFORMACIÓN BASICA DE <h:outputText
-								rendered="#{consultaPublicaMarcacionBean.municipio != null}"
-								value="#{consultaPublicaMarcacionBean.municipio.nombre}" />
+							INFORMACIÓN DE LA ZONA
 						</f:facet>
 
 						<p:row>
 							<h:outputText
-								value="Número(s) Identificador(es) de Región (Claves de larga distancia):" />
+									value="Zona:"/>
 						</p:row>
 						<p:row>
 							<ui:repeat var="nir"
-								value="#{consultaPublicaMarcacionBean.nirsMunicipio}">
-								<h:outputText value="#{nir.codigo}" />
-								<br></br>
-							</ui:repeat>
-						</p:row>
-						<p:row>
-							<h:outputText
-								value="Proveedores de telefonía que prestan servicio en esta ciudad" />
-						</p:row>
-						<p:row>
-							<p:commandLink
-								actionListener="#{listaEmpresaTelefoniaBean.setPrestadorNumero(consultaPublicaMarcacionBean.poblacionNumero)}"
-								update="P_containerConsulta :paginated-results :FORM_concesionarioSL"
-								oncomplete="PF('listadoProveedor').show();">
-								<h:outputText
-									value="#{consultaPublicaMarcacionBean.proveedoresMunicipio.size()} " />
-							</p:commandLink>
-						</p:row>
-
-
-
-						<h:outputText
-							value="Numeración asignada (no representa líneas en servicio)" />
-						<h:outputText
-							value="#{consultaPublicaMarcacionBean.numeracionAsignadaMunicipioFormat}" />
-
-						<h:outputText value="Clave INEGI" />
-						<h:outputText
-							rendered="#{consultaPublicaMarcacionBean.municipio != null}"
-							value="#{consultaPublicaMarcacionBean.inegiMunicipio}" />
-
-					</p:panelGrid>
-
-					<p:panelGrid id="TBL_localServiceTableMunicipio"
-						rendered="#{consultaPublicaMarcacionBean.municipioInfoTableActivated}"
-						columns="2" layout="grid" styleClass="mycustomtablesa">
-
-						<f:facet name="header">
-           			INFORMACIÓN DEL ÁREA GEOGRÁFICA DE NUMERACIÓN
-       			</f:facet>
-
-						<p:row>
-							<h:outputText
-								value="Número(s) Identificador(es) de Región (Claves de larga distancia):" />
-						</p:row>
-						<p:row>
-							<ui:repeat var="nir"
-								value="#{consultaPublicaMarcacionBean.nirsAbn}"
-								varStatus="status">
+									   value="#{consultaPublicaMarcacionBean.nirsAbn}"
+									   varStatus="status">
 								<h:outputText styleClass="nirs #{status.last?'last':''}"
-									value="#{nir.codigo}" />
+											  value="#{nir.zona}"/>
 							</ui:repeat>
 						</p:row>
 
-						<h:outputText value="Longitud del número nacional" />
+						<h:outputText value="Longitud del número nacional"/>
 
-							<h:outputText
-							value="10 dígitos" />
+						<h:outputText
+								value="10 dígitos"/>
 
 						<p:row>
-							<h:outputText value="Marcación nacional desde un número fijo o móvil" />
+							<h:outputText value="Marcación nacional desde un número fijo o móvil"/>
 						</p:row>
 						<p:row>
 							<h:panelGroup style="display:block;">
-								<h:outputText styleClass="greenText" value="" />
+								<h:outputText styleClass="greenText" value=""/>
 								<h:outputText
-									value="Número nacional (10 dígitos)" />
+										value="Número nacional (10 dígitos)"/>
 							</h:panelGroup>
 
 
@@ -420,80 +422,57 @@
 
 
 						<p:row>
-							<h:outputText value="Marcación desde los Estados Unidos y Canadá" />
+							<h:outputText value="Marcación desde los Estados Unidos y Canadá"/>
 						</p:row>
 						<p:row>
-							<h:outputText value="011 52 " />
+							<h:outputText value="011 52 "/>
 							<h:outputText
-								value="+ Número nacional (10 dígitos)" />
+									value="+ Número nacional (10 dígitos)"/>
 						</p:row>
 
 						<p:row>
-							<h:outputText value="Marcación desde el resto del Mundo" />
+							<h:outputText value="Marcación desde el resto del Mundo"/>
 						</p:row>
 
 						<p:row>
-							<h:outputText value="+52 " />
+							<h:outputText value="+52 "/>
 							<h:outputText
-								value="+ Número nacional (10 dígitos)" />
+									value="+ Número nacional (10 dígitos)"/>
 						</p:row>
-						<h:outputText
-							value="Ciudad con mayor cantidad de numeración asignada"
-							rendered="#{consultaPublicaMarcacionBean.poblacionAbnMaxNumAsignada != null}" />
-						<h:outputText
-							value="#{consultaPublicaMarcacionBean.poblacionAbnMaxNumAsignada.nombre}"
-							rendered="#{consultaPublicaMarcacionBean.poblacionAbnMaxNumAsignada != null}" />
 
 						<p:row>
-							<h:outputText value="Poblaciones con numeración asignada" />
+							<h:outputText value="Municipios que conforman la zona"/>
 						</p:row>
 						<p:row>
-							<p:commandLink
-								actionListener="#{detallePoblacionBean.activateAndSetPoblacion(consultaPublicaMarcacionBean.nir)}"
-								update=":DLG_detallePoblacionMunicipioProveedor"
-								oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
-								<h:outputText
-									value="#{consultaPublicaMarcacionBean.poblacionesNir.size()}" />
-							</p:commandLink>
+
+							<h:outputText value="#{consultaPublicaMarcacionBean.municipiosNir.size()}" />
+
 						</p:row>
+
 						<p:row>
-							<h:outputText value="Municipios que conforman el Área Geográfica de Numeración" />
+							<h:outputText
+									value="Proveedores de telefonía que prestan el servicio dentro de la zona"/>
 						</p:row>
 						<p:row>
 
 							<p:commandLink
-								actionListener="#{detallePoblacionBean.activateAndSetMunicipio(consultaPublicaMarcacionBean.abn, consultaPublicaMarcacionBean.nir)}"
-								update=":DLG_detallePoblacionMunicipioProveedor"
-								oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
+									rendered="#{consultaPublicaMarcacionBean.abn != null and consultaPublicaMarcacionBean.nir != null}"
+									actionListener="#{detallePoblacionBean.activateAndSetConcesionario(consultaPublicaMarcacionBean.abn, consultaPublicaMarcacionBean.nir)}"
+									update=":DLG_detallePoblacionMunicipioProveedor"
+									oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
 								<h:outputText
-									value="#{consultaPublicaMarcacionBean.municipiosNir.size()}" />
-							</p:commandLink>
-						</p:row>
-
-						<p:row>
-							<h:outputText
-								value="Proveedores de telefonía que prestan el servicio dentro del Área Geográfica de Numeración" />
-						</p:row>
-						<p:row>
-
-							<p:commandLink
-								rendered="#{consultaPublicaMarcacionBean.abn != null and consultaPublicaMarcacionBean.nir != null}"
-								actionListener="#{detallePoblacionBean.activateAndSetConcesionario(consultaPublicaMarcacionBean.abn, consultaPublicaMarcacionBean.nir)}"
-								update=":DLG_detallePoblacionMunicipioProveedor"
-								oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
-								<h:outputText
-									value="#{consultaPublicaMarcacionBean.proveedoresNir.size()}" />
+										value="#{consultaPublicaMarcacionBean.proveedoresNir.size()}"/>
 							</p:commandLink>
 							<h:outputText
-								rendered="#{consultaPublicaMarcacionBean.abn == null or consultaPublicaMarcacionBean.nir == null}"
-								value="El área consultada no tiene un NIR o ABN asociado" />
+									rendered="#{consultaPublicaMarcacionBean.abn == null or consultaPublicaMarcacionBean.nir == null}"
+									value="El área consultada no tiene un NIR o ABN asociado"/>
 						</p:row>
 
 
 						<h:outputText
-							value="Numeración asignada (no representa líneas en servicio)" />
+								value="Numeración asignada (no representa líneas en servicio)"/>
 						<h:outputText
-							value="#{consultaPublicaMarcacionBean.numeracionNirFormat}" />
+								value="#{consultaPublicaMarcacionBean.numeracionNirFormat}"/>
 
 					</p:panelGrid>
 
@@ -502,173 +481,107 @@
 
 
 				<p:panel id="P_containerinfopobNoNir" styleClass="mycustompanel">
-					<p:panelGrid columns="2" layout="grid"
-						id="TBL_detallePobNoNirTable" styleClass="mycustomtable"
-						rendered="#{consultaPublicaMarcacionBean.activaTablaPoblacionesNoNir}">
-
-						<f:facet name="header">
-           		INFORMACIÓN BASICA <h:outputText
-								value="#{consultaPublicaMarcacionBean.poblacionNumero.nombre}" />
-						</f:facet>
-						<p:row>
-							<h:outputText
-								value="Número/s Identificador de Región (Clave de Larga Distancia)" />
-						</p:row>
-						<p:row>
-							<ui:repeat var="nir"
-								value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
-								<h:outputText rendered="#{nir != null}" value="#{nir.codigo}" />
-								<h:outputText rendered="#{nir == null}"
-									value="La población consultada no tiene un NIR asociado" />
-								<br></br>
-							</ui:repeat>
-
-						</p:row>
-						<p:row>
-							<h:outputText
-								value="Concesionarios que prestan el servicio de telefonía local" />
-						</p:row>
-						<p:row>
-							<h:outputText
-								value="#{consultaPublicaMarcacionBean.prestadoresServicioPoblacionNumero.size()}" />
-						</p:row>
-						<h:outputText
-							value="Numeración asignada (no representa líneas en servicio)" />
-						<h:outputText
-							value="#{consultaPublicaMarcacionBean.numeracionAsignadaPobFormat}" />
-
-						<h:outputText value=" Clave INEGI" />
-						<h:outputText
-							value="#{consultaPublicaMarcacionBean.poblacionNumero.inegi}" />
-
-
-					</p:panelGrid>
 
 					<p:panelGrid columns="2" layout="grid" id="TBL_AreaPobNoNirTable"
-						styleClass="mycustomtable"
-						rendered="#{consultaPublicaMarcacionBean.activaTablaPoblacionesNoNir}">
+								 styleClass="mycustomtable"
+								 rendered="#{consultaPublicaMarcacionBean.activaTablaPoblacionesNoNir}">
 
 						<f:facet name="header">
-           			INFORMACIÓN BÁSICA DEL ÁREA GEOGRÁFICA DE NUMERACIÓN
-       			</f:facet>
+							INFORMACIÓN BÁSICA DE LA ZONA
+						</f:facet>
 
 						<p:row>
 							<h:outputText
-								value="Número/s Identificador de Región (Claves de larga distancia)" />
+									value="Zona"/>
 						</p:row>
 						<p:row>
 							<ui:repeat var="nir"
-								value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
-								<h:outputText rendered="#{nir != null}" value="#{nir.codigo}" />
+									   value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
+								<h:outputText rendered="#{nir != null}" value="#{nir.zona}"/>
 								<h:outputText rendered="#{nir == null}"
-									value="La población consultada no tiene un NIR asociado" />
+											  value="La población consultada no tiene una zona asociada"/>
 								<br></br>
 							</ui:repeat>
 						</p:row>
-						<h:outputText value="Longitud del número nacional" />
+						<h:outputText value="Longitud del número nacional"/>
 						<ui:repeat var="nir"
-							value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
+								   value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
 							<h:outputText rendered="#{nir != null}"
-								value="NIR #{nir.codigo}: #{consultaPublicaMarcacionBean.getDigitos(nir)} dígitos" />
+										  value="NIR #{nir.codigo}: #{consultaPublicaMarcacionBean.getDigitos(nir)} dígitos"/>
 							<h:outputText rendered="#{nir == null}"
-								value="La población consultada no tiene un NIR asociado" />
+										  value="La población consultada no tiene una zona asociada"/>
 							<br></br>
 						</ui:repeat>
 						<p:row>
-							<h:outputText value="Marcación desde los Estados Unidos y Canadá" />
+							<h:outputText value="Marcación desde los Estados Unidos y Canadá"/>
 						</p:row>
 						<p:row>
-							<h:outputText value="011 52 " />
-							<h:outputText value="+ Número nacional (10 dígitos)" />
-						</p:row>
-
-						<p:row>
-							<h:outputText value="Marcación desde el resto del Mundo" />
+							<h:outputText value="011 52 "/>
+							<h:outputText value="+ Número nacional (10 dígitos)"/>
 						</p:row>
 
 						<p:row>
-							<h:outputText value="+52 " />
-							<h:outputText value="+ Número nacional (10 dígitos)" />
+							<h:outputText value="Marcación desde el resto del Mundo"/>
 						</p:row>
 
-						<h:outputText
-							value="Ciudad con mayor cantidad de numeración asignada" />
-						<h:outputText
-							value="#{consultaPublicaMarcacionBean.poblacionAbnMaxNumAsignada.nombre}" />
+						<p:row>
+							<h:outputText value="+52 "/>
+							<h:outputText value="+ Número nacional (10 dígitos)"/>
+						</p:row>
 
 						<p:row>
-							<h:outputText value="Poblaciones con servicio de telefonía local" />
+							<h:outputText value="Municipios que conforman la Zona"/>
 						</p:row>
 						<p:row>
 							<ui:repeat var="nir"
-								value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
+									   value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
 								<h:outputText rendered="#{nir != null}"
-									value=" NIR #{nir.codigo}: #{detallePoblacionBean.getPoblacionesNumeracionAsignadaNir(nir).size()}" />
-								<p:commandLink rendered="#{nir != null}"
-									actionListener="#{detallePoblacionBean.activateAndSetPoblacion(nir)}"
-									update=":DLG_detallePoblacionMunicipioProveedor"
-									oncomplete="PF('DLG_detallePoblacionMunicipioProveedor').show();">
-									<h:outputText value=" (Consultar)" />
-								</p:commandLink>
-								<h:outputText rendered="#{nir == null}"
-									value="La población consultada no tiene un NIR asociado" />
-								<br></br>
-							</ui:repeat>
-						</p:row>
-						<p:row>
-							<h:outputText value="Municipios que conforman el Área Geográfica de Numeración" />
-						</p:row>
-						<p:row>
-							<ui:repeat var="nir"
-								value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
-								<h:outputText rendered="#{nir != null}"
-									value=" NIR #{nir.codigo}: #{detallePoblacionBean.getMunicipiosByNir(nir).size()}" />
+											  value=" NIR #{nir.codigo}: #{detallePoblacionBean.getMunicipiosByNir(nir).size()}"/>
 
 								<p:commandLink rendered="#{nir != null}"
-									actionListener="#{detallePoblacionBean.activateAndSetMunicipio(consultaPublicaMarcacionBean.abn, nir)}"
-									update=":DLG_detallePoblacionMunicipioProveedor"
-									oncomplete="PF('DLG_detallePoblacionMunicipioProveedor').show();">
+											   actionListener="#{detallePoblacionBean.activateAndSetMunicipio(consultaPublicaMarcacionBean.abn, nir)}"
+											   update=":DLG_detallePoblacionMunicipioProveedor"
+											   oncomplete="PF('DLG_detallePoblacionMunicipioProveedor').show();">
 
-									<h:outputText value=" (Consultar)" />
+									<h:outputText value=" (Consultar)"/>
 
 								</p:commandLink>
 								<h:outputText rendered="#{nir == null}"
-									value="La población consultada no tiene un NIR asociado" />
+											  value="La población consultada no tiene una Zona asociada"/>
 								<br></br>
 							</ui:repeat>
 						</p:row>
 						<p:row>
 							<h:outputText
-								value="Concesionarios que prestan servicio de telefonía local" />
+									value="Concesionarios que prestan servicio de telefonía local"/>
 						</p:row>
 
 						<p:row>
 							<ui:repeat var="nir"
-								value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
+									   value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
 								<h:outputText rendered="#{nir != null}"
-									value=" NIR #{nir.codigo}: #{detallePoblacionBean.getProveedoresNumeracionAsignadaNir(nir).size()} " />
+											  value=" NIR #{nir.codigo}: #{detallePoblacionBean.getProveedoresNumeracionAsignadaNir(nir).size()} "/>
 								<p:commandLink rendered="#{nir!=null}"
-									actionListener="#{detallePoblacionBean.activateAndSetConcesionarioPoblacion(nir)}"
-									update=":DLG_detallePoblacionMunicipioProveedor"
-									oncomplete="PF('DLG_detallePoblacionMunicipioProveedor').show();">
-									<h:outputText value=" (Consultar)" />
+											   actionListener="#{detallePoblacionBean.activateAndSetConcesionarioPoblacion(nir)}"
+											   update=":DLG_detallePoblacionMunicipioProveedor"
+											   oncomplete="PF('DLG_detallePoblacionMunicipioProveedor').show();">
+									<h:outputText value=" (Consultar)"/>
 								</p:commandLink>
 								<h:outputText rendered="#{nir == null}"
-									value="La población consultada no tiene un NIR asociado" />
+											  value="La población consultada no tiene una Zona asociada"/>
 								<br></br>
 							</ui:repeat>
 						</p:row>
 
 
 						<h:outputText
-							value="Numeración asignada
-(no representa líneas en servicio)" />
+								value="Numeración asignada (no representa líneas en servicio)"/>
 						<ui:repeat var="nir"
-							value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
+								   value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
 							<h:outputText rendered="#{nir != null}"
-								value="NIR #{nir.codigo}: #{detallePoblacionBean.getNumeracionNir(nir)}" />
+										  value="NIR #{nir.codigo}: #{detallePoblacionBean.getNumeracionNir(nir)}"/>
 							<h:outputText rendered="#{nir == null}"
-								value="La población consultada no tiene un NIR asociado" />
+										  value="La población consultada no tiene una Zona asociada"/>
 							<br></br>
 						</ui:repeat>
 					</p:panelGrid>
@@ -678,6 +591,41 @@
 
 			</h:form>
 		</p:panel>
+
+		<!-- ///////////////////////////////////// Información de la zona  ///////////////////////////////////////////////// -->
+		<p:panel id="P_containerZona" styleClass="mycustompanel"
+				 rendered="#{consultaPublicaMarcacionBean.activaTablaPoblacionesNoNir}">
+			<p:panelGrid id="TBL_zonaServiceTable"
+						 columns="2" layout="grid" styleClass="mycustomtablesa">
+				<f:facet name="header">INFORMACIÓN DEL ÁREA GEOGRÁFICA DE NUMERACIÓN</f:facet>
+
+				<h:outputText value="Zona:" />
+				<h:outputText value="#{consultaPublicaMarcacionBean.zona}" />
+
+				<h:outputText value="Longitud del número nacional" />
+				<h:outputText value="10 dígitos" />
+
+				<h:outputText value="Marcación nacional desde un número fijo o móvil" />
+				<h:outputText value="Número nacional (10 dígitos)" />
+
+				<h:outputText value="Marcación desde los Estados Unidos y Canadá" />
+				<h:outputText value="011 52 + Número nacional (10 dígitos)" />
+
+				<h:outputText value="Marcación desde el resto del Mundo" />
+				<h:outputText value="+52 + Número nacional (10 dígitos)" />
+
+				<h:outputText value="Municipios que conforman la Zona" />
+				<h:outputText value="#{consultaPublicaMarcacionBean.cantidadMunicipiosZona}" />
+
+				<h:outputText value="Proveedores de telefonía que prestan el servicio dentro de la zona" />
+				<h:outputText value="#{consultaPublicaMarcacionBean.cantidadEmpresasZona}" />
+
+				<h:outputText value="Numeración asignada (no representa líneas en servicio)" />
+				<h:outputText value="#{consultaPublicaMarcacionBean.numeracionZona}" />
+			</p:panelGrid>
+		</p:panel>
+
+
 
 		<!-- Modal 'poblacion info' -->
 		<p:dialog id="ML_infopoblacion" showHeader="true"
