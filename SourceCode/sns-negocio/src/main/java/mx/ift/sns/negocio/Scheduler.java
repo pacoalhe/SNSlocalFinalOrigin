@@ -119,7 +119,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para acciones a ejecutar a las 23:00.
      */
-    @Schedule(hour = "23", minute = "00", persistent = false)
+    @Schedule(hour = "01", minute = "00", persistent = false) //CAMBIAR HORA
     void timeoutSolicitudesProgramadas() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.SOLICITUDES_PROGRAMADAS)) {
             LOGGER.info("Ejecutando tareas planificadas 23:00h");
@@ -186,7 +186,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para acciones a ejecutar a las 23:10.
      */
-    @Schedule(hour = "23", minute = "10", persistent = false)
+    @Schedule(hour = "01", minute = "10", persistent = false)
     void timeoutCuarentena() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.CUARENTENA)) {
             LOGGER.info("Ejecutando tareas planificadas 23:10h");
@@ -211,7 +211,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para acciones a ejecutar a las 23:15.
      */
-    @Schedule(hour = "23", minute = "15", persistent = false)
+    @Schedule(hour = "01", minute = "15", persistent = false) //Cambio hora
     void timeoutConsolidaciones() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.CONSOLIDACIONES)) {
             LOGGER.info("Ejecutando tareas planificadas 23:15h");
@@ -229,7 +229,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el plan abd.
      */
-    @Schedule(hour = "23", minute = "20", persistent = false)
+    @Schedule(hour = "01", minute = "20", persistent = false) //Cambio hora
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanABD() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_ABD)) {
@@ -247,7 +247,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el Reporte abd.
      */
-    @Schedule(hour = "23", minute = "25", persistent = false)
+    @Schedule(hour = "01", minute = "25", persistent = false) //Cambio hora
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutReporteABD() {
 
@@ -266,7 +266,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el Plan NNG Especifica.
      */
-    @Schedule(hour = "23", minute = "30", persistent = false)
+    @Schedule(hour = "01", minute = "30", persistent = false) //Cambio hora
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanNngEspecifica() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NNG_ESPECIFICA)) {
@@ -284,7 +284,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el Plan NNG Especifica PST.
      */
-    @Schedule(hour = "23", minute = "31", persistent = false)
+    @Schedule(hour = "01", minute = "31", persistent = false) //Cambio hora
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanNngEspecificaPst() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NNG_ESPECIFICA_PST)) {
@@ -302,7 +302,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el Plan NNG.
      */
-    @Schedule(hour = "23", minute = "40", persistent = false)
+    @Schedule(hour = "01", minute = "40", persistent = false) //Cambio hora
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanNng() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NNG)) {
@@ -343,7 +343,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el Plan IFT.
      */
-    @Schedule(hour = "23", minute = "35", persistent = false)
+    @Schedule(hour = "01", minute = "35", persistent = false) //Cambio hora
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanIFT() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_IFT)) {
@@ -361,7 +361,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el Plan NNG Especifica IFT.
      */
-    @Schedule(hour = "23", minute = "55", persistent = false)
+    @Schedule(hour = "01", minute = "55", persistent = false) //Cambio hora
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanNngEspecificaIFT() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NNG_ESPECIFICA_IFT)) {
@@ -379,7 +379,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el Plan NG.
      */
-    @Schedule(hour = "23", minute = "29", persistent = false)
+    @Schedule(hour = "01", minute = "29", persistent = false) //Cambio hora
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanNg() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NG)) {
@@ -396,9 +396,9 @@ public class Scheduler implements IScheduler {
     }
 
     /**
-     * Timer para borrar los planes.
+     * Timer para borrar los planes. 1.00am
      */
-    @Schedule(hour = "1", minute = "0", persistent = false)
+    @Schedule(hour = "2", minute = "30", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutBorradoPlanes() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.BORRADO_PLANES)) {
@@ -567,11 +567,11 @@ public class Scheduler implements IScheduler {
 
     /**
      * Timer para ejecutar tareas a la hora requerida
-     * FJAH 26MAR2025
+     * FJAH
      */
-    private boolean testMode = false; // TODO FJAH 26MAR2025: Cambiar a true para habilitar pruebas
+    private boolean testMode = false; // TODO FJAH: Cambiar a true para habilitar pruebas
 
-    @Schedule(hour = "17", minute = "55", persistent = false)
+    @Schedule(hour = "18", minute = "45", persistent = false)
     void timeoutPruebas() {
         LOGGER.info("Inicio del timer timeoutPruebas");
 
@@ -598,15 +598,6 @@ public class Scheduler implements IScheduler {
         LOGGER.info("Inicio de testGenerarPlanes");
 /*
         try {
-            portacionSNS();
-            //FJAH 26032025 Modificación a logBitacora para persistincia
-            logBitacora("Ejecucion Prueba testGenerarPlanes: portacionSNS");
-        } catch (Exception e) {
-            LOGGER.error("Error en portacionSNS durante testGenerarPlanes: ", e);
-        }
-
-
-        try {
             timeoutDesbloqueoTareas();
             //FJAH 26032025 Modificación a logBitacora para persistincia
             logBitacora("Ejecucion Prueba desbloqueo de tareas: timeoutABD");
@@ -622,8 +613,6 @@ public class Scheduler implements IScheduler {
             LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: ", e);
         }
 
- */
-/*
         try {
             timeoutReporteABD();
             //FJAH 26032025 Modificación a logBitacora para persistincia
@@ -655,7 +644,7 @@ public class Scheduler implements IScheduler {
 		} catch (Exception e) {
 			LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: FJAH 26MAR2025", e);
 		}
-*/
+
 
 		try {
 			timeoutPlanIFT();
@@ -714,7 +703,7 @@ public class Scheduler implements IScheduler {
         }
 
         LOGGER.info("Fin de testGenerarPlanes FJAH");
-
+ */
     }
 
     private void ejecutarDesbloqueoDeTareas() {
@@ -737,8 +726,8 @@ public class Scheduler implements IScheduler {
                 logBitacora("Error ejecutando desbloqueo de tareas: " + e.getMessage());
             }
         }
-    }
 
+    }
 
 
     // FJAH 26MAR2025: Método auxiliar para registrar en la bitácora en una nueva transacción
