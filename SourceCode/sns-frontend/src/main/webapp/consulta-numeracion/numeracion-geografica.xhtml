@@ -372,6 +372,7 @@
 								value="Numeración asignada (no representa líneas en servicio)"/>
 						<h:outputText
 								value="#{consultaPublicaMarcacionBean.numeracionNirFormat}"/>
+
 					</p:panelGrid>
 
 				</p:panel>
@@ -578,6 +579,7 @@
 								value="Numeración asignada (no representa líneas en servicio)"/>
 						<ui:repeat var="nir"
 								   value="#{consultaPublicaMarcacionBean.nirsPoblacion}">
+
 							<h:outputText rendered="#{nir != null}"
 										  value="NIR #{nir.codigo}: #{detallePoblacionBean.getNumeracionNir(nir)}"/>
 							<h:outputText rendered="#{nir == null}"
@@ -622,6 +624,7 @@
 
 				<h:outputText value="Numeración asignada (no representa líneas en servicio)" />
 				<h:outputText value="#{consultaPublicaMarcacionBean.numeracionZona}" />
+
 			</p:panelGrid>
 		</p:panel>
 

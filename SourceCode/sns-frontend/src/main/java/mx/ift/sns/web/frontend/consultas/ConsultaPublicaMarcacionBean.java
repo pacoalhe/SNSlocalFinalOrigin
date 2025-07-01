@@ -335,6 +335,8 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 	    this.setCodigoNir("");
 	    this.setNirNumeroLocalSelected("");
 	    this.setMunicipioInfoTableActivated(false);
+		this.setZona("");
+		this.setNir(null);
 	} catch (Exception e) {
 	    LOGGER.error("Error al limpiar todo" + e.getMessage());
 	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error insperado");
