@@ -504,13 +504,13 @@ public class AreasGeoNumeracionMainBean implements Serializable {
             // Hardcode para cantidadMunicipiosZona
             switch (zona) {
                 case 2: this.cantidadMunicipiosZona = 444; break;
-                case 3: this.cantidadMunicipiosZona = 141; break;
-                case 4: this.cantidadMunicipiosZona = 251; break;
+                case 3: this.cantidadMunicipiosZona = 172; break;
+                case 4: this.cantidadMunicipiosZona = 280; break;
                 case 5: this.cantidadMunicipiosZona = 78; break;
-                case 6: this.cantidadMunicipiosZona = 37; break;
-                case 7: this.cantidadMunicipiosZona = 177; break;
-                case 8: this.cantidadMunicipiosZona = 141; break;
-                case 9: this.cantidadMunicipiosZona = 529; break;
+                case 6: this.cantidadMunicipiosZona = 204; break;
+                case 7: this.cantidadMunicipiosZona = 358; break;
+                case 8: this.cantidadMunicipiosZona = 140; break;
+                case 9: this.cantidadMunicipiosZona = 800; break;
                 default: this.cantidadMunicipiosZona = 0; break;
             }
 

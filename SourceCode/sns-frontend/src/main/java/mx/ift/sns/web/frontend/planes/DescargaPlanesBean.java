@@ -183,6 +183,8 @@ public class DescargaPlanesBean implements Serializable {
         return null;
     }
 
+    //TODO FJAH desbloquear cuando se pase a la rama de QA snsbase
+    /*
     private void getUserRol() {
         ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
         String uid = null;
@@ -194,6 +196,34 @@ public class DescargaPlanesBean implements Serializable {
         for (Rol r : roles) {
             getTipoPlanes("" + r.getId());
 
+        }
+    }
+
+     */
+
+    //TODO bloquear cuando se vaya a la rama QA snsbase
+    private void getUserRol() {
+        try {
+            // Emulación directa del usuario para entorno local
+            Usuario usu = new Usuario();
+            usu.setUserid("dgtic.dds.ext196");
+            usu.setNombre("Paco DEV");
+
+            Rol rol = new Rol();
+            rol.setId(4); // usa int
+            // Asegúrate que este ID tenga planes válidos
+            rol.setDescripcion("PROVEEDOR");
+
+            List<Rol> roles = new ArrayList<>();
+            roles.add(rol);
+            usu.setRoles(roles);
+
+            for (Rol r : roles) {
+                getTipoPlanes("" + r.getId());
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Error inesperado al obtener roles: {}", e.getMessage(), e);
         }
     }
 

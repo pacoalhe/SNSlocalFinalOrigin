@@ -387,7 +387,10 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
                         b.append(addQuotes(detalle.getIdAbn().toString()));
                         b.append(COMA);
 
-                        sb.append(addQuotes(String.valueOf(detalle.getId().charAt(0))));
+                        //sb.append(addQuotes(String.valueOf(detalle.getId().charAt(0))));
+                        //sb.append(COMA);
+                        int zona = Integer.parseInt(detalle.getNumFinal().substring(1, 2)) == 0 ? 0 : Integer.parseInt(detalle.getNumFinal().substring(0, 1));
+                        sb.append(addQuotes(String.valueOf(zona)));
                         sb.append(COMA);
 
                         b.append(addQuotes(detalle.getId()));
@@ -1574,7 +1577,7 @@ public class PlanNumeracionJob implements IPlanNumeracionJob {
             tmp4 = FicheroTemporal.getTmpFileName();
 
             FileOutputStream fileOutput = new FileOutputStream(tmp.getCanonicalPath());
-            FileOutputStream fileOutput2 = new FileOutputStream(tmp2.getCanonicalPath());
+            FileOutputStream fileOutput2 = new FileOutputStream(tmp3.getCanonicalPath());
 
             fileOutput.write(CABECERA_PLAN_NNG_IFT.getBytes());
             fileOutput2.write(CABECERA_PLAN_NNG_IFT_NUEVO.getBytes());

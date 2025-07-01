@@ -55,30 +55,6 @@
 											  style="font-size: 13px;" />
 							</h:panelGroup>
 
-							<!-- Bloque Botón 2 -->
-							<h:panelGroup layout="block" style="text-align: center;">
-								<p:commandButton id="BTN_planPublico2" value="Descargar"
-												 disabled="#{descargaPlanesBean.btnDescargaActivado}"
-												 ajax="false" icon="ui-icon-arrowthickstop-1-s"
-												 style="width: auto; height: auto; font-size: 13px; padding:0px; margin-top:20px;"
-												 styleClass="sombreado">
-									<p:fileDownload value="#{descargaPlanesBean.descargarPlanPublicoNuevo()}" />
-								</p:commandButton>
-								<br />
-								<div style="margin-top:8px; text-align:center;">
-            						<span style="display:block; font-size:13px; color:#000; font-weight:bold;">
-                						NUEVO LAYOUT DEL PLAN NACIONAL DE NUMERACIÓN
-            						</span>
-									<span style="display:block; font-size:12px; color:#000;">
-                						Vigencia a partir del 1 de julio de 2025
-            						</span>
-								</div>
-								<br />
-								<h:outputText value="El archivo no se encuentra disponible"
-											  rendered="#{descargaPlanesBean.btnDescargaActivado}"
-											  style="font-size:13px; color: #cb410b" />
-							</h:panelGroup>
-
 						</h:panelGroup>
 
 
@@ -89,7 +65,7 @@
 					<div style="color: #c00; text-align: center; font-size: 1.5em; font-weight: bold; margin-bottom: 16px;">
 							AVISO IMPORTANTE<br/>
 						<span style="font-size: 0.7em; font-weight: normal;">
-            				A partir del 1 de julio de 2025 cambiará el layout del plan nacional de numeración, el cual ya se encuentra disponible para su descarga.
+            				A partir del 1 de julio de 2025 cambió el layout del plan nacional de numeración.
         				</span>
 					</div>
 
