@@ -692,7 +692,6 @@ public class RangoSerieDaoImpl extends BaseDAO<RangoSerie> implements IRangoSeri
 
             return null;
         }
-
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -1731,33 +1730,40 @@ public class RangoSerieDaoImpl extends BaseDAO<RangoSerie> implements IRangoSeri
     }
 
     /**
-     * FJAH 29.06.2025
-     * @param idZona
-     * @return
+     * FJAH 01.07.2025
+     * Reemplazo total con agrupamiento por NOMBRE_CORTO
      */
     @Override
     @SuppressWarnings("unchecked")
     public List<Proveedor> findAllPrestadoresServicioByZona(Integer idZona) {
         String sql =
-                "SELECT * FROM (" +
-                        "    SELECT DISTINCT p.* " +
-                        "    FROM RANGO_SERIE rs " +
-                        "    JOIN CAT_NIR n ON rs.ID_NIR = n.ID_NIR " +
-                        "    JOIN CAT_PST p ON rs.ID_PST_ARRENDATARIO = p.ID_PST " +
-                        "    WHERE n.ZONA = ? AND rs.ID_STATUS_RANGO != 'P' " +
-                        "    UNION " +
-                        "    SELECT DISTINCT p.* " +
-                        "    FROM RANGO_SERIE rs " +
-                        "    JOIN CAT_NIR n ON rs.ID_NIR = n.ID_NIR " +
-                        "    JOIN CAT_PST p ON rs.ID_PST_ASIGNATARIO = p.ID_PST " +
-                        "    WHERE n.ZONA = ? AND rs.ID_STATUS_RANGO != 'P' " +
-                        ") ORDER BY NOMBRE_CORTO";
+                "SELECT p.NOMBRE_CORTO, " +
+                        "       MIN(p.NOMBRE) AS NOMBRE " +
+                        "FROM RANGO_SERIE rs " +
+                        "JOIN CAT_NIR n ON rs.ID_NIR = n.ID_NIR " +
+                        "JOIN CAT_PST p ON p.ID_PST IN (rs.ID_PST_ARRENDATARIO, rs.ID_PST_ASIGNATARIO) " +
+                        "WHERE n.ZONA = ? " +
+                        "  AND rs.ID_STATUS_RANGO != 'P' " +
+                        "GROUP BY p.NOMBRE_CORTO " +
+                        "ORDER BY p.NOMBRE_CORTO";
 
-        return getEntityManager()
-                .createNativeQuery(sql, Proveedor.class)
+        List<Object[]> rows = getEntityManager()
+                .createNativeQuery(sql)
                 .setParameter(1, idZona)
-                .setParameter(2, idZona)
                 .getResultList();
+
+        List<Proveedor> resultado = new ArrayList<>();
+        for (Object[] row : rows) {
+            Proveedor p = new Proveedor();
+            p.setNombreCorto((String) row[0]);
+            p.setNombre((String) row[1]);
+            resultado.add(p);
+        }
+
+        return resultado;
     }
+
+
+
 
 }

@@ -67,8 +67,6 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
             //return null;
         } catch (Exception e) {
             LOGGER.error("Error inesperado en getDetalleNumero: " + e.getMessage(), e);
-        } finally {
-            consulta = null;
         }
         //Fin FJAH
 
@@ -178,7 +176,7 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
             LOGGER.error("Consulta pública: número {} no localizado en plan maestro", numeroInicial);
         } catch (Exception e) {
             LOGGER.error("Error en getDetalleNumeroConsultaPublica: {}", e.getMessage(), e);
-        }
+		}
 
         return null;
     }

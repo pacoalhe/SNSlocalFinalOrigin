@@ -90,7 +90,8 @@ public class AreasGeoNumeracionMainBean implements Serializable {
     /**
      * Path de la imagen general de estados.
      */
-    private String path = "/img/mapas/estados.gif";
+    final String IMAGEN_VERSION = "20250701";
+    private String path = "/img/mapas/estados.gif?v=" + IMAGEN_VERSION;
 
     /** Path de la imagen de zona
      *
@@ -338,7 +339,8 @@ public class AreasGeoNumeracionMainBean implements Serializable {
 
     // --- Agregados por Zona ---
     private List<Municipio> municipiosZona;
-    private Set<Proveedor> empresasZona;
+    private List<Proveedor> empresasZona;
+
     private BigDecimal numeracionZona;
     private String clavesInegiZona;
     private int cantidadMunicipiosZona;
@@ -373,7 +375,11 @@ public class AreasGeoNumeracionMainBean implements Serializable {
     public List<Region> getListaRegiones() { return listaRegiones; }
     public void setListaRegiones(List<Region> listaRegiones) { this.listaRegiones = listaRegiones; }
     public List<Municipio> getMunicipiosZona() { return municipiosZona; }
-    public Set<Proveedor> getEmpresasZona() { return empresasZona; }
+    //public Set<Proveedor> getEmpresasZona() { return empresasZona; }
+    public List<Proveedor> getEmpresasZona() {
+        return empresasZona;
+    }
+
     public String getNumeracionZona() { return numeracionZona != null ? numeracionZona.toPlainString() : "0"; }
     public String getClavesInegiZona() { return clavesInegiZona; }
     public int getCantidadMunicipiosZona() { return cantidadMunicipiosZona; }
@@ -493,7 +499,7 @@ public class AreasGeoNumeracionMainBean implements Serializable {
         LOGGER.debug("== INICIA carga de datos agregados ==");
 
         Set<Municipio> municipiosZonaTmp = new HashSet<>();
-        Set<Proveedor> empresasZonaTmp = new HashSet<>();
+        List<Proveedor> empresasZonaTmp = new ArrayList<>();
 
         // Municipios por zona (nueva lógica) y lista de muncipios para descargar archivo excel.
         try {
@@ -539,7 +545,22 @@ public class AreasGeoNumeracionMainBean implements Serializable {
         try {
             LOGGER.debug("== Carga de Proveedores ==");
             List<Proveedor> proveedoresZona = ngPublicService.findAllPrestadoresServicioByZona(region.getIdRegion().intValue());
-            if (proveedoresZona != null) empresasZonaTmp.addAll(proveedoresZona);
+            if (proveedoresZona != null) {
+                // Ordenar por nombre corto (compatible con Java 7)
+                Collections.sort(proveedoresZona, new Comparator<Proveedor>() {
+                    @Override
+                    public int compare(Proveedor p1, Proveedor p2) {
+                        String nombre1 = p1.getNombreCorto();
+                        String nombre2 = p2.getNombreCorto();
+                        if (nombre1 == null && nombre2 == null) return 0;
+                        if (nombre1 == null) return 1;
+                        if (nombre2 == null) return -1;
+                        return nombre1.compareToIgnoreCase(nombre2);
+                    }
+                });
+
+                empresasZonaTmp.addAll(proveedoresZona);
+            }
         } catch (Exception e) {
             LOGGER.error("Error al obtener Proveedores de la zona " + region.getIdRegion() + ": " + e.getMessage());
             numeracionZona = BigDecimal.ZERO;
@@ -564,9 +585,10 @@ public class AreasGeoNumeracionMainBean implements Serializable {
         //this.cantidadMunicipiosZona = this.municipiosZona.size();
         this.cantidadEmpresasZona = this.empresasZona.size();
 
-        String rutaImagenZona = "/img/mapas/" + region.getIdRegion() + ".gif";
+        String rutaImagenZona = "/img/mapas/" + region.getIdRegion() + ".gif?v=" + IMAGEN_VERSION;
         this.setPathMapaNir(rutaImagenZona);
         LOGGER.debug("Imagen asignada para zona: " + rutaImagenZona);
+        LOGGER.debug("Se asigna imagen inicial: " + this.pathMapaNir);
 
         this.setEstateTable(true);
         this.setActivateMap(false);
@@ -580,11 +602,25 @@ public class AreasGeoNumeracionMainBean implements Serializable {
 
     private void limpiarDatosZona() {
         this.municipiosZonaTmp = new ArrayList<>();
-        this.empresasZona = new HashSet<>();
+        this.empresasZona = new ArrayList<>();
         this.numeracionZona = BigDecimal.ZERO;
         this.clavesInegiZona = "";
         this.cantidadMunicipiosZona = 0;
         this.cantidadEmpresasZona = 0;
+    }
+
+    /**
+     * FJAH 01.07.2025
+     */
+    public String getNumeracionZonaFormato() {
+        if (numeracionZona != null) {
+            NumberFormat nf = NumberFormat.getInstance(new Locale("es", "MX"));
+            nf.setGroupingUsed(true);
+            nf.setMaximumFractionDigits(0);
+            return nf.format(numeracionZona);
+        } else {
+            return "0";
+        }
     }
 
     /** Comprueba si algun campo esta relleno y deshabilita o habilita inputs y boton. */
@@ -1799,14 +1835,32 @@ public class AreasGeoNumeracionMainBean implements Serializable {
      */
     public void abrirDialogoConProveedoresZona() {
         LOGGER.debug("== Ejecutando abrirDialogoConProveedoresZona ==");
+
         if (dialogInfoBean != null) {
-            LOGGER.debug("dialogInfoBean OK, enviando lista");
+            LOGGER.debug("dialogInfoBean OK, preparando modal");
+
+            //Forzar refresco: primero desactivar
+            dialogInfoBean.setTablaProvEstadoActivated(false);
+
+            //limpiar la lista anterior
+            if (dialogInfoBean.getConcesionariosEstado() != null) {
+                dialogInfoBean.getConcesionariosEstado().clear();
+            }
+
+            //Asignar la lista ordenada (del backend)
             dialogInfoBean.setAndActivatedProveedorEstado(this.concesionariosZona);
+
+            //Activar nuevamente la tabla para forzar pintado limpio
             dialogInfoBean.setTablaProvEstadoActivated(true);
-            dialogInfoBean.setTablaProvAbnActivated(false); // por si acaso
-            dialogInfoBean.setTableMunicipioActivated(false); // por si acaso
+
+            // por si acaso
+            dialogInfoBean.setTablaProvAbnActivated(false);
+            dialogInfoBean.setTableMunicipioActivated(false);
+
             LOGGER.debug("   → Modal preparado con " + this.concesionariosZona.size() + " elementos");
-        } else {LOGGER.warn("dialogInfoBean es NULL");}
+        } else {
+            LOGGER.warn("dialogInfoBean es NULL");
+        }
     }
 
     /**

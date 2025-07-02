@@ -76,9 +76,8 @@
 											update="BTN_publicSearch TXT_LocalNumber TXT_NationalNumber"
 											global="false">
 									</p:ajax>
-
-
 								</p:inputText>
+										<p style="font-size: 11px">Ingresar número válido entre 2 y 9</p>
 							</h:panelGrid>
 
 							<h:panelGrid>
@@ -272,7 +271,7 @@
 						</p:row>
 
 						<p:row>
-							<h:outputText value="Proveedor de telefonía que atiende el número"/>
+							<h:outputText value="Proveedor que atiende el número."/>
 						</p:row>
 						<p:row>
 							<h:outputText
@@ -354,24 +353,18 @@
 
 						<p:row>
 							<h:outputText
-									value="Proveedores de telefonía que prestan el servicio dentro de la zona"/>
+									value="Proveedores que prestan el servicio"/>
 						</p:row>
 						<p:row>
-
-							<p:commandLink
-									actionListener="#{consultaPublicaMarcacionBean.cargarProveedoresZonaParaDialogo}"
-									update=":DLG_detallePoblacionMunicipioProveedor"
-									oncomplete="PF('detallePoblacionMunicipioProveedor').show();">
 								<h:outputText
 										value="#{consultaPublicaMarcacionBean.proveedoresNir.size()}"/>
-							</p:commandLink>
 						</p:row>
 
 
 						<h:outputText
 								value="Numeración asignada (no representa líneas en servicio)"/>
 						<h:outputText
-								value="#{consultaPublicaMarcacionBean.numeracionNirFormat}"/>
+								value="#{consultaPublicaMarcacionBean.numeracionZonaFormato}"/>
 
 					</p:panelGrid>
 

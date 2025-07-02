@@ -181,21 +181,23 @@
 												INFORMACIÓN GENERAL DE LA ZONA
 											</f:facet>
 											<h:outputText value="Zona" />
-											<h:outputText value="#{areasGeoNumeracionMainBean.region.descripcion}" />
+											<h:outputText value="#{areasGeoNumeracionMainBean.region.idRegion}" />
 
 											<h:outputText value="Municipios que conforman la Zona" />
 											<h:outputText value="#{areasGeoNumeracionMainBean.totalMunicipiosZona}" />
 
 											<h:outputText value="Numeración asignada (no representa líneas en servicio)" />
-											<h:outputText value="#{areasGeoNumeracionMainBean.numeracionZona}" />
-
+											<h:outputText value="#{areasGeoNumeracionMainBean.numeracionZonaFormato}" />
 
 											<h:outputText value="Empresas que prestan el servicio en la zona" />
 											<p:commandLink
 													update=":MDL_infoProveedor P_containerVista2"
 													oncomplete="PF('infoProveedor').show();"
 													actionListener="#{areasGeoNumeracionMainBean.abrirDialogoConProveedoresZona}">
-												<h:outputText value="#{areasGeoNumeracionMainBean.numeroConcesionariosZona}" style="text-decoration: underline; cursor: pointer;" />
+												<h:outputText value="#{areasGeoNumeracionMainBean.numeroConcesionariosZona}" style="text-decoration: underline; cursor: pointer;">
+
+												</h:outputText>
+
 											</p:commandLink>
 
 											<h:outputText value="Definición geográfica de la zona" />

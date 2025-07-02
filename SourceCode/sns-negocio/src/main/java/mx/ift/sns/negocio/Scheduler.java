@@ -119,7 +119,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para acciones a ejecutar a las 23:00.
      */
-    @Schedule(hour = "01", minute = "00", persistent = false) //CAMBIAR HORA
+    @Schedule(hour = "23", minute = "00", persistent = false)
     void timeoutSolicitudesProgramadas() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.SOLICITUDES_PROGRAMADAS)) {
             LOGGER.info("Ejecutando tareas planificadas 23:00h");
@@ -186,7 +186,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para acciones a ejecutar a las 23:10.
      */
-    @Schedule(hour = "01", minute = "10", persistent = false)
+    @Schedule(hour = "23", minute = "10", persistent = false)
     void timeoutCuarentena() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.CUARENTENA)) {
             LOGGER.info("Ejecutando tareas planificadas 23:10h");
@@ -211,7 +211,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para acciones a ejecutar a las 23:15.
      */
-    @Schedule(hour = "01", minute = "15", persistent = false) //Cambio hora
+    @Schedule(hour = "23", minute = "15", persistent = false)
     void timeoutConsolidaciones() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.CONSOLIDACIONES)) {
             LOGGER.info("Ejecutando tareas planificadas 23:15h");
@@ -229,7 +229,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el plan abd.
      */
-    @Schedule(hour = "01", minute = "20", persistent = false) //Cambio hora
+    @Schedule(hour = "23", minute = "20", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanABD() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_ABD)) {
@@ -247,7 +247,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el Reporte abd.
      */
-    @Schedule(hour = "01", minute = "25", persistent = false) //Cambio hora
+    @Schedule(hour = "23", minute = "25", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutReporteABD() {
 
@@ -266,7 +266,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el Plan NNG Especifica.
      */
-    @Schedule(hour = "01", minute = "30", persistent = false) //Cambio hora
+    @Schedule(hour = "23", minute = "30", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanNngEspecifica() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NNG_ESPECIFICA)) {
@@ -284,7 +284,7 @@ public class Scheduler implements IScheduler {
     /**
      * Timer para generar el Plan NNG Especifica PST.
      */
-    @Schedule(hour = "01", minute = "31", persistent = false) //Cambio hora
+    @Schedule(hour = "23", minute = "35", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanNngEspecificaPst() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NNG_ESPECIFICA_PST)) {
@@ -300,13 +300,31 @@ public class Scheduler implements IScheduler {
     }
 
     /**
+     * Timer para generar el Plan IFT.
+     */
+    @Schedule(hour = "23", minute = "40", persistent = false) //Cambio hora
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    void timeoutPlanIFT() {
+        if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_IFT)) {
+            LOGGER.info("Ejecutando tarea planificada 23:40h: Plan IFT.");
+            try {
+                planServiceJob.generarPlanIFTD();
+            } catch (Exception e) {
+                LOGGER.error("Error ejecutando Plan IFT.", e);
+            }
+            LOGGER.info("Finalizada tarea planificada 23:40h: Plan IFT.");
+            controlTareasService.desbloquearTarea(ControlTarea.PLAN_IFT);
+        }
+    }
+
+    /**
      * Timer para generar el Plan NNG.
      */
-    @Schedule(hour = "01", minute = "40", persistent = false) //Cambio hora
+    @Schedule(hour = "23", minute = "45", persistent = false) //Cambio hora
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanNng() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NNG)) {
-            LOGGER.info("Ejecutando tarea planificada 23:40h: Plan NNG.");
+            LOGGER.info("Ejecutando tarea planificada 23:45h: Plan NNG.");
             try {
                 planServiceJob.generarPlanNngPst();
                 List<ClaveServicio> listaClaves = seriesNngService.findAllClaveServicioAsignadas();
@@ -317,8 +335,27 @@ public class Scheduler implements IScheduler {
             } catch (Exception e) {
                 LOGGER.error("Error ejecutando Plan NNG.", e);
             }
-            LOGGER.info("Finalizada tarea planificada 23:40h: Plan NNG.");
+            LOGGER.info("Finalizada tarea planificada 23:45h: Plan NNG.");
             controlTareasService.desbloquearTarea(ControlTarea.PLAN_NNG);
+        }
+    }
+
+    /**
+     * Timer para generar el Plan NG.
+     */
+    @Schedule(hour = "23", minute = "50", persistent = false)
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    void timeoutPlanNg() {
+        if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NG)) {
+            LOGGER.info("Ejecutando tarea planificada 23:50h: Plan NG.");
+            try {
+                planServiceJob.generarPlanNumeracionGeograficaPST();
+                planServiceJob.generarPlanNumeracionGeograficaPublico();
+            } catch (Exception e) {
+                LOGGER.error("Error ejecutando Ejecutando Plan NG.", e);
+            }
+            LOGGER.info("Finalizada tarea planificada 23:50h: Plan NG.");
+            controlTareasService.desbloquearTarea(ControlTarea.PLAN_NG);
         }
     }
 
@@ -340,28 +377,12 @@ public class Scheduler implements IScheduler {
         }
     }*/
 
-    /**
-     * Timer para generar el Plan IFT.
-     */
-    @Schedule(hour = "01", minute = "35", persistent = false) //Cambio hora
-    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    void timeoutPlanIFT() {
-        if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_IFT)) {
-            LOGGER.info("Ejecutando tarea planificada 23:40h: Plan IFT.");
-            try {
-                planServiceJob.generarPlanIFTD();
-            } catch (Exception e) {
-                LOGGER.error("Error ejecutando Plan IFT.", e);
-            }
-            LOGGER.info("Finalizada tarea planificada 23:40h: Plan IFT.");
-            controlTareasService.desbloquearTarea(ControlTarea.PLAN_IFT);
-        }
-    }
+
 
     /**
      * Timer para generar el Plan NNG Especifica IFT.
      */
-    @Schedule(hour = "01", minute = "55", persistent = false) //Cambio hora
+    @Schedule(hour = "23", minute = "55", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutPlanNngEspecificaIFT() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NNG_ESPECIFICA_IFT)) {
@@ -377,28 +398,9 @@ public class Scheduler implements IScheduler {
     }
 
     /**
-     * Timer para generar el Plan NG.
-     */
-    @Schedule(hour = "01", minute = "29", persistent = false) //Cambio hora
-    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    void timeoutPlanNg() {
-        if (controlTareasService.isAccesoPermitido(ControlTarea.PLAN_NG)) {
-            LOGGER.info("Ejecutando tarea planificada 23:29h: Plan NG.");
-            try {
-                planServiceJob.generarPlanNumeracionGeograficaPST();
-                planServiceJob.generarPlanNumeracionGeograficaPublico();
-            } catch (Exception e) {
-                LOGGER.error("Error ejecutando Ejecutando Plan NG.", e);
-            }
-            LOGGER.info("Finalizada tarea planificada 23:29h: Plan NG.");
-            controlTareasService.desbloquearTarea(ControlTarea.PLAN_NG);
-        }
-    }
-
-    /**
      * Timer para borrar los planes. 1.00am
      */
-    @Schedule(hour = "2", minute = "30", persistent = false)
+    @Schedule(hour = "1", minute = "00", persistent = false)
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     void timeoutBorradoPlanes() {
         if (controlTareasService.isAccesoPermitido(ControlTarea.BORRADO_PLANES)) {

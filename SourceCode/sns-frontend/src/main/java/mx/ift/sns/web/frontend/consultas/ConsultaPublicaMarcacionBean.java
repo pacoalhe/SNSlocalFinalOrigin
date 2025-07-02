@@ -809,6 +809,20 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 		}
 	}
 
+	/**
+	 * FJAH 01.07.2025
+	 */
+	public String getNumeracionZonaFormato() {
+		if (numeracionZona != null) {
+			NumberFormat nf = NumberFormat.getInstance(new Locale("es", "MX"));
+			nf.setGroupingUsed(true);
+			nf.setMaximumFractionDigits(0);
+			return nf.format(numeracionZona);
+		} else {
+			return "0";
+		}
+	}
+
 	public void cargarProveedoresZonaParaDialogo() {
 		try {
 			LOGGER.debug("== Carga rápida de Proveedores desde el .xhtml ==");
