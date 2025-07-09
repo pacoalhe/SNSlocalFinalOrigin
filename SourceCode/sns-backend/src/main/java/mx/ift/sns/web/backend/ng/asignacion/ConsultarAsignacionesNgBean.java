@@ -123,7 +123,9 @@ public class ConsultarAsignacionesNgBean implements Serializable {
         LOGGER.debug("");
         try {
             // Listado de proveedores de servicio
+            LOGGER.debug(">> Llamando ngService.findAllProveedoresActivos()");
             listaProveedores = ngService.findAllProveedoresActivos();
+            LOGGER.debug("<< Retorno de ngService.findAllProveedoresActivos");
             proveedorSeleccionado = new Proveedor();
 
             // Se inicializan las fechas
@@ -133,7 +135,9 @@ public class ConsultarAsignacionesNgBean implements Serializable {
             numFinalfchIniUtilizacion = null;
 
             // Listado de estado de solicitudes
+            LOGGER.debug(">> Llamando ngService.findAllEstadosSolicitud()");
             listaEstados = ngService.findAllEstadosSolicitud();
+            LOGGER.debug("<< Retorno de ngService.findAllEstadosSolicitud");
             EstadoSolicitud estadoSeleccionadoAux = new EstadoSolicitud();
             estadoSeleccionadoAux.setCodigo(EstadoSolicitud.SOLICITUD_EN_TRAMITE);
             estadoSeleccionado = null;
@@ -151,7 +155,9 @@ public class ConsultarAsignacionesNgBean implements Serializable {
             solicitudesAsignacionModel.setService(ngService);
 
             // Plantilla de oficio PST Solicitante
+            LOGGER.debug(">> Llamando ngService.getParamByName(Parametro.PREFIJO)");
             prefijoOficio = ngService.getParamByName(Parametro.PREFIJO);
+            LOGGER.debug("<< Retorno de ngService.getParamByName");
             referenciaSolicitud = new String(prefijoOficio);
 
         } catch (Exception e) {

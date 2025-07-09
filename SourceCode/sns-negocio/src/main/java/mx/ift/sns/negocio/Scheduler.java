@@ -573,7 +573,7 @@ public class Scheduler implements IScheduler {
      */
     private boolean testMode = false; // TODO FJAH: Cambiar a true para habilitar pruebas
 
-    @Schedule(hour = "18", minute = "45", persistent = false)
+    @Schedule(hour = "17", minute = "31", persistent = false)
     void timeoutPruebas() {
         LOGGER.info("Inicio del timer timeoutPruebas");
 
@@ -614,7 +614,7 @@ public class Scheduler implements IScheduler {
         } catch (Exception e) {
             LOGGER.error("Error en timeoutPlanABD durante testGenerarPlanes: ", e);
         }
-
+*/
         try {
             timeoutReporteABD();
             //FJAH 26032025 Modificación a logBitacora para persistincia
@@ -622,7 +622,7 @@ public class Scheduler implements IScheduler {
         } catch (Exception e) {
             LOGGER.error("Error en timeoutReporteABD() durante testGenerarPlanes: ", e);
         }
-
+/*
         try {
 			timeoutPlanABD();
 			//FJAH 26032025 Modificación a logBitacora para persistincia
