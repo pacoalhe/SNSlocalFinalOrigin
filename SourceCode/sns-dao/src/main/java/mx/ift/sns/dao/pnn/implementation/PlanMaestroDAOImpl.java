@@ -26,8 +26,9 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
     public PlanMaestroDetalle getDetalleNumero(Long numeroInicial, Long numeroFinal) {
         //final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO "
         //        + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= :numeroInicial AND NUMERO_FINAL >= :numeroFinal";
-        final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO, ZONA "
-                + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= ?1 AND NUMERO_FINAL >= ?2";
+        final String strQuery = "SELECT " +
+                "IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO, ZONA " +
+                "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= ?1 AND NUMERO_FINAL >= ?2";
 
         //FJAH 27.05.2025
         LOGGER.debug("getDetalleNumero - numeroInicial: " + numeroInicial + ", numeroFinal: " + numeroFinal);
@@ -155,8 +156,9 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
 
     @Override
     public PlanMaestroDetalle getDetalleNumeroConsultaPublica(Long numeroInicial, Long numeroFinal) {
-        final String strQuery = "SELECT IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO, ZONA "
-                + "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= ? AND NUMERO_FINAL >= ?";
+        final String strQuery = "SELECT " +
+                "IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO, ZONA " +
+                "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= ?1 AND NUMERO_FINAL >= ?2";
 
         try {
             Query query = getEntityManager().createNativeQuery(strQuery, PlanMaestroDetalle.class);

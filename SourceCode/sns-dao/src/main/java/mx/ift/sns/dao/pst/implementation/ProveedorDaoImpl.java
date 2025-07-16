@@ -949,7 +949,7 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         // Convertir a String para la consulta
         String nativeQuery = sbquery.toString();
 
-        System.out.println("===> Valor del parametro recibido, Buscando PST por IDA:" + idaProveedor);
+        //System.out.println("===> Valor del parametro recibido, Buscando PST por IDA:" + idaProveedor);
         //System.out.println("===> Query a ejecutarse Preparado ...." + nativeQuery);
 
         // Crear la consulta nativa
@@ -962,7 +962,7 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         @SuppressWarnings("unchecked")
         List<Proveedor> pstListIda = query.getResultList();
 
-        System.out.println("===> Proveedores encontrados:" + pstListIda.size());
+        //System.out.println("===> Proveedores encontrados:" + pstListIda.size());
 
         if (pstListIda.size() > 1) {
             if (LOGGER.isDebugEnabled()) {
@@ -1024,7 +1024,7 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         // Convertir a String para la consulta
         String nativeQuery = sbquery.toString();
 
-        System.out.println("===> Valor del parametro recibido, Buscando PST por IDO:" + idoProveedor);
+        //System.out.println("===> Valor del parametro recibido, Buscando PST por IDO:" + idoProveedor);
         //System.out.println("===> Query a ejecutarse Preparado ...." + nativeQuery);
 
         // Crear la consulta nativa
@@ -1037,10 +1037,10 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         @SuppressWarnings("unchecked")
         List<Proveedor> pstListIdo = query.getResultList();
 
-        System.out.println("===> Proveedores encontrados:" + pstListIdo.size());
+        //System.out.println("===> Proveedores encontrados:" + pstListIdo.size());
 
         // Log de la lista recibida
-        LOGGER.info("Lista IDO :::::::::::::::::::::::::::: {}", pstListIdo.size());
+        //LOGGER.info("Lista IDO :::::::::::::::::::::::::::: {}", pstListIdo.size());
 
         // Si hay más de un proveedor, seleccionamos el activo
         if (pstListIdo.size() > 1) {
@@ -1094,7 +1094,7 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         // Convertir a String para la consulta
         String nativeQuery = sbquery.toString();
 
-        System.out.println("===> Valor del parametro recibido, Buscando PST por IDO:" + abcProveedor);
+        //System.out.println("===> Valor del parametro recibido, Buscando PST por IDO:" + abcProveedor);
         //System.out.println("===> Query a ejecutarse Preparado ...." + nativeQuery);
 
         // Crear la consulta nativa
@@ -1107,7 +1107,7 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
         @SuppressWarnings("unchecked")
         List<Proveedor> pstListBcd = query.getResultList();
 
-        System.out.println("===> Proveedores encontrados:" + pstListBcd.size());
+        //System.out.println("===> Proveedores encontrados:" + pstListBcd.size());
 
 
         //String queryBcd = "SELECT p FROM Proveedor p WHERE p.bcd = :bcd";
@@ -1137,7 +1137,7 @@ public class ProveedorDaoImpl extends BaseDAO<Proveedor> implements IProveedorDa
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Proveedor principal no especificado para BCD {}", abcProveedor);
                 }
-                // Si no hay principal, podrías regresar el primero o todos (como en getProveedorByIDO)
+                // Si no hay principal, regresa el primero o todos (como en getProveedorByIDO)
                 return Collections.singletonList(pstListBcd.get(0));
             }
         } else {

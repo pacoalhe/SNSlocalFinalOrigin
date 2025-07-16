@@ -57,11 +57,12 @@ public class NumerosPortadosDAOImpl extends BaseDAO<NumeroPortado> implements IN
         NumeroPortado res = null;
 
         try {
-            final String sql = "SELECT NUMBERFROM, ACTION, ACTIONDATE,   DCR, DIDA, ISMPP,"
-                    + "NUMBERTO, PORTID, PORTTYPE, RCR, RIDA FROM PORT_NUM_PORTADO WHERE (NUMBERFROM = '"
-                    + numero + "')";
+            final String sql = "SELECT NUMBERFROM, ACTION, ACTIONDATE, DCR, DIDA, ISMPP, " +
+                    "NUMBERTO, PORTID, PORTTYPE, RCR, RIDA " +
+                    "FROM PORT_NUM_PORTADO WHERE NUMBERFROM = ?";
 
             Query consulta = getEntityManager().createNativeQuery(sql, NumeroPortado.class);
+            consulta.setParameter(1, numero);
 
             @SuppressWarnings("unchecked")
             List<NumeroPortado> list = consulta.getResultList();
