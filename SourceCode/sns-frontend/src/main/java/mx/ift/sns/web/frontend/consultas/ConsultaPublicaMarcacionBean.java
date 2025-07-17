@@ -3,10 +3,7 @@ package mx.ift.sns.web.frontend.consultas;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -607,6 +604,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 			// ========== INICIO BLOQUE DE REEMPLAZO ==========
 			Integer zonaInt = this.nir.getZona(); // zona real desde el NIR
 			// Municipios en duro
+			/*
 			switch (zonaInt) {
 				case 2: this.setCantidadMunicipiosZona(444); break;
 				case 3: this.setCantidadMunicipiosZona(172); break;
@@ -618,15 +616,23 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 				case 9: this.setCantidadMunicipiosZona(800); break;
 				default: this.setCantidadMunicipiosZona(0); break;
 			}
-			//List<Municipio> municipiosZona = ngPublicService.findMunicipiosByZona(zona);
-			//Long total = ngPublicService.getTotalMunicipiosByZona(zona);
+			 */
 
-			//if (municipiosZona != null) {
-			//    municipiosZonaTmp.clear(); // Limpiar antes por si es recarga
-			//    municipiosZonaTmp.addAll(municipiosZona);
-			//}
+			// === LÓGICA REAL ACTIVADA ===
+			Set<Municipio> municipiosZonaTmp = new HashSet<>();
+			List<Municipio> municipiosZonaRaw = ngPublicService.findMunicipiosByZona(zonaInt);
 
-			//totalMunicipiosZona = total != null ? total.intValue() : 0;
+			if (municipiosZonaRaw != null) {
+				municipiosZonaTmp.clear();
+				municipiosZonaTmp.addAll(municipiosZonaRaw);
+			}
+
+			// Asignamos a atributos y calculamos total
+			this.setCantidadMunicipiosZona(municipiosZonaTmp.size());
+
+			if (this.cantidadMunicipiosZona == 0) {
+				LOGGER.warn("No se encontraron municipios para la zona " + zonaInt);
+			}
 
 
 			// Carga de proveedores por zona
@@ -760,6 +766,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 
 			// ----------------------------
 			// Municipios en duro
+			/*
 			switch (zonaInt) {
 				case 2: this.setCantidadMunicipiosZona(444); break;
 				case 3: this.setCantidadMunicipiosZona(172); break;
@@ -771,6 +778,25 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 				case 9: this.setCantidadMunicipiosZona(800); break;
 				default: this.setCantidadMunicipiosZona(0); break;
 			}
+			 */
+
+
+			// === LÓGICA REAL ACTIVADA ===
+			Set<Municipio> municipiosZonaTmp = new HashSet<>();
+			List<Municipio> municipiosZonaRaw = ngPublicService.findMunicipiosByZona(zonaInt);
+
+			if (municipiosZonaRaw != null) {
+				municipiosZonaTmp.clear();
+				municipiosZonaTmp.addAll(municipiosZonaRaw);
+			}
+
+			// Asignamos a atributos y calculamos total
+			this.setCantidadMunicipiosZona(municipiosZonaTmp.size());
+
+			if (this.cantidadMunicipiosZona == 0) {
+				LOGGER.warn("No se encontraron municipios para la zona " + zonaInt);
+			}
+
 			// ----------------------------
 			// Proveedores desde BD
 			// Carga de Proveedores por zona

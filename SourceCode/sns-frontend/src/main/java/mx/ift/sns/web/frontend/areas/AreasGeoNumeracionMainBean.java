@@ -508,6 +508,7 @@ public class AreasGeoNumeracionMainBean implements Serializable {
             Integer zona = region.getIdRegion().intValue();
 
             // Hardcode para cantidadMunicipiosZona
+            /*
             switch (zona) {
                 case 2: this.cantidadMunicipiosZona = 444; break;
                 case 3: this.cantidadMunicipiosZona = 172; break;
@@ -519,23 +520,25 @@ public class AreasGeoNumeracionMainBean implements Serializable {
                 case 9: this.cantidadMunicipiosZona = 800; break;
                 default: this.cantidadMunicipiosZona = 0; break;
             }
+             */
 
-            //List<Municipio> municipiosZona = ngPublicService.findMunicipiosByZona(zona);
-            //Long total = ngPublicService.getTotalMunicipiosByZona(zona);
+            // === LÓGICA REAL ACTIVADA ===
+            List<Municipio> municipiosZonaRaw = ngPublicService.findMunicipiosByZona(zona);
 
-            //if (municipiosZona != null) {
-            //    municipiosZonaTmp.clear(); // Limpiar antes por si es recarga
-            //    municipiosZonaTmp.addAll(municipiosZona);
-            //}
+            if (municipiosZonaRaw != null) {
+                municipiosZonaTmp.clear();
+                municipiosZonaTmp.addAll(municipiosZonaRaw);
+            }
 
-            //totalMunicipiosZona = total != null ? total.intValue() : 0;
-            totalMunicipiosZona = this.cantidadMunicipiosZona;
+            // Asignamos a atributos y calculamos total
+            this.municipiosZona = new ArrayList<>(municipiosZonaTmp);
+            this.totalMunicipiosZona = municipiosZonaTmp.size();
+            this.cantidadMunicipiosZona = this.totalMunicipiosZona;
 
-            // Validación opcional
-            //if (municipiosZonaTmp.size() != totalMunicipiosZona) {
-            //    LOGGER.warn("¡Inconsistencia! Lista trae " + municipiosZonaTmp.size() +
-            //            " pero el total reportado es " + totalMunicipiosZona);
-            //}
+            if (this.cantidadMunicipiosZona == 0) {
+                LOGGER.warn("No se encontraron municipios para la zona " + zona);
+            }
+
 
         } catch (Exception e) {
             LOGGER.error("Error al obtener municipios por zona " + region.getIdRegion() + ": " + e.getMessage(), e);

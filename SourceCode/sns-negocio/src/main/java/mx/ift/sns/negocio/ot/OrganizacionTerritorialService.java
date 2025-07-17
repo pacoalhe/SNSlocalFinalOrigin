@@ -773,10 +773,11 @@ public class OrganizacionTerritorialService implements IOrganizacionTerritorialS
             m.setId(pk);
 
             m.setNombre((String) row[1]);               // NOMBRE del municipio
-            m.setClaveInegi5((String) row[5]);          // CLAVE_INEGI_5 (SUBSTR del ID_INEGI)
+            //m.setClaveInegi5((String) row[5]);          // CLAVE_INEGI_5 (SUBSTR del ID_INEGI)
 
             Estado estado = new Estado();
-            estado.setNombre((String) row[4]);          // NOMBRE del estado
+            //estado.setNombre((String) row[4]);          // NOMBRE del estado
+            estado.setNombre((String) row[3]);          // NOMBRE del estado
             m.setEstado(estado);
 
             municipios.add(m);

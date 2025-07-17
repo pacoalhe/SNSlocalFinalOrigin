@@ -1,5 +1,7 @@
 package mx.ift.sns.dao.ot.implementation;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Named;
@@ -203,22 +205,18 @@ public class MunicipioDaoImpl extends BaseDAO<Municipio> implements IMunicipioDa
      */
     @Override
     public List<Object[]> findMunicipiosByZona(Integer idZona) {
-        String sql =
-                "SELECT DISTINCT " +
-                        "m.ID_MUNICIPIO, m.NOMBRE, cp.ID_ESTADO, cp.ID_INEGI, cp.ID_POBLACION, " +
-                        "SUBSTR(TO_CHAR(cp.ID_INEGI), 1, 5) AS CLAVE_INEGI_5 " +
-                        "FROM RANGO_SERIE rs " +
-                        "JOIN CAT_NIR cn ON rs.ID_NIR = cn.ID_NIR " +
-                        "JOIN CAT_POBLACION cp ON rs.ID_POBLACION = cp.ID_INEGI " +
-                        "JOIN CAT_MUNICIPIO m ON cp.ID_MUNICIPIO = m.ID_MUNICIPIO " +
-                        "WHERE cn.ZONA = ? " +
-                        "ORDER BY m.NOMBRE";
+        String sql = "SELECT cm.ID_MUNICIPIO, cm.NOMBRE, cm.ID_ESTADO, ce.NOMBRE AS ESTADO_NOMBRE " +
+                "FROM CAT_MUNICIPIO cm " +
+                "JOIN CAT_ESTADO ce ON cm.ID_ESTADO = ce.ID_ESTADO " +
+                "WHERE cm.REGION_CELULAR = ? " +
+                "ORDER BY cm.NOMBRE";
 
         return getEntityManager()
                 .createNativeQuery(sql)
                 .setParameter(1, idZona)
                 .getResultList();
     }
+
     @Override
     public Long countMunicipiosByZona(Integer idZona) {
         String sql =
