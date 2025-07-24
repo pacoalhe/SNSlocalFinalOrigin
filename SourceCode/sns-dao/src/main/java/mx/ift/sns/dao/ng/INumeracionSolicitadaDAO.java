@@ -72,4 +72,10 @@ public interface INumeracionSolicitadaDAO extends IBaseDAO<NumeracionSolicitada>
      */
     List<Object[]> findAllNumSolicitadasBySolicitudGroupByAbn(SolicitudAsignacion solicitud);
 
+    /**
+     * Limpia numeracion geográfica solicitada y no asignada
+     * @param numeracionSolicitadaList
+     */
+    void resetNoAsignada(List<NumeracionSolicitada> numeracionSolicitadaList);
+
 }

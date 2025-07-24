@@ -2,10 +2,8 @@ package mx.ift.sns.negocio.ng;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
 import javax.ejb.Remote;
@@ -32,24 +30,7 @@ import mx.ift.sns.modelo.abn.Abn;
 import mx.ift.sns.modelo.abn.EstadoAbn;
 import mx.ift.sns.modelo.abn.PoblacionAbn;
 import mx.ift.sns.modelo.filtros.FiltroBusquedaSolicitudes;
-import mx.ift.sns.modelo.ng.AbnConsolidar;
-import mx.ift.sns.modelo.ng.Cesion;
-import mx.ift.sns.modelo.ng.CesionSolicitadaNg;
-import mx.ift.sns.modelo.ng.EstadoAbnConsolidar;
-import mx.ift.sns.modelo.ng.Liberacion;
-import mx.ift.sns.modelo.ng.LiberacionSolicitadaNg;
-import mx.ift.sns.modelo.ng.NirConsolidar;
-import mx.ift.sns.modelo.ng.NumeracionRedistribuida;
-import mx.ift.sns.modelo.ng.NumeracionSolicitada;
-import mx.ift.sns.modelo.ng.PoblacionConsolidar;
-import mx.ift.sns.modelo.ng.RangoSerie;
-import mx.ift.sns.modelo.ng.RedistribucionSolicitadaNg;
-import mx.ift.sns.modelo.ng.SolicitudAsignacion;
-import mx.ift.sns.modelo.ng.SolicitudCesionNg;
-import mx.ift.sns.modelo.ng.SolicitudConsolidacion;
-import mx.ift.sns.modelo.ng.SolicitudLiberacionNg;
-import mx.ift.sns.modelo.ng.SolicitudLineasActivas;
-import mx.ift.sns.modelo.ng.SolicitudRedistribucionNg;
+import mx.ift.sns.modelo.ng.*;
 import mx.ift.sns.modelo.ot.Poblacion;
 import mx.ift.sns.modelo.series.EstadoRango;
 import mx.ift.sns.modelo.series.Nir;
@@ -1713,9 +1694,28 @@ public class SolicitudesService implements ISolicitudesService {
 
     @Override
     public SolicitudAsignacion getSolicitudAsignacionEagerLoad(SolicitudAsignacion pSolicitud) throws Exception {
+        List<NumeracionAsignada> numeracionAsignadaList = numAsignadaDao.findAllNumeracionAsignadaBySolicitud(pSolicitud);
+        List<NumeracionSolicitada> numeracionSolicitadaList = numSolcitadaDao.getNumSolicitada(pSolicitud.getId());
+        List<NumeracionSolicitada> asignadas = new ArrayList<>();
+        List<NumeracionSolicitada> noAsignadas = new ArrayList<>();
 
-        pSolicitud.setNumeracionAsignadas(numAsignadaDao.findAllNumeracionAsignadaBySolicitud(pSolicitud));
-        pSolicitud.setNumeracionSolicitadas(numSolcitadaDao.getNumSolicitada(pSolicitud.getId()));
+        for (NumeracionAsignada na : numeracionAsignadaList) {
+            asignadas.add(na.getNumeracionSolicitada());
+        }
+
+        for (NumeracionSolicitada ns : numeracionSolicitadaList) {
+            if (!asignadas.contains(ns)) {
+                ns.setCantAsignada(new BigDecimal(0));
+                noAsignadas.add(ns);
+            }
+        }
+
+        if(!noAsignadas.isEmpty()) {
+            numSolcitadaDao.resetNoAsignada(noAsignadas);
+        }
+
+        pSolicitud.setNumeracionAsignadas(numeracionAsignadaList);
+        pSolicitud.setNumeracionSolicitadas(asignadas);
         pSolicitud.setRangos(seriesService.findAllRangosBySolicitud(pSolicitud));
         pSolicitud.setOficios(oficiosService.getOficiosBySolicitud(pSolicitud.getId()));
         return pSolicitud;

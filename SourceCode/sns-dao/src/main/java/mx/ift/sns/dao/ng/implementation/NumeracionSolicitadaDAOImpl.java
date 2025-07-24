@@ -260,4 +260,18 @@ public class NumeracionSolicitadaDAOImpl extends BaseDAO<NumeracionSolicitada> i
 
         return lista;
     }
+
+    public void resetNoAsignada(List<NumeracionSolicitada> numeracionSolicitadaList) {
+        try {
+            for (NumeracionSolicitada numeracionSolicitada : numeracionSolicitadaList) {
+                String query = "UPDATE NG_NUM_SOLICITADA SET CANT_ASIGNADA = 0 WHERE ID_SOL = ? AND ID_NG_NUM_SOLICITADA = ?";
+                Query tquery = getEntityManager().createNativeQuery(query);
+                tquery.setParameter(1, numeracionSolicitada.getSolicitudAsignacion().getId());
+                tquery.setParameter(2, numeracionSolicitada.getId());
+                tquery.executeUpdate();
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
 }

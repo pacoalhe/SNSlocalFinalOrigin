@@ -1,6 +1,7 @@
 package mx.ift.sns.modelo.pnn;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
@@ -38,6 +39,12 @@ public class PlanMaestroDetalle implements Serializable {
 
     @Column(name = "ZONA")
     private Integer zona;
+
+    @Column(name = "NUMERO_INICIAL")
+    private BigDecimal numeroInicial;
+
+    @Column(name = "NUMERO_FINAL")
+    private BigDecimal numeroFinal;
 
     /**
      * @return the id
@@ -132,6 +139,23 @@ public class PlanMaestroDetalle implements Serializable {
      * @param zona the zona to set
      */
     public void setZona(Integer zona) { this.zona = zona; }
+
+    public Long getNumeroInicial() {
+        return numeroInicial != null ? numeroInicial.longValue() : null;
+    }
+
+    public void setNumeroInicial(BigDecimal numeroInicial) {
+        this.numeroInicial = numeroInicial;
+    }
+
+    public Long getNumeroFinal() {
+        return numeroFinal != null ? numeroFinal.longValue() : null;
+    }
+
+    public void setNumeroFinal(BigDecimal numeroFinal) {
+        this.numeroFinal = numeroFinal;
+    }
+
 
     @Override
     public String toString() {

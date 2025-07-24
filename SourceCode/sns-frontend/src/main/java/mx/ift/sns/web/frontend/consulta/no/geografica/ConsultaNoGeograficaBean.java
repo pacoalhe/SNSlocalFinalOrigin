@@ -10,6 +10,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 
+import mx.ift.sns.negocio.pnn.IPlanNumeracionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,10 @@ public class ConsultaNoGeograficaBean implements Serializable {
 
     @EJB(mappedName = "PlanMaestroService")
     private IPlanMaestroService planService;
+
+	/** FJAH */
+	@EJB(mappedName = "PlanNumeracionService")
+	private IPlanNumeracionService planNumeracionService;
 
     /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsultaPublicaMarcacionBean.class);
@@ -267,7 +272,10 @@ public class ConsultaNoGeograficaBean implements Serializable {
 				LOGGER.info("    RIDA: {}, DIDA: {}, ACTION: {}", numeroPortado.getRida(), numeroPortado.getDida(), numeroPortado.getAction());
 			}
 
-			PlanMaestroDetalle planEncontrado = planService.getPlanMaestroDetalle(Long.valueOf(numeroCompleto), Long.valueOf(numeroCompleto));
+			//PlanMaestroDetalle planEncontrado = planService.getPlanMaestroDetalle(Long.valueOf(numeroCompleto), Long.valueOf(numeroCompleto));
+			PlanMaestroDetalle planEncontrado = planNumeracionService.getDetalleNumeroConsultaPublica(
+					Long.valueOf(numeroConsultado), Long.valueOf(numeroConsultado));
+
 			LOGGER.info("===> Resultado planService.getPlanMaestroDetalle: {}", (planEncontrado != null ? "Sí" : "No"));
 
 			List<Proveedor> pstList = new ArrayList<>();
@@ -338,191 +346,6 @@ public class ConsultaNoGeograficaBean implements Serializable {
 			MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
 		}
 	}
-
-	/*
-    private void findProveedorPrestador(RangoSerieNng rango, String numeroConsultado) {
-	try {
-//FJAH 28.05.2025 Rastreo
-		LOGGER.debug("Clave seleccionada: " + this.claveSelected);
-		LOGGER.debug("Número consultado: " + numeroConsultado);
-
-		if (this.claveSelected == null
-				|| numeroConsultado == null
-				|| numeroConsultado.trim().isEmpty()) {
-			LOGGER.error("Datos insuficientes: claveSelected=" + this.claveSelected + ", numeroConsultado='" + numeroConsultado + "'");
-			this.setProveedorConsulta(null);
-			MensajesFrontBean.addErrorMsg(MSG_ID, "Datos insuficientes para consulta de proveedor.");
-			return;
-		}
-//Fin Rastreo
-
-		String numeroCompleto = this.claveSelected + numeroConsultado;
-
-//FJAH 28.05.2025 Rastreo
-		LOGGER.debug("Número completo armado: " + numeroCompleto);
-		if (!numeroCompleto.matches("\\d+")) {
-			LOGGER.error("El número completo no es numérico: " + numeroCompleto);
-			this.setProveedorConsulta(null);
-			MensajesFrontBean.addErrorMsg(MSG_ID, "El número consultado es inválido.");
-			return;
-		}
-//Fin Rastreo
-
-		// Si existe numero portado, buscamos el pst por ABC, si no devuelve nada
-	    // buscamos por IDA.
-
-		NumeroPortado numeroPortado = ngPublicService.findNumeroPortado(numeroCompleto);
-
-//FJAH 28.05.2025 Rastreo
-		LOGGER.debug("Resultado de findNumeroPortado para " + numeroCompleto + ": " + (numeroPortado != null ? numeroPortado.toString() : "null"));
-//Fin Rastreo
-
-	    LOGGER.info("Se realiza la busqueda del numero en el plan maestro ******");
-//FJAH 28.05.2025 Rastreo
-		if (numeroCompleto == null || !numeroCompleto.matches("\\d+")) {
-			LOGGER.error("El número completo es inválido: " + numeroCompleto);
-			this.setProveedorConsulta(null);
-			MensajesFrontBean.addErrorMsg(MSG_ID, "El número consultado no es válido para esta consulta.");
-			return;
-		}
-
-		try {
-			Long numCompletoLong = Long.valueOf(numeroCompleto);
-			PlanMaestroDetalle planEncontrado = planService.getPlanMaestroDetalle(numCompletoLong, numCompletoLong);
-			LOGGER.debug("Resultado de getPlanMaestroDetalle: " + (planEncontrado != null ? planEncontrado.toString() : "null"));
-			// ... resto del flujo
-		} catch (NumberFormatException ex) {
-			LOGGER.error("Error al convertir numeroCompleto a Long: " + numeroCompleto, ex);
-			this.setProveedorConsulta(null);
-			MensajesFrontBean.addErrorMsg(MSG_ID, "Número consultado inválido para consulta en plan maestro.");
-			return;
-		}
-//FIN Rastreo
-
-		PlanMaestroDetalle planEncontrado = planService.getPlanMaestroDetalle(Long.valueOf(numeroCompleto),
-		    Long.valueOf(numeroCompleto));
-
-	    LOGGER.info("Se obtiene el resultado de la busqueda del numero en el plan maestro "
-		    + planEncontrado.toString() != null ? planEncontrado.toString() : "");
-
-	    if (numeroPortado != null) {
-			List<Proveedor> pstIDOListAux = ngPublicService.getProveedorByABC(numeroPortado.getRida());
-
-//FJAH 28.05.2025 Rastreo
-		LOGGER.debug("Proveedores encontrados por ABC para RIDA " + numeroPortado.getRida() + ": " + (pstIDOListAux != null ? pstIDOListAux.size() : "null"));
-//FIN Rastreo
-
-		if (pstIDOListAux.size() >= 1) {
-		    // Se recorre la lista en caso de existir más de un PST con un mismo código de
-		    // identificación
-		    for (Proveedor pst : pstIDOListAux) {
-
-//FJAH 28.05.2025 Rastreo
-				LOGGER.debug("Revisando proveedor: " + pst.toString());
-//FIN Rastreo
-				if (pstIDOListAux.size() == 1 || (pst.getConsultaPublicaSns() != null
-				&& pst.getConsultaPublicaSns().equals(NUMERACION_NO_GEOGRAFICA)))
-			    this.setProveedorConsulta(pst);
-
-//FJAH 28.05.2025 Rastreo
-				LOGGER.info("Proveedor asignado: " + (this.getProveedorConsulta() != null ? this.getProveedorConsulta().toString() : "null"));
-//FIN Rastreo
-
-		    }
-		} else {
-		    List<Proveedor> pstIDAListAux = ngPublicService.getProveedorByIDA(numeroPortado.getRida());
-		    if (pstIDAListAux.size() >= 1) {
-			// Se recorre la lista en caso de existir más de un PST con un mismo código de
-			// identificación
-			for (Proveedor pst : pstIDAListAux) {
-
-//FJAH 28.05.2025 Rastreo
-				LOGGER.debug("Revisando proveedor: " + pst.toString());
-//FIN Rastreo
-
-			    if (pstIDAListAux.size() == 1 || (pst.getConsultaPublicaSns() != null
-				    && pst.getConsultaPublicaSns().equals(NUMERACION_NO_GEOGRAFICA)))
-				this.setProveedorConsulta(pst);
-
-//FJAH 28.05.2025 Rastreo
-				LOGGER.info("Proveedor asignado: " + (this.getProveedorConsulta() != null ? this.getProveedorConsulta().toString() : "null"));
-//FIN Rastreo
-
-			}
-		    } else {
-			LOGGER.error("No se ha definido un proveedor principal en la tabla CAT_PST para el RIDA: {}",
-				numeroPortado.getRida());
-			this.setProveedorConsulta(null);
-
-//FJAH 28.05.2025 Rastreo
-				LOGGER.info("Proveedor asignado: " + (this.getProveedorConsulta() != null ? this.getProveedorConsulta().toString() : "null"));
-//FIN Rastreo
-
-		    }
-		}
-	    } else if (planEncontrado != null) {
-		List<Proveedor> pstIDOListAux = null;
-
-		LOGGER.info("Se busca el PST con IDA " + planEncontrado.getIda());
-
-		pstIDOListAux = ngPublicService.getProveedorByIDA(BigDecimal.valueOf(planEncontrado.getIda()));
-
-		LOGGER.info("Se encontraron " + pstIDOListAux.size() + " PST(s) con IDA " + planEncontrado.getIda());
-
-		if (pstIDOListAux.isEmpty()) {
-
-		    LOGGER.info(
-			    "Se busca el PST como IDO debido a que no se localizó por IDA " + planEncontrado.getIda());
-		    pstIDOListAux = ngPublicService.getProveedorByIDO(BigDecimal.valueOf(planEncontrado.getIda()));
-
-		    if (pstIDOListAux.isEmpty()) {
-
-			LOGGER.info("Se busca el PST con IDO debido a que no se localizó el IDA "
-				+ planEncontrado.getIdo());
-			pstIDOListAux = ngPublicService.getProveedorByIDO(BigDecimal.valueOf(planEncontrado.getIdo()));
-		    }
-		}
-
-		if (pstIDOListAux.size() >= 1) {
-		    // Se recorre la lista en caso de existir más de un PST con un mismo código de
-		    // identificación
-		    LOGGER.info(
-			    "No se encontro información en portabilidad o en el plan maestro, se busca internamente en el SNS");
-		    for (Proveedor pst : pstIDOListAux) {
-			LOGGER.info("Se asocia el PST localizado al número búscado");
-
-//FJAH 28.05.2025 Rastreo
-				LOGGER.debug("Revisando proveedor: " + pst.toString());
-//FIN Rastreo
-
-			if (pstIDOListAux.size() == 1 || (pst.getConsultaPublicaSns() != null
-				&& pst.getConsultaPublicaSns().equals(NUMERACION_NO_GEOGRAFICA)))
-			    this.setProveedorConsulta(pst);
-
-//FJAH 28.05.2025 Rastreo
-				LOGGER.info("Proveedor asignado: " + (this.getProveedorConsulta() != null ? this.getProveedorConsulta().toString() : "null"));
-//FIN Rastreo
-
-		    }
-		}
-
-	    } else {
-		this.setProveedorConsulta(rango.getAsignatario());
-
-//FJAH 28.05.2025 Rastreo
-			LOGGER.info("Proveedor asignado: " + (this.getProveedorConsulta() != null ? this.getProveedorConsulta().toString() : "null"));
-//FIN Rastreo
-
-		;
-	    }
-
-	} catch (Exception e) {
-	    LOGGER.error("Error insesperado en la carga de datos" + e.getMessage());
-	    MensajesFrontBean.addErrorMsg(MSG_ID, "Error inesperado");
-	}
-    }
-
-	 */
 
     /**
      * Devuelve el número correspondiente a la letra introducida.

@@ -1,5 +1,6 @@
 package mx.ift.sns.dao.pnn.implementation;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import javax.inject.Named;
@@ -158,6 +159,51 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
     public PlanMaestroDetalle getDetalleNumeroConsultaPublica(Long numeroInicial, Long numeroFinal) {
         final String strQuery = "SELECT " +
                 "IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO, ZONA " +
+                "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= ? AND NUMERO_FINAL >= ?";
+
+        PlanMaestroDetalle planMaestroDetalle = null;
+
+        try {
+            Query query = getEntityManager().createNativeQuery(strQuery);
+            query.setParameter(1, numeroInicial);
+            query.setParameter(2, numeroFinal);
+            query.setMaxResults(1); // Obtiene registro unico
+
+            LOGGER.info("Consulta pública: búsqueda del número {} en el plan maestro", numeroInicial);
+
+            @SuppressWarnings("unchecked")
+            List<Object[]> resultados = query.getResultList();
+
+            if (resultados != null && !resultados.isEmpty()) {
+                Object[] resultado = resultados.get(0);
+                planMaestroDetalle = new PlanMaestroDetalle();
+
+                planMaestroDetalle.setIdo(resultado[0] != null ? Integer.valueOf(resultado[0].toString()) : null);
+                planMaestroDetalle.setNumeroInicial(resultado[1] != null ? new BigDecimal(resultado[1].toString()) : null);
+                planMaestroDetalle.setNumeroFinal(resultado[2] != null ? new BigDecimal(resultado[2].toString()) : null);
+                planMaestroDetalle.setTipoServicio(resultado[3] != null ? resultado[3].toString().charAt(0) : null);
+                planMaestroDetalle.setMpp(resultado[4] != null ? resultado[4].toString().charAt(0) : null);
+                planMaestroDetalle.setIda(resultado[5] != null ? Integer.valueOf(resultado[5].toString()) : null);
+                planMaestroDetalle.setAreaServicio(resultado[6] != null ? Integer.valueOf(resultado[6].toString()) : null);
+                planMaestroDetalle.setZona(resultado[7] != null ? Integer.valueOf(resultado[7].toString()) : null);
+
+                LOGGER.info("Consulta pública: número {} localizado en el plan maestro.", numeroInicial);
+            }
+
+        } catch (NoResultException e) {
+            LOGGER.error("Consulta pública: número {} no localizado en plan maestro", numeroInicial);
+        } catch (Exception e) {
+            LOGGER.error("Error en getDetalleNumeroConsultaPublica: {}", e.getMessage(), e);
+        }
+
+        return planMaestroDetalle;
+    }
+
+    /*
+    @Override
+    public PlanMaestroDetalle getDetalleNumeroConsultaPublica(Long numeroInicial, Long numeroFinal) {
+        final String strQuery = "SELECT " +
+                "IDO, NUMERO_INICIAL, NUMERO_FINAL, TIPO_SERVICIO, MPP, IDA, AREA_SERVICIO, ZONA " +
                 "FROM PNN_DETALLE WHERE NUMERO_INICIAL <= ?1 AND NUMERO_FINAL >= ?2";
 
         try {
@@ -182,5 +228,6 @@ public class PlanMaestroDAOImpl extends BaseDAO<PlanMaestroDetalle> implements I
 
         return null;
     }
+     */
 
 }

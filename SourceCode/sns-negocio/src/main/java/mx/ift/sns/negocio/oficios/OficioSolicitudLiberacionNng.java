@@ -1,6 +1,8 @@
 package mx.ift.sns.negocio.oficios;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.ResourceBundle;
 
 import mx.ift.sns.modelo.nng.LiberacionSolicitadaNng;
 import mx.ift.sns.modelo.nng.SolicitudLiberacionNng;
@@ -137,6 +139,64 @@ public class OficioSolicitudLiberacionNng extends GeneradorOficio {
             }
 
             // Contenido de la tabla
+            int fila = 1; // Empezamos después de la cabecera
+            for (LiberacionSolicitadaNng libSol : solicitud.getLiberacionesSolicitadas()) {
+                if (!libSol.getEstatus().getCodigo().equals(EstadoLiberacionSolicitada.CANCELADO)) {
+
+                    // CLAVE DE SERVICIO
+                    generaCelda(table.getRow(fila).getCell(0), libSol.getIdClaveServicio().toString(), 10, false);
+
+                    // SERIE
+                    generaCelda(table.getRow(fila).getCell(1), libSol.getSna().toString(), 10, false);
+
+                    // NUM. INICIAL
+                    generaCelda(table.getRow(fila).getCell(2), libSol.getNumInicio(), 10, false);
+
+                    // NUM. FINAL
+                    generaCelda(table.getRow(fila).getCell(3), libSol.getNumFinal(), 10, false);
+
+                    // IDO/IDD (Antes BCD)
+                    String bcdValue = "";
+                    if (libSol.getBcd() != null) {
+                        if (FechasUtils.esAntesDeFechaUmbral("liberacion.fecha.umbral.bcd", libSol.getFechaAsignacion())) {
+                            bcdValue = String.valueOf(libSol.getProveedorCesionario().getBcd());
+                            LOGGER.info("[BCD por fecha < umbral - proveedorCesionario]: {}", bcdValue);
+                        }else {
+                            bcdValue = String.valueOf(libSol.getBcd());
+                            LOGGER.info("[BCD por fecha > umbral - BCD Origen]: {}", bcdValue);
+                        }
+                        LOGGER.info("[Valor del BCD {}]", libSol.getBcd());
+                    } else if (libSol.getProveedorCesionario() != null && libSol.getProveedorCesionario().getBcd() != null) {
+                        bcdValue = String.valueOf(libSol.getProveedorCesionario().getBcd());
+                        LOGGER.info("[Valor proveedorCesionario {}]", libSol.getProveedorCesionario());
+                        LOGGER.info("[Valor bcdValue {}]", bcdValue);
+                    } else if (libSol.getProveedorConcesionario() != null && libSol.getProveedorConcesionario().getBcd() != null) {
+                        bcdValue = String.valueOf(libSol.getProveedorConcesionario().getBcd());
+                        LOGGER.info("[Valor proveedorConcesionario {}]", libSol.getProveedorConcesionario());
+                        LOGGER.info("[Valor bcdValue {}]", bcdValue);
+                    }
+                    generaCelda(table.getRow(fila).getCell(4), bcdValue, 10, false);
+
+                    // IDA
+                    String idaValue = "";
+                    if (libSol.getIda() != null) {
+                        idaValue = String.valueOf(libSol.getIda());
+                    } else if (libSol.getProveedorCesionario() != null && libSol.getProveedorCesionario().getBcd() != null) {
+                        idaValue = String.valueOf(libSol.getProveedorCesionario().getBcd());
+                        LOGGER.info("IDA = null [Valor IDA desde el PST {}]", idaValue);
+                    }
+                    generaCelda(table.getRow(fila).getCell(5), idaValue, 10, false);
+
+                    // Log explícito
+                    LOGGER.info("[Fila {}] IDA (efectivo): {} (fuente: {})", fila, idaValue,
+                            libSol.getIda() != null ? "libSol.getIda()" : "libSol.getProveedorCesionario().getBcd()");
+
+                    fila++;
+                }
+            }
+
+            //ORIGINAL
+            /*
             int fila = 1; // Empezamos despúes de la cabecera
             for (LiberacionSolicitadaNng libSol : solicitud.getLiberacionesSolicitadas()) {
                 if (!libSol.getEstatus().getCodigo().equals(EstadoLiberacionSolicitada.CANCELADO)) {
@@ -173,6 +233,7 @@ public class OficioSolicitudLiberacionNng extends GeneradorOficio {
                     fila++;
                 }
             }
+             */
 
         } catch (Exception e) {
             LOGGER.error("Error inesperado", e.getMessage());
@@ -180,4 +241,5 @@ public class OficioSolicitudLiberacionNng extends GeneradorOficio {
 
         return table;
     }
+
 }

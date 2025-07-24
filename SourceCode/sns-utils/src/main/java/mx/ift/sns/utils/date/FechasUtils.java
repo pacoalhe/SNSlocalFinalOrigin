@@ -6,7 +6,10 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Utilidades para el manejo de Fechas (java.util.date).
@@ -365,6 +368,25 @@ public final class FechasUtils {
 	}
 
 
+    private static final String FECHA_FORMATO_DEFAULT = "dd/MM/yyyy";
+
+    /**
+     * Compara si una fecha dada es anterior a la fecha umbral definida en sns.properties.
+     */
+    public static boolean esAntesDeFechaUmbral(String clavePropiedad, Date fechaEvaluar) {
+        try {
+            ResourceBundle bundle = ResourceBundle.getBundle("sns");
+            String fechaUmbralStr = bundle.getString(clavePropiedad);
+            SimpleDateFormat sdf = new SimpleDateFormat(FECHA_FORMATO_DEFAULT);
+            Date fechaUmbral = sdf.parse(fechaUmbralStr);
+            return fechaEvaluar != null && fechaEvaluar.before(fechaUmbral);
+        } catch (Exception e) {
+            Logger.getLogger(FechasUtils.class.getName()).log(Level.SEVERE,
+                    "Error comparando fecha umbral para clave: " + clavePropiedad, e);
+            return false;
+        }
+    }
+
     /*
     public static String getActualDate() {
         // Ejemplo: "dd.MM.yyyy HH:mm:ss"
@@ -397,6 +419,8 @@ public final class FechasUtils {
     }
 
      */
+
+
 
 
 

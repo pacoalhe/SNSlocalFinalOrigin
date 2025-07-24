@@ -974,6 +974,7 @@ public class ConsultaPublicaMarcacionBean implements Serializable {
 
 			PlanMaestroDetalle planEncontrado = planNumeracionService.getDetalleNumeroConsultaPublica(
 					Long.valueOf(numeroConsultado), Long.valueOf(numeroConsultado));
+
 			//LOGGER.info("===> Resultado planService.getPlanMaestroDetalle: " + (planEncontrado != null ? "Sí" : "No"));
 
 			boolean numIni = false;
