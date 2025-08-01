@@ -274,7 +274,7 @@ public class ConsultaNoGeograficaBean implements Serializable {
 
 			//PlanMaestroDetalle planEncontrado = planService.getPlanMaestroDetalle(Long.valueOf(numeroCompleto), Long.valueOf(numeroCompleto));
 			PlanMaestroDetalle planEncontrado = planNumeracionService.getDetalleNumeroConsultaPublica(
-					Long.valueOf(numeroConsultado), Long.valueOf(numeroConsultado));
+					Long.valueOf(numeroCompleto), Long.valueOf(numeroCompleto));
 
 			LOGGER.info("===> Resultado planService.getPlanMaestroDetalle: {}", (planEncontrado != null ? "Sí" : "No"));
 
