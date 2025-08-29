@@ -3,6 +3,9 @@ package mx.ift.sns.dao.pnn;
 import mx.ift.sns.dao.IBaseDAO;
 import mx.ift.sns.modelo.pnn.PlanMaestroDetalle;
 
+import java.sql.SQLException;
+import java.util.List;
+
 /**
  * Dao Tipo Plan.
  */
@@ -43,5 +46,14 @@ public interface IPlanMaestroDAO extends IBaseDAO<PlanMaestroDetalle> {
      * @return
      */
     PlanMaestroDetalle getDetalleNumeroConsultaPublica(Long numeroInicial, Long numeroFinal);
+
+    /**
+     * FJAH Refactorizacion UPSERT 01.08.2025
+     */
+    int upsertBatchPlanMaestro(List<PlanMaestroDetalle> registros) throws SQLException;
+
+    int deleteBatchPlanMaestro(List<PlanMaestroDetalle> registros);
+
+
 
 }

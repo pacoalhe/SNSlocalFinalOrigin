@@ -1,5 +1,9 @@
+
 package mx.ift.sns.negocio.port;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,9 +35,51 @@ public class ObtenerArchivosDiarios {
 	
 	
 	public void getArchidosDiarios(){
-	
+
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+
+		// === PORTADOS ===
+		if (remoteFilePortedPath != null && remoteFilePortedPath.startsWith("file:/")) {
+			try {
+				String localPath = remoteFilePortedPath.replace("file:/", "");
+				File origen = new File(localPath);
+
+				Files.copy(origen.toPath(), new File(archivoPortados).toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+				LOGGER.info("[LocalMode] Archivo PORTADOS leído localmente desde {}", origen.getAbsolutePath());
+			} catch (Exception e) {
+				LOGGER.error("[LocalMode] Error leyendo archivo PORTADOS local", e);
+			}
+		} else {
+			Runnable worker1 = new RunnableSFTPConection(connectionParams, this.archivoPortados, this.remoteFilePortedPath);
+			executor.execute(worker1);
+		}
+
+		// === CANCELADOS ===
+		if (remoteFileDeletedPath != null && remoteFileDeletedPath.startsWith("file:/")) {
+			try {
+				String localPath = remoteFileDeletedPath.replace("file:/", "");
+				File origen = new File(localPath);
+
+				Files.copy(origen.toPath(), new File(archivoCancelados).toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+				LOGGER.info("[LocalMode] Archivo CANCELADOS leído localmente desde {}", origen.getAbsolutePath());
+			} catch (Exception e) {
+				LOGGER.error("[LocalMode] Error leyendo archivo CANCELADOS local", e);
+			}
+		} else {
+			Runnable worker2 = new RunnableSFTPConection(connectionParams, this.archivoCancelados, this.remoteFileDeletedPath);
+			executor.execute(worker2);
+		}
+
+		executor.shutdown();
+		while (!executor.isTerminated()) {
+			// espera que terminen los hilos SFTP
+		}
+
+		LOGGER.info("Finished all threads SFTP/Local downloads");
 		
-		ExecutorService executor = Executors.newFixedThreadPool(2);		
+		/*ExecutorService executor = Executors.newFixedThreadPool(2);
 		
 		Runnable worker1=new RunnableSFTPConection(connectionParams, this.archivoPortados, this.remoteFilePortedPath);
 		executor.execute(worker1);
@@ -45,7 +91,7 @@ public class ObtenerArchivosDiarios {
 		executor.shutdown();
         while (!executor.isTerminated()) {
         }
-        LOGGER.info("Finished all threads SFTP downloads");
+        LOGGER.info("Finished all threads SFTP downloads");*/
 		
 	}
 

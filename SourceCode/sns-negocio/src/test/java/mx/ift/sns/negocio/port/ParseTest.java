@@ -5,6 +5,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -45,18 +46,23 @@ public class ParseTest extends TestCaseContext {
 	@Ignore
 	@Test
 	public void test1NumerosPortadosXmlParser() {
+		try {
+			LOGGER.info("<--init test parse Numbers Ported xml file--->");
 
-		LOGGER.info("<--init test parse Numbers Ported xml file--->");
+			NumerosPortadosXmlParser parser = new NumerosPortadosXmlParser();
+			ResultadoParser res = new ResultadoParser();
+			System.out.println("<--Tiempo de inicio:" + getActualDate());
 
-		NumerosPortadosXmlParser parser = new NumerosPortadosXmlParser();
-		ResultadoParser res = new ResultadoParser();
-		System.out.println("<--Tiempo de inicio:"+getActualDate());
-		
-		parser.parse("file:/home/jparanda/tmp/NumbersPorted-20161027.xml",
-				new File("/home/jparanda/tmp/salida_portados_20161027.txt"), res);
-		
-		System.out.println("<--Tiempo de de fin:"+getActualDate());
-		LOGGER.info("<--Fin test parse Numbers Ported xml file--->");
+			parser.parse("file:/home/jparanda/tmp/NumbersPorted-20161027.xml",
+					new File("/home/jparanda/tmp/salida_portados_20161027.txt"), res);
+
+			System.out.println("<--Tiempo de de fin:" + getActualDate());
+			LOGGER.info("<--Fin test parse Numbers Ported xml file--->");
+
+		} catch (Exception e) {
+			LOGGER.error("Error en test1NumerosPortadosXmlParser", e);
+			Assert.fail("Excepción en el parseo: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -64,7 +70,7 @@ public class ParseTest extends TestCaseContext {
 	*/
 	@Ignore
 	@Test
-	public void test2NumerosDeletedXmlParser() {
+	public void test2NumerosDeletedXmlParser() throws Exception {
 
 		LOGGER.info("<--init test parse Numbers Deleted xml file--->");
 
@@ -73,9 +79,9 @@ public class ParseTest extends TestCaseContext {
 		parser.parse("file:/home/jparanda/tmp/NumbersDeleted-20160203.xml",
 				new File("/home/jparanda/tmp/salida_deleted.txt"), res);
 
-		LOGGER.info("<--init test parse Numbers Deleted xml file--->");
+		LOGGER.info("<--fin test parse Numbers Deleted xml file--->");
 	}
-	
+
 	/**
 	 * This method get the actual date
 	 * @return actual date in format yyyy/MM/dd HH:mm:ss

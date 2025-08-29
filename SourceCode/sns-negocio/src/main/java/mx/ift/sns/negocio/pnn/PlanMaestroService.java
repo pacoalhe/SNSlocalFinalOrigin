@@ -3,12 +3,7 @@ package mx.ift.sns.negocio.pnn;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
@@ -218,7 +213,7 @@ public class PlanMaestroService implements IPlanMaestroService {
 
     @Override
     @Asynchronous
-    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    //@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void syncPlanMaestroAsync() {
         LOGGER.debug("");
 
@@ -238,6 +233,8 @@ public class PlanMaestroService implements IPlanMaestroService {
             LOGGER.debug("Obtenemos ficheros");
             String remoteFileAddedPath = getNumbersAddedFileName(cal.getTime());
             String remoteFileDeletedPath = getNumbersDeletedFileName(cal.getTime());
+            LOGGER.debug("Nombre archivo add {}", remoteFileAddedPath);
+            LOGGER.debug("Nombre archivo delete {}", remoteFileDeletedPath);
 
             tmpAdded = FicheroTemporal.getTmpFileName();
             tmpDeleted = FicheroTemporal.getTmpFileName();
@@ -302,7 +299,133 @@ public class PlanMaestroService implements IPlanMaestroService {
      *
      * @param fileUpdateSNS
      * @throws Exception
+     * FJAH Refactorización 01.08.2025
      */
+    private void procesarPlanCSV(File fileUpdateSNS) throws Exception {
+        List<PlanMaestroDetalle> listaParaUpsert = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(fileUpdateSNS))) {
+            String line = br.readLine();
+
+            while (line != null) {
+                String[] datos = line.split(",");
+
+                if (datos.length > 1 && !Arrays.toString(datos).contains("Ido")) {
+                    PlanMaestroDetalle pmd = new PlanMaestroDetalle();
+                    PlanMaestroDetallePK pk = new PlanMaestroDetallePK();
+
+                    pk.setNumeroInicial(Long.parseLong(datos[1])); // NUMERO_INICIAL
+                    pk.setNumeroFinal(Long.parseLong(datos[2]));   // NUMERO_FINAL
+                    pmd.setId(pk);
+
+                    pmd.setIdo(Integer.parseInt(datos[0]));        // IDO
+                    pmd.setTipoServicio(datos[3].charAt(0));       // TIPO_SERVICIO
+                    pmd.setMpp(datos[4].charAt(0));                // MPP
+                    pmd.setIda(Integer.parseInt(datos[5]));        // IDA
+                    pmd.setAreaServicio(Integer.parseInt(datos[6])); // AREA_SERVICIO
+                    pmd.setZona(
+                            Integer.parseInt(datos[1].substring(1, 2)) == 0
+                                    ? 0
+                                    : Integer.parseInt(datos[1].substring(0, 1))
+                    );
+
+                    listaParaUpsert.add(pmd);
+                }
+
+                line = br.readLine();
+            }
+
+            int total = planMaestroDAO.upsertBatchPlanMaestro(listaParaUpsert);
+            LOGGER.info("Registros PMN procesados vía MERGE: {}", total);
+
+        } catch (Exception e) {
+            LOGGER.error("Error al procesar CSV del PMN", e);
+            throw e;
+        }
+    }
+
+    public void cancelarPlanCSV(File fileDeleteSNS) {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileDeleteSNS))) {
+            List<PlanMaestroDetalle> listCancelados = new ArrayList<>();
+            Set<String> combinacionesUnicas = new HashSet<>();
+
+            LOGGER.info("Procesando deserialización de CSV: {} ", fileDeleteSNS.getName());
+
+            String line = br.readLine(); // Leer encabezado
+            int i = 0;
+
+            while ((line = br.readLine()) != null) {
+                String[] fields = line.split(SEPARATOR);
+                fields = removeTrailingQuotes(fields);
+
+                if (fields.length < 7) {
+                    LOGGER.warn("Línea inválida (saltada): {} ", Arrays.toString(fields));
+                    continue;
+                }
+
+                try {
+                    long numeroInicial = Long.parseLong(fields[1]);
+                    long numeroFinal = Long.parseLong(fields[2]);
+
+                    // Validación de rango correcto
+                    if (numeroInicial > numeroFinal) {
+                        LOGGER.warn("Rango inválido: NoInicial={} > NoFinal={}, línea ignorada", numeroInicial, numeroFinal);
+                        continue;
+                    }
+
+                    // Evitar duplicados
+                    String clave = numeroInicial + "-" + numeroFinal;
+                    if (!combinacionesUnicas.add(clave)) {
+                        continue; // ya estaba, lo salta
+                    }
+
+                    PlanMaestroDetalle pCSV = new PlanMaestroDetalle();
+                    PlanMaestroDetallePK pk = new PlanMaestroDetallePK();
+                    pk.setNumeroInicial(numeroInicial);
+                    pk.setNumeroFinal(numeroFinal);
+                    pCSV.setId(pk);
+
+                    pCSV.setIdo(Integer.parseInt(fields[0]));
+                    pCSV.setTipoServicio(fields[3].charAt(0));
+                    pCSV.setMpp(fields[4].charAt(0));
+                    pCSV.setIda(Integer.parseInt(fields[5]));
+                    pCSV.setAreaServicio(Integer.parseInt(fields[6]));
+
+                    // ZONA: lógica especial por formato del número
+                    pCSV.setZona(
+                            Integer.parseInt(fields[1].substring(1, 2)) == 0
+                                    ? 0
+                                    : Integer.parseInt(fields[1].substring(0, 1))
+                    );
+
+                    listCancelados.add(pCSV);
+                    //LOGGER.info("Eliminar por CSV: NoInicial={} NoFinal={}", numeroInicial, numeroFinal);
+                    i++;
+
+                } catch (Exception parseError) {
+                    LOGGER.warn("Error parseando línea (saltada): {}", Arrays.toString(fields));
+                }
+            }
+
+            LOGGER.info("Mandando llamar a deleteBatchPlanMaestro con {} registros únicos", listCancelados.size());
+            int eliminados = planMaestroDAO.deleteBatchPlanMaestro(listCancelados);
+            //int eliminados = eliminarPlanMaestroConTransaccion(listCancelados);
+            //LOGGER.info("Cancelados a procesar: {}, eliminaciones realizadas: {}", i, eliminados);
+            LOGGER.info("Cancelados a procesar: {}: ", i);
+
+        } catch (Exception e) {
+            LOGGER.error("Error al procesar CSV de eliminados: {}", e.getMessage(), e);
+        }
+    }
+
+    /*
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public int eliminarPlanMaestroConTransaccion(List<PlanMaestroDetalle> registros) {
+        return planMaestroDAO.deleteBatchPlanMaestro(registros);
+    }
+     */
+
+    /*
     private void procesarPlanCSV(File fileUpdateSNS) throws Exception {
         List<PlanMaestroDetalle> listSyncronizados = new ArrayList<>();
         BufferedReader br = null;
@@ -382,7 +505,8 @@ public class PlanMaestroService implements IPlanMaestroService {
         }
 
     }
-
+*/
+    /*
     public void cancelarPlanCSV(File fileDeleteSNS) {
         BufferedReader br;
         try {
@@ -430,6 +554,8 @@ public class PlanMaestroService implements IPlanMaestroService {
             LOGGER.error("Error exception: {}", e.getMessage());
         }
     }
+
+     */
 
     private String[] removeTrailingQuotes(String[] fields) {
         String[] result = new String[fields.length];

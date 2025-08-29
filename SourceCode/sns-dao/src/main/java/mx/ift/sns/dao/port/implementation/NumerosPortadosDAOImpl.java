@@ -130,5 +130,17 @@ public class NumerosPortadosDAOImpl extends BaseDAO<NumeroPortado> implements IN
         return cal.getTime();
     }
 
+    public List<Object[]> getDiferenciasTmpVsFinal() {
+        String sql = "SELECT t.PORTID, t.NUMBERFROM, t.NUMBERTO, t.ACTIONDATE " +
+                "FROM TMP_NUM_PORTADO t " +
+                "LEFT JOIN PORT_NUM_PORTADO p " +
+                "  ON t.PORTID = p.PORTID " +
+                " AND t.NUMBERFROM = p.NUMBERFROM " +
+                "WHERE p.PORTID IS NULL " +
+                "   OR NVL(t.NUMBERTO, 'X') <> NVL(p.NUMBERTO, 'X') " +
+                "   OR NVL(t.ACTIONDATE, TO_DATE('1900-01-01','YYYY-MM-DD')) <> NVL(p.ACTIONDATE, TO_DATE('1900-01-01','YYYY-MM-DD'))";
+        Query query = getEntityManager().createNativeQuery(sql);
+        return query.getResultList();
+    }
 
 }

@@ -3,10 +3,7 @@ package mx.ift.sns.modelo.port;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * Tabla de Numeros Cancelados.
@@ -100,4 +97,17 @@ public class NumeroCancelado extends Numero implements Serializable {
 
         return b.toString();
     }
+
+    /** FOLIOID (solo en XML, no en BD). */
+    @Transient
+    private String folioId;
+
+    public String getFolioId() {
+        return folioId;
+    }
+
+    public void setFolioId(String folioId) {
+        this.folioId = folioId;
+    }
+
 }

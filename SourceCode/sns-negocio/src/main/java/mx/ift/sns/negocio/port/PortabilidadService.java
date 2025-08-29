@@ -1,8 +1,7 @@
 package mx.ift.sns.negocio.port;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -16,6 +15,8 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -29,6 +30,10 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.net.ssl.SSLContext;
 import javax.persistence.NoResultException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import com.google.gson.Gson;
 import com.opencsv.CSVReader;
@@ -71,6 +76,9 @@ import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 /**
  * Servicio de Portabilidad. Mantiene y sincroniza la BBDD de portabilidad con el ABD.
@@ -143,6 +151,11 @@ public class PortabilidadService implements IPortabilidadService {
 
     @EJB
     private ValidadorArchivoPortadosCSV2 validadorArchivoPortadosCSV2;
+
+    /** FJAH DAO portados  */
+    @EJB
+    private PortadosDAO portadosDAO;
+
 
     /** DAO de status de portabilidad. */
     @Inject
@@ -374,23 +387,106 @@ public class PortabilidadService implements IPortabilidadService {
 	 */
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public EstatusSincronizacion parsePortabilidad(File tmpPorted, EstatusSincronizacion status) throws Exception {
-        LOGGER.info("[parsePortabilidad] valor recibido del status hash: {}", System.identityHashCode(status));
+    //public EstatusSincronizacion parsePortabilidad(File tmpPorted, EstatusSincronizacion status) throws Exception {
+    public ResultadoValidacionCSV parsePortabilidad(File tmpPorted, EstatusSincronizacion status) throws Exception {
+        //LOGGER.info("[parsePortabilidad] valor recibido del status hash: {}", System.identityHashCode(status));
         File tmpPortedCSV = null;
 
         try {
             ResultadoParser res = new ResultadoParser();
+            res.setTimestamp(new Date()); // evita NPE si parser no asigna fecha
+            int totalOrigen = 0;
 
             tmpPortedCSV = FicheroTemporal.getTmpFileName();
-            LOGGER.debug("Parseamos a CSV fichero: " + tmpPortedCSV);
-            // parseamos portabilidades
-            NumerosPortadosXmlParser parserPort = new NumerosPortadosXmlParser();
-            parserPort.parse(tmpPorted.getCanonicalPath(), tmpPortedCSV, res);
+            LOGGER.info("Parseamos a CSV fichero: " + tmpPortedCSV);
+            // parseamos XML -> CSV
+            //==================================================
+            // Clase refactorizada
+            // NumerosPortadosXmlParser parserPort = new NumerosPortadosXmlParser();
+            // parserPort.parse(tmpPorted.getCanonicalPath(), tmpPortedCSV, res);
+            //==================================================
+            // Crear lista para acumular registros inválidos (estructura o CSV)
+            List<String> registrosInvalidos = new ArrayList<>();
+
+            NumerosPortadosXmlParser parser = new NumerosPortadosXmlParser(new FileWriter(tmpPortedCSV));
+            parser.setRegistrosInvalidosGlobal(registrosInvalidos);
+
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser saxParser = factory.newSAXParser();
+
+            //usamos streaming (isCancelados = true)
+            LOGGER.info("Validamos fichero temporal obtenido para validar integridad: " + tmpPorted+" longitud "+tmpPorted.length());
+            totalOrigen = contarPortData(tmpPorted);
+            LOGGER.info("Total de registros (origen XML): {}", totalOrigen);
+
+            InputSource sanitizedSource = sanitizeAndValidateXml(tmpPorted, registrosInvalidos, false);
+            if (sanitizedSource != null) {
+                saxParser.parse(sanitizedSource, parser);
+                if (parser != null) {
+                    try {
+                        Field writerField = NumerosPortadosXmlParser.class.getDeclaredField("writer");
+                        writerField.setAccessible(true);
+                        BufferedWriter bw = (BufferedWriter) writerField.get(parser);
+                        if (bw != null) {
+                            bw.flush();
+                            bw.close();
+                        }
+                        try (BufferedReader br = new BufferedReader(new FileReader(tmpPortedCSV))) {
+                            String linea;
+                            int contador = 0;
+                            while ((linea = br.readLine()) != null && contador < 5) {
+                                LOGGER.info("CSV TEMPORAL [{}]: {}", contador+1, linea);
+                                contador++;
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("Error leyendo CSV temporal", e);
+                        }
+
+                    } catch (Exception e) {
+                        LOGGER.warn("No se pudo cerrar el writer del parser", e);
+                    }
+                }
+            } else {
+                LOGGER.error("Archivo descartado por estructura inválida. Ver registrosInvalidos.");
+                generarLogInvalidos(registrosInvalidos, "Portados"); // guardamos detalle
+                ResultadoValidacionCSV resultadoFallback = new ResultadoValidacionCSV();
+                resultadoFallback.setIdEstatus(status.getId());
+                resultadoFallback.setTs(status.getTs());
+                resultadoFallback.setEstatus(status.getEstatus());
+                resultadoFallback.setReintentos(status.getReintentos());
+                resultadoFallback.setPortProcesadas(BigDecimal.ZERO); // nada procesado
+                resultadoFallback.setPortProcesar(BigDecimal.ZERO);   // nada por procesar
+                resultadoFallback.setProcesadasTs(new Timestamp(System.currentTimeMillis()));
+                resultadoFallback.setActionDateLoteDate(new Date());
+                resultadoFallback.setTotalErrorEstructura(registrosInvalidos.size()); // total de errores encontrados
+
+                return resultadoFallback; //salimos aquí mismo
+            }
+
+            int invalidosXml = 0;
+            if (registrosInvalidos != null) {
+                for (String reg : registrosInvalidos) {
+                    // Contamos solo los bloques PortData inválidos
+                    if (reg.startsWith("<PortData")) {
+                        invalidosXml++;
+                    }
+                }
+            }
+            LOGGER.info("Parse {} completado -> InvalidosXml={}", "Cancelados", invalidosXml);
+
+            // Guardar log de inválidos en archivo físico (si los hay)
+            if (!registrosInvalidos.isEmpty()) {
+                generarLogInvalidos(registrosInvalidos,"Portados");
+            }
+
+            // actualizar status con datos iniciales
             status.setPortProcesadas(res.getNumerosOk());
             status.setPortProcesar(res.getNumerosTotal());
             status.setProcesadasTs(new Timestamp(res.getTimestamp().getTime()));
-            LOGGER.info("***-************- status:"+status.toString());
-            LOGGER.debug("Validamos fichero: " + tmpPortedCSV+" longitud"+tmpPortedCSV.length());
+
+            //LOGGER.info("***-************- status:"+status.toString());
+            LOGGER.info("Validamos fichero: " + tmpPortedCSV+" longitud "+tmpPortedCSV.length());
+
             // importamos portados
             //FJAH 24052025
             //ValidadorArchivoPortadosCSV importPortados = new ValidadorArchivoPortadosCSV();
@@ -400,33 +496,59 @@ public class PortabilidadService implements IPortabilidadService {
 //            Cargar BD
             //importPortados.validar(tmpPortedCSV.getAbsolutePath());
             //validadorArchivoPortadosCSV.validar(tmpPortedCSV.getAbsolutePath());
-            LOGGER.info("[parsePortabilidad] Llamando a validar para el archivo CSV: {}", tmpPortedCSV.getAbsolutePath());
+            //LOGGER.info("[parsePortabilidad] Llamando a validar para el archivo CSV: {}", tmpPortedCSV.getAbsolutePath());
+
+            // importar portados y validar
+            LOGGER.info("<--Ingresa al proceso de validar 7 pasos... {}",FechasUtils.getActualDate());
             ResultadoValidacionCSV resultadoValidacionCSV = validadorArchivoPortadosCSV.validar(tmpPortedCSV.getAbsolutePath());
-            LOGGER.info("[parsePortabilidad] Valor recibido de actionDateLote en resultadoValidacionCSV: '{}'", resultadoValidacionCSV.getActionDateLote());
+            //LOGGER.info("[parsePortabilidad] Valor recibido de actionDateLote en resultadoValidacionCSV: '{}'", resultadoValidacionCSV.getActionDateLote());
+
+            // sincronizar actionDateLote en el status
             if (resultadoValidacionCSV.getActionDateLote() != null) {
-                Date fechaActionDateLote = null;
+                //Date fechaActionDateLote = null;
                 try {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // sin .S // formato correcto
-                    fechaActionDateLote = sdf.parse(resultadoValidacionCSV.getActionDateLote());
-                    LOGGER.info("[parsePortabilidad] Fecha parseada de actionDateLote: {}", fechaActionDateLote);
+                    Date fechaActionDateLote =
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(resultadoValidacionCSV.getActionDateLote());
+                    status.setActionDateLote(fechaActionDateLote);
+                    //SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // sin .S // formato correcto
+                    //fechaActionDateLote = sdf.parse(resultadoValidacionCSV.getActionDateLote());
+                    //LOGGER.info("[parsePortabilidad] Fecha parseada de actionDateLote: {}", fechaActionDateLote);
                 } catch (ParseException e) {
                     LOGGER.error("[parsePortabilidad] Error al parsear actionDateLote: '{}'. Exception: {}", resultadoValidacionCSV.getActionDateLote(), e.getMessage());
+                    status.setActionDateLote(new Date()); // fallback
                 }
-                LOGGER.info("[parsePortabilidad] ANTES de asignar valor al actiondate en el status hash: {}", System.identityHashCode(status));
-                status.setActionDateLote(fechaActionDateLote);
-                LOGGER.info("[parsePortabilidad] Se asignó actionDateLote en status: {}", fechaActionDateLote);
-                LOGGER.info("[parsePortabilidad] DESPUES de recibir actiondate status hash: {}", System.identityHashCode(status));
+                //LOGGER.info("[parsePortabilidad] ANTES de asignar valor al actiondate en el status hash: {}", System.identityHashCode(status));
+                //status.setActionDateLote(fechaActionDateLote);
+                //LOGGER.info("[parsePortabilidad] Se asignó actionDateLote en status: {}", fechaActionDateLote);
+                //LOGGER.info("[parsePortabilidad] DESPUES de recibir actiondate status hash: {}", System.identityHashCode(status));
             }else{
-                LOGGER.warn("[parsePortabilidad] No se obtuvo actionDateLote del lote (valor nulo o vacío).");
+                //LOGGER.warn("[parsePortabilidad] No se obtuvo actionDateLote del lote (valor nulo o vacío).");
                 status.setActionDateLote(new Date());
                 //status.setActionDateLote(FECHA_PROCESO);
             }
 
             LOGGER.info("<--finaliza el procesamiento del csv de portados {}", FechasUtils.getActualDate());
 
-            LOGGER.info("[parsePortabilidad] status hash: {}", System.identityHashCode(status));
-            LOGGER.info("[parsePortabilidad] VALOR status.getActionDateLote EN EL RETURN status: {}", status.getActionDateLote());
-            return status;
+            //LOGGER.info("[parsePortabilidad] status hash: {}", System.identityHashCode(status));
+            //LOGGER.info("[parsePortabilidad] VALOR status.getActionDateLote EN EL RETURN status: {}", status.getActionDateLote());
+            //return status;
+            resultadoValidacionCSV.setIdEstatus(status.getId());
+            resultadoValidacionCSV.setTs(status.getTs());
+            resultadoValidacionCSV.setEstatus(status.getEstatus());
+            resultadoValidacionCSV.setReintentos(status.getReintentos());
+            resultadoValidacionCSV.setPortProcesadas(status.getPortProcesadas());
+            resultadoValidacionCSV.setPortProcesar(status.getPortProcesar());
+            resultadoValidacionCSV.setProcesadasTs(status.getProcesadasTs());
+            resultadoValidacionCSV.setActionDateLoteDate(status.getActionDateLote());
+
+
+
+            // Sumar los inválidos detectados en el XML
+            int totalErroresEstructura = resultadoValidacionCSV.getTotalErrorEstructura() + invalidosXml;
+            resultadoValidacionCSV.setTotalErrorEstructura(totalErroresEstructura);
+            resultadoValidacionCSV.setTotalOrigen(totalOrigen);
+
+            return resultadoValidacionCSV;
 
         } catch (Exception e) {
             LOGGER.info("ERROR INESPERADO: \n" + e.getMessage());
@@ -442,6 +564,71 @@ public class PortabilidadService implements IPortabilidadService {
         }
     }
 
+    private int contarPortData(File xmlFile) {
+        int count = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(xmlFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String trimmed = line.trim();
+                // Solo cuenta la apertura exacta, no el cierre
+                if (trimmed.startsWith("<PortData") && !trimmed.startsWith("</PortData")) {
+                    count++;
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("No se pudo contar PortData en archivo {}", xmlFile.getName(), e);
+        }
+        return count;
+    }
+
+    /**
+     * Genera un archivo .log con los registros inválidos de estructura.
+     * Si no hay errores, crea un log con la leyenda "sin errores" y nombre con sufijo _SINERROR.
+     */
+    private void generarLogInvalidos(List<String> registrosInvalidos, String Origen) {
+        try {
+            String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
+            if (StringUtils.isEmpty(basePath)) {
+                LOGGER.warn("Parametro port_XMLLOG_path.portados no definido, usando directorio actual");
+                basePath = ".";
+            }
+
+            File dir = new File(basePath);
+            if (!dir.exists()) {
+                LOGGER.warn("Directorio {} no existe, verificar configuración de parámetros", basePath);
+            }
+
+            // Nombre con timestamp
+            String fechaStr = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+
+            // Si no hay errores → sufijo SINERROR
+            String fileName;
+            if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
+                fileName = "port_num_" + Origen + "_XML_estructuraInvalidos_SINERROR_" + fechaStr + ".log";
+            } else {
+                fileName = "port_num_" + Origen + "_XML_estructuraInvalidos_" + fechaStr + ".log";
+            }
+
+            File logFile = new File(dir, fileName);
+
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(logFile))) {
+                if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
+                    bw.write("Validación completada - No se detectaron errores de estructura");
+                    bw.newLine();
+                } else {
+                    for (String linea : registrosInvalidos) {
+                        bw.write(linea);
+                        bw.newLine();
+                    }
+                }
+            }
+
+            LOGGER.info("Archivo de inválidos generado: {}", logFile.getAbsolutePath());
+        } catch (Exception e) {
+            LOGGER.error("Error al generar archivo de inválidos", e);
+        }
+    }
+
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public EstatusSincronizacion parsePortabilidadManual(File tmpPorted, EstatusSincronizacion status) throws Exception {
 
@@ -449,12 +636,74 @@ public class PortabilidadService implements IPortabilidadService {
 
         try {
             ResultadoParser res = new ResultadoParser();
+            res.setTimestamp(new Date()); // evita NPE si parser no asigna fecha
 
             tmpPortedCSV = FicheroTemporal.getTmpFileName();
             LOGGER.debug("Parseamos a CSV fichero: " + tmpPortedCSV);
             // parseamos portabilidades
-            NumerosPortadosXmlParser parserPort = new NumerosPortadosXmlParser();
-            parserPort.parse(tmpPorted.getCanonicalPath(), tmpPortedCSV, res);
+            //==================================================
+            // Clase refactorizada
+            // NumerosPortadosXmlParser parserPort = new NumerosPortadosXmlParser();
+            // parserPort.parse(tmpPorted.getCanonicalPath(), tmpPortedCSV, res);
+            //==================================================
+            // Crear lista para acumular registros inválidos (estructura o CSV)
+            List<String> registrosInvalidos = new ArrayList<>();
+
+            NumerosPortadosXmlParser parser = new NumerosPortadosXmlParser(new FileWriter(tmpPortedCSV));
+            parser.setRegistrosInvalidosGlobal(registrosInvalidos);
+
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser saxParser = factory.newSAXParser();
+
+            //usamos streaming (isCancelados = false)
+            InputSource sanitizedSource = sanitizeAndValidateXml(tmpPorted, registrosInvalidos, false);
+            if (sanitizedSource != null) {
+                saxParser.parse(sanitizedSource, parser);
+                if (parser != null) {
+                    try {
+                        Field writerField = NumerosPortadosXmlParser.class.getDeclaredField("writer");
+                        writerField.setAccessible(true);
+                        BufferedWriter bw = (BufferedWriter) writerField.get(parser);
+                        if (bw != null) {
+                            bw.flush();
+                            bw.close();
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("No se pudo cerrar el writer del parser", e);
+                    }
+                }
+            } else {
+                LOGGER.error("Archivo descartado por estructura inválida. Ver registrosInvalidos.");
+                generarLogInvalidos(registrosInvalidos, "Portados"); // guardamos detalle
+
+                // Ajustamos el status para reflejar que no hubo procesamiento
+                status.setPortProcesadas(BigDecimal.ZERO);
+                status.setPortProcesar(BigDecimal.ZERO);
+                status.setProcesadasTs(new Timestamp(System.currentTimeMillis()));
+                status.setActionDateLote(new Date());
+
+                // Podrías tener un campo en status para errores, si no, al menos dejamos el log
+                LOGGER.warn("PortabilidadManual terminada sin procesar por errores de estructura. Total errores={}", registrosInvalidos.size());
+
+                return status; //salimos aquí mismo
+            }
+
+            int invalidosXml = 0;
+            if (registrosInvalidos != null) {
+                for (String reg : registrosInvalidos) {
+                    // Contamos solo los bloques PortData inválidos
+                    if (reg.startsWith("<PortData")) {
+                        invalidosXml++;
+                    }
+                }
+            }
+            LOGGER.info("Parse {} completado -> InvalidosXml={}", "Cancelados", invalidosXml);
+
+            // Guardar log de inválidos en archivo físico (si los hay)
+            if (!registrosInvalidos.isEmpty()) {
+                generarLogInvalidos(registrosInvalidos,"Portados");
+            }
+
             status.setPortProcesadas(res.getNumerosOk());
             status.setPortProcesar(res.getNumerosTotal());
             status.setProcesadasTs(new Timestamp(res.getTimestamp().getTime()));
@@ -487,6 +736,342 @@ public class PortabilidadService implements IPortabilidadService {
         }
     }
 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public ResultadoValidacionCSV parseDeleted(File tmpDeleted, EstatusSincronizacion status) throws Exception {
+
+        File tmpDeletedCSV = null;
+
+        try {
+            ResultadoParser res = new ResultadoParser();
+            res.setTimestamp(new Date()); // evita NPE si parser no asigna fecha
+            tmpDeletedCSV = FicheroTemporal.getTmpFileName();
+            LOGGER.debug("Parseamos a CSV fichero: {}", tmpDeletedCSV);
+
+            int totalOrigen = contarPortData(tmpDeleted);
+            LOGGER.info("Total de registros (origen XML): {}", totalOrigen);
+
+            // Crear lista para acumular registros inválidos (estructura o CSV)
+            List<String> registrosInvalidos = new ArrayList<>();
+
+            NumerosDeletedXmlParser parser = new NumerosDeletedXmlParser(new FileWriter(tmpDeletedCSV));
+            parser.setRegistrosInvalidosGlobal(registrosInvalidos);
+
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser saxParser = factory.newSAXParser();
+
+            InputSource sanitizedSource = sanitizeAndValidateXml(tmpDeleted, registrosInvalidos, false);
+            if (sanitizedSource != null) {
+                saxParser.parse(sanitizedSource, parser);
+
+                if (parser != null) {
+                    try {
+                        Field writerField = NumerosDeletedXmlParser.class.getDeclaredField("writer");
+                        writerField.setAccessible(true);
+                        BufferedWriter bw = (BufferedWriter) writerField.get(parser);
+                        if (bw != null) {
+                            bw.flush();
+                            bw.close();
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("No se pudo cerrar el writer del parser", e);
+                    }
+                }
+            } else {
+                LOGGER.error("Archivo descartado por estructura inválida. Ver registrosInvalidos.");
+                generarLogInvalidos(registrosInvalidos, "Cancelados"); // guardamos detalle
+                ResultadoValidacionCSV resultadoFallback = new ResultadoValidacionCSV();
+                resultadoFallback.setIdEstatus(status.getId());
+                resultadoFallback.setTs(status.getTs());
+                resultadoFallback.setEstatus(status.getEstatus());
+                resultadoFallback.setReintentos(status.getReintentos());
+                resultadoFallback.setPortCanceladas(BigDecimal.ZERO);
+                resultadoFallback.setPortCancelar(BigDecimal.ZERO);
+                resultadoFallback.setCanceladasTs(new Timestamp(System.currentTimeMillis()));
+                resultadoFallback.setActionDateLoteDate(new Date());
+                resultadoFallback.setTotalErrorEstructuraCanc(registrosInvalidos.size());
+                resultadoFallback.setTotalOrigenCanc(registrosInvalidos.size());
+                return resultadoFallback;
+            }
+
+            // Contar inválidos a nivel de bloque
+            int invalidosXml = 0;
+            if (registrosInvalidos != null) {
+                for (String reg : registrosInvalidos) {
+                    if (reg.startsWith("<PortData")) {
+                        invalidosXml++;
+                    }
+                }
+            }
+            LOGGER.info("Parse Cancelados completado -> InvalidosXml={}", invalidosXml);
+
+            // Guardar log de inválidos en archivo físico (si los hay)
+            if (!registrosInvalidos.isEmpty()) {
+                generarLogInvalidos(registrosInvalidos, "Cancelados");
+            }
+
+            // actualizar status con datos iniciales
+            status.setPortCanceladas(res.getNumerosOk());
+            status.setPortCancelar(res.getNumerosTotal());
+            status.setCanceladasTs(new Timestamp(res.getTimestamp().getTime()));
+
+            LOGGER.info("<-- Inicia procesamiento CSV de cancelados {}", FechasUtils.getActualDate());
+
+            // importar y validar cancelados
+            ResultadoValidacionCSV resultadoValidacionCSV = validadorArchivoDeletedCSV.validar(tmpDeletedCSV.getAbsolutePath());
+
+            // sincronizar actionDateLote
+            if (resultadoValidacionCSV.getActionDateLote() != null) {
+                try {
+                    Date fechaActionDateLote =
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(resultadoValidacionCSV.getActionDateLote());
+                    status.setActionDateLote(fechaActionDateLote);
+                } catch (ParseException e) {
+                    LOGGER.error("Error al parsear actionDateLote: '{}'. Exception: {}", resultadoValidacionCSV.getActionDateLote(), e.getMessage());
+                    status.setActionDateLote(new Date());
+                }
+            } else {
+                status.setActionDateLote(new Date());
+            }
+
+            LOGGER.info("<-- Finaliza el procesamiento del csv de cancelados {}", FechasUtils.getActualDate());
+
+            // pasar info del status al resultado
+            resultadoValidacionCSV.setIdEstatus(status.getId());
+            resultadoValidacionCSV.setTs(status.getTs());
+            resultadoValidacionCSV.setEstatus(status.getEstatus());
+            resultadoValidacionCSV.setReintentos(status.getReintentos());
+            resultadoValidacionCSV.setPortCanceladas(status.getPortCanceladas());
+            resultadoValidacionCSV.setPortCancelar(status.getPortCancelar());
+            resultadoValidacionCSV.setCanceladasTs(status.getCanceladasTs());
+            resultadoValidacionCSV.setActionDateLoteDate(status.getActionDateLote());
+
+            // Ajustar origen con lo que declaró el XML
+            resultadoValidacionCSV.setTotalOrigenCanc(totalOrigen);
+
+            // Errores de estructura = inválidos CSV + inválidos XML
+            int totalErrorEstructuraCanc = (resultadoValidacionCSV.getTotalErrorEstructuraCanc() > 0
+                    ? resultadoValidacionCSV.getTotalErrorEstructuraCanc()
+                    : 0) + invalidosXml;
+            resultadoValidacionCSV.setTotalErrorEstructuraCanc(totalErrorEstructuraCanc);
+
+            return resultadoValidacionCSV;
+
+        } finally {
+            if (tmpDeletedCSV != null) {
+                FileUtils.deleteQuietly(tmpDeletedCSV);
+            }
+        }
+    }
+
+    /**
+     * Limpia un XML potencialmente mal formado (Portados o Cancelados) para que pueda ser parseado por SAX.
+     * Lo que no se pueda corregir se envía a registrosInvalidos y se reemplaza por <Invalid>.
+     */
+
+    // ======================================================
+    // Sanitizer streaming (Portados y Cancelados)
+    // ======================================================
+    private InputSource sanitizeAndValidateXml(final File original,
+                                               final List<String> registrosInvalidos,
+                                               final boolean isCancelados) throws IOException {
+
+        final StringBuilder sanitized = new StringBuilder();
+        boolean headerOk = false;
+        boolean footerOk = false;
+        int expectedNumMessages = -1;
+        int countedPortData = 0;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(original))) {
+            String line;
+            StringBuilder portDataBuffer = null;
+            int portDataIndex = 0;
+
+            while ((line = br.readLine()) != null) {
+                String trimmed = line.trim();
+
+                // --- Cabecera raíz ---
+                if (trimmed.startsWith("<?xml")) {
+                    sanitized.append(line).append("\n");
+                    continue;
+                }
+                if (trimmed.startsWith("<NPCData")) {
+                    sanitized.append(line).append("\n");
+                    headerOk = true;
+                    continue;
+                }
+                if (trimmed.startsWith("</NPCData")) {
+                    sanitized.append(line).append("\n");
+                    footerOk = true;
+                    break; // fin del archivo válido
+                }
+
+                // --- Cabecera interna ---
+                if (trimmed.startsWith("<MessageName") ||
+                        trimmed.startsWith("<Timestamp") ||
+                        trimmed.startsWith("<NumberOfMessages") ||
+                        trimmed.startsWith("<PortDataList") ||
+                        trimmed.startsWith("</PortDataList")) {
+
+                    if (trimmed.startsWith("<NumberOfMessages")) {
+                        try {
+                            expectedNumMessages = Integer.parseInt(
+                                    trimmed.replaceAll("\\D+", "")
+                            );
+                        } catch (Exception e) {
+                            registrosInvalidos.add("Error: No se pudo leer <NumberOfMessages>");
+                        }
+                    }
+
+                    sanitized.append(line).append("\n");
+                    continue;
+                }
+
+                // --- PortData open ---
+                if (trimmed.startsWith("<PortData")) {
+                    portDataBuffer = new StringBuilder();
+                    portDataBuffer.append(line).append("\n");
+                    continue;
+                }
+
+                // --- PortData close ---
+                if (trimmed.startsWith("</PortData")) {
+                    if (portDataBuffer != null) {
+                        portDataBuffer.append(line).append("\n");
+                        portDataIndex++;
+                        countedPortData++;
+
+                        String bloque = portDataBuffer.toString();
+                        if (validatePortDataBlock(bloque, portDataIndex, registrosInvalidos, isCancelados)) {
+                            sanitized.append(bloque); // válido
+                        }
+                        // else: no hacemos nada aquí, validatePortDataBlock ya se encargó
+                        portDataBuffer = null;
+                    } else {
+                        // cierre sin apertura
+                        portDataIndex++;
+                        registrosInvalidos.add("Error: PortData #" + portDataIndex +
+                                " descartado por estructura inválida en la apertura/cierre del bloque.");
+                    }
+                    continue;
+                }
+
+                // --- Dentro de PortData ---
+                if (portDataBuffer != null) {
+                    portDataBuffer.append(line).append("\n");
+                } else {
+                    // Texto fuera de PortData pero no cabecera → basura real
+                    if (!trimmed.isEmpty()) {
+                        registrosInvalidos.add("Error: Texto basura fuera de PortData.");
+                    }
+                }
+            }
+        }
+
+        // --- Validación global ---
+        if (!headerOk) {
+            registrosInvalidos.add(0, "Error: Cabecera inválida o basura al inicio.");
+            return null;
+        }
+        if (!footerOk) {
+            registrosInvalidos.add(0, "Error: Falta cierre </NPCData>.");
+            return null;
+        }
+
+        // Validación de conteo de mensajes → mensaje se inserta al inicio
+        if (expectedNumMessages >= 0 && expectedNumMessages != countedPortData) {
+            String diffMsg = "Error: Registros encontrados " + countedPortData +
+                    " difiere de lo señalado en el XML (" + expectedNumMessages + ")";
+            registrosInvalidos.add(0, diffMsg); // lo coloca al inicio del log
+        }
+
+        // Generamos InputSource solo si pasó validación
+        String sanitizedXml = sanitized.toString();
+        return new InputSource(new StringReader(sanitizedXml));
+    }
+
+
+    /**
+     * Valida un bloque <PortData> contra la estructura esperada.
+     * Solo revisa apertura/cierre, orden de tags y que estén presentes.
+     */
+    /**
+     * Valida un bloque <PortData>.
+     * - Revisa que tenga los tags obligatorios.
+     * - Ignora comentarios y orden.
+     * - Si faltan varios tags, acumula todos en un único mensaje.
+     */
+    private boolean validatePortDataBlock(String portDataXml,
+                                          int index,
+                                          List<String> registrosInvalidos,
+                                          boolean isCancelados) {
+
+        // Tags obligatorios para PORTADOS
+        List<String> expectedPortados = Arrays.asList(
+                "PortID", "PortType", "Action",
+                "NumberRanges", "NumberRange", "NumberFrom", "NumberTo", "isMPP",
+                "RIDA", "RCR", "DIDA", "DCR", "ActionDate"
+        );
+
+        // Tags obligatorios para CANCELADOS
+        List<String> expectedCancelados = Arrays.asList(
+                "PortID", "FolioID", "PortType", "Action",
+                "NumberRanges", "NumberRange", "NumberFrom", "NumberTo", "isMPP",
+                "RIDA", "RCR", "DIDA", "DCR",
+                "AssigneeIDA", "AssigneeCR", "ActionDate"
+        );
+
+        List<String> expected = isCancelados ? expectedCancelados : expectedPortados;
+
+        // 1. Limpiar comentarios y espacios
+        String cleaned = portDataXml.replaceAll("<!--.*?-->", "").trim();
+
+        // 2. Revisar todos los tags obligatorios
+        List<String> faltantes = new ArrayList<>();
+        for (String tag : expected) {
+            String regex = "<" + tag + ">([\\s\\S]*?)</" + tag + ">";
+            if (!cleaned.matches("(?s).*" + regex + ".*")) {
+                faltantes.add("<" + tag + ">");
+            }
+        }
+
+        // 3. Si hubo faltantes, acumulamos en un único mensaje
+        if (!faltantes.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < faltantes.size(); i++) {
+                sb.append(faltantes.get(i));
+                if (i < faltantes.size() - 1) {
+                    sb.append(", ");
+                }
+            }
+
+            registrosInvalidos.add("Error: PortData #" + index +
+                    " descartado por contenido inválido en el bloque. Faltan o están mal cerrados: " +
+                    sb.toString());
+            registrosInvalidos.add(portDataXml);
+            return false;
+        }
+
+
+        // 4. Bloque válido
+        return true;
+    }
+
+
+    /**
+     * Extrae el valor simple de un tag de un bloque XML.
+     */
+    private String extractValue(String xml, String tag) {
+        Pattern p = Pattern.compile("<" + tag + ">(.*?)</" + tag + ">");
+        Matcher m = p.matcher(xml);
+        if (m.find()) {
+            return m.group(1).trim();
+        }
+        return null;
+    }
+
+
+    /*
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public EstatusSincronizacion parseDeleted(File tmpDeleted, EstatusSincronizacion status) throws Exception {
@@ -531,6 +1116,7 @@ public class PortabilidadService implements IPortabilidadService {
 //            }
         }
     }
+     */
 
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public EstatusSincronizacion parseDeletedManual(File tmpDeleted, EstatusSincronizacion status) throws Exception {
@@ -539,6 +1125,7 @@ public class PortabilidadService implements IPortabilidadService {
 
         try {
             ResultadoParser res = new ResultadoParser();
+            res.setTimestamp(new Date()); // evita NPE si parser no asigna fecha
 
             tmpDeletedCSV = FicheroTemporal.getTmpFileName();
             LOGGER.debug("Parseamos a CSV fichero: " + tmpDeletedCSV);
@@ -605,186 +1192,197 @@ public class PortabilidadService implements IPortabilidadService {
     public void syncBDDPortabilidadAsync() {
         LOGGER.info("[syncBDDPortabilidadAsync] INICIO");
 
-        if (checkConfig() == false) {
-            bitacoraService.add(BIT_MSG_ERR_CONFIG);
-            LOGGER.warn("[syncBDDPortabilidadAsync] Configuración inválida, abortando.");
-            return;
-        }
-
-        EstatusSincronizacion status = getStatus();
-        LOGGER.info("[syncBDDPortabilidadAsync] Estatus inicial: {}", status);
-
-        if (FechasUtils.esHoy(status.getTs())) {
-            LOGGER.info("[syncBDDPortabilidadAsync] El status es de hoy.");
-            if ((status.getEstatus() != null) && status.getEstatus().equals(EstatusSincronizacion.ESTATUS_PORT_OK)) {
-                LOGGER.info("[syncBDDPortabilidadAsync] Ya fue ejecutado hoy con OK, no hace nada.");
-                return;
-            } else {
-                int r = status.getReintentos().compareTo(MAX_REINTENTOS);
-                LOGGER.info("[syncBDDPortabilidadAsync] Reintentos actuales: {}", status.getReintentos());
-                if (r > 0) {
-                    LOGGER.warn("[syncBDDPortabilidadAsync] Máximo de reintentos alcanzado, abortando.");
-                    LOGGER.debug("maximo reintentos.");
-                    return;
-                } else {
-                    LOGGER.debug("aumentamos reintentos");
-                    LOGGER.info("[syncBDDPortabilidadAsync] Aumentando reintentos.");
-                    status.setReintentos(status.getReintentos().add(BigDecimal.ONE));
-                }
-            }
-        }
-
         File tmpPorted = null;
         File tmpDeleted = null;
+        EstatusSincronizacion status = null;  // <<-- declarado desde el inicio
 
         try {
+            if (!checkConfig()) {
+                bitacoraService.add(BIT_MSG_ERR_CONFIG);
+                LOGGER.warn("[syncBDDPortabilidadAsync] Configuración inválida, abortando.");
+                return;
+            }
 
-            // calculamos el dia de ayer
+            status = getStatus();  // <<-- inicializado aquí
+            LOGGER.info("[syncBDDPortabilidadAsync] Estatus inicial: {}", status);
+
+            if (FechasUtils.esHoy(status.getTs())) {
+                LOGGER.info("[syncBDDPortabilidadAsync] El status es de hoy.");
+                if (status.getEstatus() != null &&
+                        status.getEstatus().equals(EstatusSincronizacion.ESTATUS_PORT_OK)) {
+                    LOGGER.info("[syncBDDPortabilidadAsync] Ya fue ejecutado hoy con OK, no hace nada.");
+                    return;
+                } else {
+                    int r = status.getReintentos().compareTo(MAX_REINTENTOS);
+                    LOGGER.info("[syncBDDPortabilidadAsync] Reintentos actuales: {}", status.getReintentos());
+                    if (r > 0) {
+                        LOGGER.warn("[syncBDDPortabilidadAsync] Máximo de reintentos alcanzado, abortando.");
+                        return;
+                    } else {
+                        LOGGER.info("[syncBDDPortabilidadAsync] Aumentando reintentos.");
+                        status.setReintentos(status.getReintentos().add(BigDecimal.ONE));
+                    }
+                }
+            }
+
+            // ============================
+            // Descarga de archivos remotos
+            // ============================
             Calendar cal = Calendar.getInstance();
-            //TODO FJAH desbloquear QA/Productivo
-            cal.add(Calendar.DATE, -1);
-            //cal.setTime(FECHA_PROCESO);   // FJAH 28.05.2025 Refactorizada
-            //cal.add(Calendar.DATE, -1);
+            cal.add(Calendar.DATE, -1); // día de ayer
             LOGGER.debug("Obtenemos ficheros");
 
             LOGGER.info("[syncBDDPortabilidadAsync] Fecha de proceso: {}", cal.getTime());
             LOGGER.info("[syncBDDPortabilidadAsync] Obteniendo nombres de archivos remotos...");
+
             String remoteFilePortedPath = getNumbersPortedFileName(cal.getTime());
             String remoteFileDeletedPath = getNumbersDeletedFileName(cal.getTime());
-            LOGGER.info("[syncBDDPortabilidadAsync] nombre archivo PORTADO remoto obtenido ..." + remoteFilePortedPath);
-            LOGGER.info("[syncBDDPortabilidadAsync] nombre archivo CANCELADO remoto obtenido ..." + remoteFileDeletedPath);
+
+            LOGGER.info("[syncBDDPortabilidadAsync] nombre archivo PORTADO remoto obtenido: {}", remoteFilePortedPath);
+            LOGGER.info("[syncBDDPortabilidadAsync] nombre archivo CANCELADO remoto obtenido: {}", remoteFileDeletedPath);
 
             tmpPorted = FicheroTemporal.getTmpFileName();
             tmpDeleted = FicheroTemporal.getTmpFileName();
+
             LOGGER.info("[syncBDDPortabilidadAsync] Archivos temporales: ported={}, deleted={}", tmpPorted, tmpDeleted);
 
-            //ConexionSFTP con = new ConexionSFTP();
+            ObtenerArchivosDiarios ar = new ObtenerArchivosDiarios(
+                    tmpPorted.getCanonicalPath(),
+                    tmpDeleted.getCanonicalPath(),
+                    conectionParams,
+                    remoteFilePortedPath,
+                    remoteFileDeletedPath
+            );
 
-            //con.download(host, port, user, pwd, tmpPorted.getCanonicalPath(), remoteFilePortedPath);
-
-            //con.download(host, port, user, pwd, tmpDeleted.getCanonicalPath(), remoteFileDeletedPath);
-
-            ObtenerArchivosDiarios ar=new ObtenerArchivosDiarios(tmpPorted.getCanonicalPath(),
-            													tmpDeleted.getCanonicalPath(),
-            													conectionParams,
-            													remoteFilePortedPath,
-            													remoteFileDeletedPath);
             LOGGER.info("[syncBDDPortabilidadAsync] Iniciando descarga de archivos diarios...");
             ar.getArchidosDiarios();
             LOGGER.info("[syncBDDPortabilidadAsync] Descarga finalizada.");
 
-            if(tmpPorted.length()==0 || tmpDeleted.length()==0) {
-                LOGGER.error("[syncBDDPortabilidadAsync] Algún archivo descargado está vacío. ported.length={}, deleted.length={}", tmpPorted.length(), tmpDeleted.length());
-            	throw new FileNotFoundException(remoteFilePortedPath);
+            if (tmpPorted.length() == 0 || tmpDeleted.length() == 0) {
+                LOGGER.error("[syncBDDPortabilidadAsync] Algún archivo descargado está vacío. ported.length={}, deleted.length={}",
+                        tmpPorted.length(), tmpDeleted.length());
+                throw new FileNotFoundException(remoteFilePortedPath);
             }
+
+            // ============================
+            // Procesamiento de portados
+            // ============================
             LOGGER.info("[syncBDDPortabilidadAsync] Parseando ficheros a CSV...");
-            //EstatusSincronizacion s = me.parsePortabilidad(tmpPorted, status);
-            //LOGGER.info("[syncBDDPortabilidadAsync] Resultado parsePortabilidad en s: {}", s);
-            LOGGER.info("[syncBDDPortabilidadAsync] ANTES de llamar a parsePortabilidad status hash: {}", System.identityHashCode(status));
-            status = me.parsePortabilidad(tmpPorted, status);
-            LOGGER.info("[syncBDDPortabilidadAsync] status DESPUES de llamar a parsePortabilidad status hash: {}", System.identityHashCode(status));
-            LOGGER.info("[syncBDDPortabilidadAsync] Resultado parseDeleted: {}", status);
-            LOGGER.info("[syncBDDPortabilidadAsync] Valor del actionDateLote en status: {}", status.getActionDateLote());
-            /*
-            status.setPortProcesadas(s.getPortProcesadas());
-            status.setPortProcesar(s.getPortProcesadas());
-            status.setProcesadasTs(s.getProcesadasTs());
-            */
-//            EstatusSincronizacion s =me.parseDeleted(tmpDeleted, status);
-            LOGGER.info("[syncBDDPortabilidadAsync] ANTES de parseDeleted status hash: {}", System.identityHashCode(status));
-            status = me.parseDeleted(tmpDeleted, status);
-            LOGGER.info("[syncBDDPortabilidadAsync] DESPUES de parseDeleted status hash: {}", System.identityHashCode(status));
-            LOGGER.info("[syncBDDPortabilidadAsync] Resultado parseDeleted: {}", status);
-            LOGGER.info("[syncBDDPortabilidadAsync] Valor del actionDateLote en status: {}", status.getActionDateLote());
-            /*
-            status.setPortCanceladas(s.getPortCanceladas());
-            status.setPortCancelar(s.getPortCancelar());
-            status.setCanceladasTs(s.getCanceladasTs());
-             */
+            ResultadoValidacionCSV res = me.parsePortabilidad(tmpPorted, status);
 
+            // Actualizar status con resultado de parsePortabilidad
+            status.setId(res.getIdEstatus());
+            status.setTs(res.getTs());
+            status.setEstatus(res.getEstatus());
+            status.setReintentos(res.getReintentos());
+            status.setPortProcesadas(res.getPortProcesadas());
+            status.setPortProcesar(res.getPortProcesar());
+            status.setProcesadasTs(res.getProcesadasTs());
+            status.setActionDateLote(res.getActionDateLoteDate());
 
+            LOGGER.info("[syncBDDPortabilidadAsync] Resumen detallado: Insertados={}, Actualizados={}, NoPersistidos={}, ErroresEstructura={}",
+                    res.getTotalInsertados(),
+                    res.getTotalActualizados(),
+                    res.getTotalNoPersistidos(),
+                    res.getTotalErrorEstructura());
+
+            // ============================
+            // Procesamiento de cancelados
+            // status = me.parseDeleted(tmpDeleted, status);
+            // ============================
+            ResultadoValidacionCSV resultadocanc = me.parseDeleted(tmpDeleted, status);
+            // ============================
+            // Fusionar resultados de cancelados en res
+            // ============================
+            if (resultadocanc != null) {
+                res.setTotalOrigenCanc(resultadocanc.getTotalOrigenCanc());
+                res.setTotalProcesadosCanc(resultadocanc.getTotalProcesadosCanc());
+                res.setTotalFallidosInsercionCanc(resultadocanc.getTotalFallidosInsercionCanc());
+                res.setTotalFallidosEliminacionCanc(resultadocanc.getTotalFallidosEliminacionCanc());
+                res.setTotalErrorEstructuraCanc(resultadocanc.getTotalErrorEstructuraCanc());
+            }
+
+            // ============================
+            // Totales de BD
+            // ============================
             status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_OK);
             status.setTs(new Date());
-            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
             status.setReintentos(BigDecimal.ZERO);
 
-            //FJAH 27.05.2025 Refactorización fecha actiondate del XML
-            // Obtenemos los totales realmente registrados en BD
-            //BigDecimal totalPort = numerosPortadosDAO.getTotalNumerosPortadosHoy();
-            //BigDecimal totalCancel = numerosCanceladosDAO.getTotalNumerosCanceladosHoy();
-
-            // *** FJAH: Obtiene actionDate real del archivo procesado ***
-            LOGGER.info("[syncBDDPortabilidadAsync] status hash: {}", System.identityHashCode(status));
-            LOGGER.info("[syncBDDPortabilidadAsync] Valor del actionDateLote en status: {}", status.getActionDateLote());
             Date fechaActionDateArchivo = status.getActionDateLote();
-            LOGGER.info("[syncBDDPortabilidadAsync] Se asignó fechaActionDateArchivo: {}", fechaActionDateArchivo);
             if (fechaActionDateArchivo == null) {
-                LOGGER.warn("[syncBDDPortabilidadAsync] No se obtuvo actionDate del lote.");
+                LOGGER.warn("[syncBDDPortabilidadAsync] No se obtuvo actionDate del lote, se usa fecha actual.");
                 fechaActionDateArchivo = new Date();
-                //fechaActionDateArchivo = FECHA_PROCESO;
             }
 
             BigDecimal totalPort = numerosPortadosDAO.getTotalNumerosPortadosPorFecha(fechaActionDateArchivo);
             BigDecimal totalCancel = numerosCanceladosDAO.getTotalNumerosCanceladosPorFecha(fechaActionDateArchivo);
 
-            // Obtenemos los totales que ralmente se ha registrado en BD
             status.setPortProcesadas(totalPort);
             status.setPortCanceladas(totalCancel);
-            //status.setPortProcesadas(numerosPortadosDAO.getTotalNumerosPortadosHoy());
-            //status.setPortCanceladas(numerosCanceladosDAO.getTotalNumerosCanceladosHoy());
+
             LOGGER.info("[syncBDDPortabilidadAsync] Totales en BD: portados={}, cancelados={}", totalPort, totalCancel);
 
+            // ============================
+            // Bitácora y correo
+            // ============================
             String msg = formatMensaje(BIT_MSG_SYNC_OK, status);
             LOGGER.info("[syncBDDPortabilidadAsync] Mensaje a bitácora: {}", msg);
             bitacoraService.add(msg);
 
-            enviarMailSyncOk(status);
+            enviarMailSyncOkDetalle(status, res);
             LOGGER.info("[syncBDDPortabilidadAsync] Sincronización ABD ejecutada en {}: {}", WeblogicNode.getName(), msg);
+
         } catch (FileNotFoundException e) {
-            LOGGER.error("No se puede acceder al archivo: " + e.getMessage());
+            LOGGER.error("No se puede acceder al archivo: {}", e.getMessage());
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
-
-            status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-            status.setTs(new Date());
-            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
-
+            if (status != null) {
+                status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
+                status.setTs(new Date());
+            }
             enviarMailErrorABD("No se puede acceder al archivo: " + e.getMessage());
+
         } catch (FileSystemException e) {
             LOGGER.error("[syncBDDPortabilidadAsync] No se puede acceder al archivo: {}", e.getMessage(), e);
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
-
-            status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
-
-            status.setTs(new Date());
-            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
+            if (status != null) {
+                status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
+                status.setTs(new Date());
+            }
             enviarMailErrorABD("No se puede acceder al archivo: " + e.getMessage());
+
         } catch (Exception e) {
             LOGGER.error("[syncBDDPortabilidadAsync] Error inesperado", e);
             bitacoraService.add(BIT_MSG_SYNC_ERROR);
-            status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
+            if (status != null) {
+                status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
+                status.setTs(new Date());
+            }
+            enviarMailErrorABD("Error inesperado: " + e.getMessage());
 
-            status.setTs(new Date());
-            //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
-
-            enviarMailErrorABD("Error inespedado: " + e.getMessage());
         } finally {
             LOGGER.info("[syncBDDPortabilidadAsync] Guardando status y eliminando temporales.");
 
-            me.saveStatus(status);
+            if (status != null && !FechasUtils.esHoy(status.getTs())) {
+                LOGGER.warn("[syncBDDPortabilidadAsync] Forzamos update de status.TS a hoy para evitar reprocesos múltiples");
+                status.setTs(new Date());
+            }
+
+            if (status != null) {
+                me.saveStatus(status);
+            }
 
             if (tmpPorted != null) {
                 FileUtils.deleteQuietly(tmpPorted);
                 LOGGER.info("[syncBDDPortabilidadAsync] Archivo temporal ported eliminado: {}", tmpPorted);
             }
-
             if (tmpDeleted != null) {
                 FileUtils.deleteQuietly(tmpDeleted);
                 LOGGER.info("[syncBDDPortabilidadAsync] Archivo temporal deleted eliminado: {}", tmpDeleted);
-
             }
+
             LOGGER.info("[syncBDDPortabilidadAsync] FIN");
         }
-
     }
 
     @Asynchronous
@@ -861,7 +1459,8 @@ public class PortabilidadService implements IPortabilidadService {
                     }
 
                     //EstatusSincronizacion s = me.parseDeleted(tmpDeleted, status);
-                    me.parseDeleted(tmpDeleted, status);
+                    //me.parseDeleted(tmpDeleted, status);
+                    ResultadoValidacionCSV resultadocanc = me.parsePortabilidad(tmpDeleted, status);
                     /*
                     status.setPortCanceladas(s.getPortCanceladas());
                     status.setPortCancelar((s.getPortCancelar()));
@@ -952,21 +1551,44 @@ public class PortabilidadService implements IPortabilidadService {
         status.clear();
 
         File tmp = null;
+        ResultadoValidacionCSV resultado = null;
 
         try {
             LOGGER.debug("[syncBDDPortabilidad] Tipo de fichero recibido: {}", tipo.getCdg());
+
             if (tipo.getCdg().equals(TipoFicheroPort.DIARIO_PORTED)) {
                 LOGGER.info("[syncBDDPortabilidad] Procesando fichero de portabilidad: {}", file);
-
                 tmp = new File(file);
                 LOGGER.debug("[syncBDDPortabilidad] Llamando a parsePortabilidad()");
-                status = me.parsePortabilidad(tmp, status);
+                //status = me.parsePortabilidad(tmp, status);
+                resultado = me.parsePortabilidad(tmp, status);
+                // Sincronizamos valores de resultado -> status
+                status.setId(resultado.getIdEstatus());
+                status.setTs(resultado.getTs());
+                status.setEstatus(resultado.getEstatus());
+                status.setReintentos(resultado.getReintentos());
+                status.setPortProcesadas(resultado.getPortProcesadas());
+                status.setPortProcesar(resultado.getPortProcesar());
+                status.setProcesadasTs(resultado.getProcesadasTs());
+                status.setActionDateLote(resultado.getActionDateLoteDate());
+
                 LOGGER.info("[syncBDDPortabilidad] parsePortabilidad() terminó correctamente.");
             } else if (tipo.getCdg().equals(TipoFicheroPort.DIARIO_DELETED)) {
                 LOGGER.info("[syncBDDPortabilidad] Procesando fichero de cancelaciones: {}", file);
                 tmp = new File(file);
                 LOGGER.debug("[syncBDDPortabilidad] Llamando a parseDeleted()");
-                status = me.parseDeleted(tmp, status);
+                //status = me.parseDeleted(tmp, status);
+                resultado = me.parseDeleted(tmp, status);
+
+                // Sincronizamos valores de resultado -> status (igual que en portados)
+                status.setId(resultado.getIdEstatus());
+                status.setTs(resultado.getTs());
+                status.setEstatus(resultado.getEstatus());
+                status.setReintentos(resultado.getReintentos());
+                status.setPortCanceladas(resultado.getPortCanceladas());
+                status.setPortCancelar(resultado.getPortCancelar());
+                status.setCanceladasTs(resultado.getCanceladasTs());
+                status.setActionDateLote(resultado.getActionDateLoteDate());
                 LOGGER.info("[syncBDDPortabilidad] parseDeleted() terminó correctamente.");
             }else {
                 LOGGER.warn("[syncBDDPortabilidad] Tipo de fichero NO reconocido: {}", tipo.getCdg());
@@ -1099,6 +1721,9 @@ public class PortabilidadService implements IPortabilidadService {
      * Mail de resultado de la sincronizacion.
      * @param status status de la sincronizacion
      */
+    /**
+     * Mail de resultado de la sincronizacion con totales de validación.
+     */
     @Override
     public void enviarMailSyncOk(EstatusSincronizacion status) {
         try {
@@ -1113,6 +1738,95 @@ public class PortabilidadService implements IPortabilidadService {
             mailService.sendEmail(to, subjectWithHost.toString(), body);
         } catch (Exception e) {
             LOGGER.error("error enviando mail", e);
+        }
+    }
+
+    /**
+     * FJAH Integrar detalle de totales procesados
+     * @param status estado de la sincronizacion
+     * @param res
+     */
+    @Override
+    public void enviarMailSyncOkDetalle(EstatusSincronizacion status, ResultadoValidacionCSV res) {
+        final String subject = "SNS-Notificación Sincronizacion ABD (Detalle)";
+        StringBuilder subjectWithHost = new StringBuilder();
+        String to = paramService.getParamByName(ParametrosABD.ABD_MAIL_LIST);
+
+        StringBuilder body = new StringBuilder();
+        body.append("Resumen sincronización portados/cancelados\n\n");
+
+        try {
+            // ====== Estatus de Sincronizacion ======
+            //body.append("Número de portaciones a procesar : ").append(status.getPortProcesar()).append("\n");
+            //body.append("Número de portaciones procesadas : ").append(status.getPortProcesadas()).append("\n");
+            //body.append("Número de portaciones a cancelar : ").append(status.getPortCancelar()).append("\n");
+            //body.append("Número de portaciones canceladas : ").append(status.getPortCanceladas()).append("\n\n");
+
+            if (res != null) {
+                // ====== Totales Portados ======
+                body.append("Totales procesados (Portados)\n");
+                body.append("   - Origen archivo XML: ").append(res.getTotalOrigen()).append("\n");
+                body.append("   - Insertados BD: ").append(res.getTotalInsertados()).append("\n");
+                body.append("   - Actualizados BD: ").append(res.getTotalActualizados()).append("\n");
+                body.append("   - Total Persistidos BD (Insertados + Actualizados): ").append(res.getTotalProcesados()).append("\n");
+                body.append("   - No persistidos BD: ").append(res.getTotalNoPersistidos()).append("\n");
+                body.append("   - Errores de estructura y contenido : ").append(res.getTotalErrorEstructura()).append("\n");
+                body.append("   - Fallidos (No persistidos + Estructura y contenido): ").append(res.getTotalFallidosGlobal()).append("\n\n");
+
+                // ====== Totales Cancelados ======
+                body.append("Totales procesados (Cancelados)\n");
+                body.append("   - Origen archivo XML: ").append(res.getTotalOrigenCanc()).append("\n");
+                body.append("   - Procesados BD (Cancelados efectivos): ").append(res.getTotalProcesadosCanc()).append("\n");
+                body.append("   - No persistidos BD: ").append(res.getTotalFallidosInsercionCanc()).append("\n");
+                body.append("   - Errores de estructura y contenido: ").append(res.getTotalErrorEstructuraCanc()).append("\n");
+                body.append("   - Fallidos (No persistidos + Estructura y contenido): ").append(res.getTotalFallidosCanc()).append("\n\n");
+
+                // ====== Archivos generados ======
+                String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
+                if (StringUtils.isEmpty(basePath)) {
+                    basePath = ".";
+                }
+                String fechaStr = (res.getActionDateLote() != null) ?
+                        res.getActionDateLote().replaceAll("[^0-9]", "") : "sinFecha";
+
+                File logFile = new File(basePath, "port_num_portados_" + fechaStr + ".log");
+                if (logFile.exists()) {
+                    body.append("Log inválidos de estructura: ").append(logFile.getAbsolutePath()).append("\n");
+                }
+
+                File xmlFile = new File(basePath, "port_num_portados_fallidos_" + fechaStr + ".xml");
+                if (xmlFile.exists()) {
+                    body.append("XML no persistidos portados: ").append(xmlFile.getAbsolutePath()).append("\n");
+                }
+
+                File xmlCancFile = new File(basePath, "port_num_cancelados_fallidos_" + fechaStr + ".xml");
+                if (xmlCancFile.exists()) {
+                    body.append("XML no persistidos cancelados: ").append(xmlCancFile.getAbsolutePath()).append("\n");
+                }
+
+                // ====== Espejo en archivo físico (siempre) ======
+                File mailLogFile = new File(basePath, "correo_sincronizacion_" + fechaStr + ".txt");
+                try (FileWriter fw = new FileWriter(mailLogFile, false);
+                     BufferedWriter bw = new BufferedWriter(fw)) {
+                    bw.write("Asunto: " + subject + ":Host:" + getHostName() + "\n\n");
+                    bw.write(body.toString());
+                }
+                LOGGER.info("Copia física del correo generada en: {}", mailLogFile.getAbsolutePath());
+            }
+
+            body.append("\nFin del reporte automático.\n");
+
+            // ====== Enviar correo siempre ======
+            try {
+                subjectWithHost.append(subject).append(":Host:").append(getHostName());
+                mailService.sendEmail(to, subjectWithHost.toString(), body.toString());
+                LOGGER.info("Correo de resumen detallado enviado correctamente.");
+            } catch (Exception mailEx) {
+                LOGGER.info("Error enviando mail detallado", mailEx);
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Error general en armado/envío de mail detallado", e);
         }
     }
 

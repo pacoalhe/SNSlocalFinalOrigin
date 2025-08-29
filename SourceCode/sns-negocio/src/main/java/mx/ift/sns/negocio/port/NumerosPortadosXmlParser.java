@@ -1,28 +1,17 @@
 package mx.ift.sns.negocio.port;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import mx.ift.sns.modelo.port.Numero;
 import mx.ift.sns.modelo.port.NumeroPortado;
-import mx.ift.sns.negocio.port.modelo.Rango;
+
 import mx.ift.sns.negocio.port.modelo.ResultadoParser;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -34,63 +23,382 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class NumerosPortadosXmlParser extends DefaultHandler {
 
-    /** Logger de la clase. */
     private static final Logger LOGGER = LoggerFactory.getLogger(NumerosPortadosXmlParser.class);
 
+    private BufferedWriter writer;
+    private NumeroPortado currentNumero;
+    private StringBuilder currentValue = new StringBuilder();
+
+    private int totalDeclarados = 0;
+    private int totalGenerados = 0;
+    private int invalidosXml = 0;
+
+    // === Constructor vacío (legacy) ===
+    public NumerosPortadosXmlParser() {
+        // writer se inicializará en parse(File outFile,...)
+    }
+
+    // === Constructor nuevo (refactor) ===
+    public NumerosPortadosXmlParser(Writer writer) {
+        this.writer = new BufferedWriter(writer);
+    }
+
+    // Setter opcional
+    public void setWriter(Writer writer) {
+        this.writer = new BufferedWriter(writer);
+    }
+
+    // === Método parse (soporta legacy y refactor) ===
+    public void parse(String xmlPath, File outFile, ResultadoParser res) throws Exception {
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        SAXParser saxParser = factory.newSAXParser();
+
+        // Si se usó constructor vacío, inicializamos aquí el writer
+        if (this.writer == null && outFile != null) {
+            this.writer = new BufferedWriter(new FileWriter(outFile));
+        }
+
+        saxParser.parse(xmlPath, this);
+
+        if (this.writer != null) {
+            this.writer.flush();
+            this.writer.close();
+        }
+
+        LOGGER.info("XML Portados parseado -> Declarados={}, Generados={}, Invalidos={}",
+                totalDeclarados, totalGenerados, invalidosXml);
+    }
+
+    @Override
+    public void startElement(String uri, String localName, String qName, Attributes attributes) {
+        currentValue.setLength(0);
+        if ("PortData".equalsIgnoreCase(qName)) {
+            currentNumero = new NumeroPortado();
+            totalDeclarados++;
+        }
+    }
+
+    @Override
+    public void characters(char[] ch, int start, int length) {
+        currentValue.append(ch, start, length);
+    }
+
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+        String value = currentValue.toString().trim();
+
+        if (currentNumero != null) {
+
+            if ("PortID".equalsIgnoreCase(qName)) {
+                currentNumero.setPortId(value);
+
+            } else if ("PortType".equalsIgnoreCase(qName)) {
+                currentNumero.setPortType(value);
+
+            } else if ("Action".equalsIgnoreCase(qName)) {
+                currentNumero.setAction(value);
+
+            } else if ("NumberFrom".equalsIgnoreCase(qName)) {
+                currentNumero.setNumberFrom(value);
+
+            } else if ("NumberTo".equalsIgnoreCase(qName)) {
+                currentNumero.setNumberTo(value);
+
+            } else if ("isMPP".equalsIgnoreCase(qName)) {
+                currentNumero.setIsMpp(value);
+
+            } else if ("RIDA".equalsIgnoreCase(qName)) {
+                currentNumero.setRida(toBigDecimal(value));
+
+            } else if ("RCR".equalsIgnoreCase(qName)) {
+                currentNumero.setRcr(toBigDecimal(value));
+
+            } else if ("DIDA".equalsIgnoreCase(qName)) {
+                currentNumero.setDida(toBigDecimal(value));
+
+            } else if ("DCR".equalsIgnoreCase(qName)) {
+                currentNumero.setDcr(toBigDecimal(value));
+
+            } else if ("ActionDate".equalsIgnoreCase(qName)) {
+                try {
+                    if (value != null && !value.isEmpty()) {
+                        String formatted = value.replaceFirst(
+                                "(\\d{4})(\\d{2})(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
+                                "$1-$2-$3 $4:$5:$6"
+                        );
+                        Timestamp ts = Timestamp.valueOf(formatted);
+                        currentNumero.setActionDate((Timestamp) ts); //fuerza a Timestamp
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("ActionDate inválido: {}", value);
+                    currentNumero.setActionDate((Timestamp) null); //fuerza a Timestamp
+                }
+
+            } else if ("PortData".equalsIgnoreCase(qName)) {
+                if (isRegistroValido(currentNumero)) {
+                    try {
+                        if (writer != null) {
+                            writer.write(toCsvRow(currentNumero));
+                            writer.newLine();
+                        }
+                        totalGenerados++;
+                    } catch (IOException e) {
+                        throw new SAXException("Error escribiendo fila CSV", e);
+                    }
+                } else {
+                    invalidosXml++;
+                    LOGGER.warn("Registro Portado inválido descartado: {}", currentNumero);
+                }
+                currentNumero = null;
+
+            } else {
+                //String msg = "Etiqueta XML inesperada encontrada: <" + qName + "> con valor='" + value + "'";
+                //LOGGER.warn(msg);
+                //if (registrosInvalidosGlobal != null) registrosInvalidosGlobal.add(msg);
+            }
+        }
+    }
+
+    /*@Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+        String value = currentValue.toString().trim();
+        String tag = qName.toLowerCase();
+
+        if (currentNumero != null) {
+            switch (tag) {
+                case "PortID": currentNumero.setPortId(value); break;
+                case "PortType": currentNumero.setPortType(value); break;
+                case "Action": currentNumero.setAction(value); break;
+                case "NumberFrom": currentNumero.setNumberFrom(value); break;
+                case "NumberTo": currentNumero.setNumberTo(value); break;
+                case "isMPP": currentNumero.setIsMpp(value); break;
+
+                case "RIDA": currentNumero.setRida(toBigDecimal(value)); break;
+                case "RCR":  currentNumero.setRcr(toBigDecimal(value)); break;
+                case "DIDA": currentNumero.setDida(toBigDecimal(value)); break;
+                case "DCR":  currentNumero.setDcr(toBigDecimal(value)); break;
+                case "numberranges":
+                case "numberrange":
+                    break;
+
+
+                case "actiondate":
+                    try {
+                        if (value != null && !value.isEmpty()) {
+                            String formatted = value.replaceFirst(
+                                    "(\\d{4})(\\d{2})(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
+                                    "$1-$2-$3 $4:$5:$6"
+                            );
+                            Timestamp ts = Timestamp.valueOf(formatted);
+                            currentNumero.setActionDate((Timestamp) ts); // 🔑 fuerza a Timestamp
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("ActionDate inválido: {}", value);
+                        currentNumero.setActionDate((Timestamp) null); // 🔑 fuerza a Timestamp
+                    }
+                    break;
+
+                case "PortData":
+                    if (isRegistroValido(currentNumero)) {
+                        try {
+                            if (writer != null) {
+                                writer.write(toCsvRow((NumeroPortado) currentNumero));
+                                writer.newLine();
+                            }
+                            totalGenerados++;
+                        } catch (IOException e) {
+                            throw new SAXException("Error escribiendo fila CSV", e);
+                        }
+                    } else {
+                        invalidosXml++;
+                        LOGGER.warn("Registro Portado inválido descartado: {}", currentNumero);
+                    }
+                    currentNumero = null;
+                    break;
+                default:
+                    String msg = "Etiqueta XML inesperada encontrada: <" + qName + "> con valor='" + value + "'";
+                    LOGGER.warn(msg);
+                    if (registrosInvalidosGlobal != null) registrosInvalidosGlobal.add(msg);
+                    break;
+            }
+        }
+    }
+
+     */
+
+    // Conversión segura
+    private BigDecimal toBigDecimal(String value) {
+        try {
+            if (value != null && !value.isEmpty()) {
+                return new BigDecimal(value);
+            }
+        } catch (NumberFormatException e) {
+            LOGGER.warn("Valor no numérico para campo BigDecimal en Portados: '{}'", value);
+        }
+        return null;
+    }
+
+    private boolean isRegistroValido(NumeroPortado np) {
+        return np != null &&
+                np.getPortId() != null && !np.getPortId().isEmpty() &&
+                np.getNumberFrom() != null && !np.getNumberFrom().isEmpty();
+    }
+
+    private String toCsvRow(NumeroPortado np) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(safe(np.getPortId())).append("|")
+                .append(safe(np.getPortType())).append("|")
+                .append(safe(np.getAction())).append("|")
+                .append(safe(np.getNumberFrom())).append("|")
+                .append(safe(np.getNumberTo())).append("|")
+                .append(safe(np.getIsMpp())).append("|")
+                .append(safeBD(np.getRida())).append("|")
+                .append(safeBD(np.getRcr())).append("|")
+                .append(safeBD(np.getDida())).append("|")
+                .append(safeBD(np.getDcr())).append("|")
+                .append(safeDate(np.getActionDate()));
+        //return sb.toString();
+        String linea = sb.toString();
+
+        //Validación rápida: contar cuántos separadores trae
+        int pipes = linea.length() - linea.replace("|", "").length();
+        if (pipes < 10) {
+            LOGGER.warn("Línea CSV generada con {} columnas (esperado 11): {}",
+                    pipes+1, linea);
+        } else if (totalGenerados < 5) {
+            // Solo para debug: loguear las primeras 5 filas válidas
+            LOGGER.info("Fila CSV generada [{}]: {}", totalGenerados+1, linea);
+        }
+
+        return linea;
+    }
+
+    private String safe(String v) {
+        return v != null ? v : "";
+    }
+
+    private String safeBD(BigDecimal v) {
+        return v != null ? v.toString() : "";
+    }
+
+    private String safeDate(Timestamp ts) {
+        if (ts != null) {
+            return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(ts);
+        }
+        return "";
+    }
+
+    private List<String> registrosInvalidosGlobal;
+
+    public void setRegistrosInvalidosGlobal(List<String> registrosInvalidosGlobal) {
+        this.registrosInvalidosGlobal = registrosInvalidosGlobal;
+    }
+
+    // === Getters para validación externa ===
+    public int getTotalDeclarados() { return totalDeclarados; }
+    public int getTotalGenerados() { return totalGenerados; }
+    public int getInvalidosXml() { return invalidosXml; }
+
+}
+
+
+
+
+    /** Logger de la clase. */
+    /*
+private static final Logger LOGGER = LoggerFactory.getLogger(NumerosPortadosXmlParser.class);
+
+
+     */
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_PORT_DATA = "PortData";
+/*    protected static final String ETIQUETA_PORT_DATA = "PortData";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_PORTID = "PortID";
+/*    protected static final String ETIQUETA_PORTID = "PortID";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_PORTTYPE = "PortType";
+/*    protected static final String ETIQUETA_PORTTYPE = "PortType";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_ACTION = "Action";
+/*    protected static final String ETIQUETA_ACTION = "Action";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_NUMBER_RANGE = "NumberRange";
+/*    protected static final String ETIQUETA_NUMBER_RANGE = "NumberRange";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_NUMBER_FROM = "NumberFrom";
+/*    protected static final String ETIQUETA_NUMBER_FROM = "NumberFrom";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_NUMBER_TO = "NumberTo";
+/*    protected static final String ETIQUETA_NUMBER_TO = "NumberTo";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_IS_MPP = "isMPP";
+/*    protected static final String ETIQUETA_IS_MPP = "isMPP";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_RIDA = "RIDA";
+/*    protected static final String ETIQUETA_RIDA = "RIDA";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_DIDA = "DIDA";
+/*    protected static final String ETIQUETA_DIDA = "DIDA";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_DCR = "DCR";
+/*    protected static final String ETIQUETA_DCR = "DCR";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_RCR = "RCR";
+/*    protected static final String ETIQUETA_RCR = "RCR";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_ACTION_DATE = "ActionDate";
+/*    protected static final String ETIQUETA_ACTION_DATE = "ActionDate";
+
+ */
+
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_TIMESTAMP = "Timestamp";
+/*    protected static final String ETIQUETA_TIMESTAMP = "Timestamp";
+
+ */
 
     /** Etiqueta XML. */
-    protected static final String ETIQUETA_NUMBER_OF_MESSAGES = "NumberOfMessages";
+/*    protected static final String ETIQUETA_NUMBER_OF_MESSAGES = "NumberOfMessages";
 
+
+ */
     /** Cabecera CSV Ported. */
-    protected static final String HEADER_PORTED = "portId,portType,action,numberFrom,numberTo,isMpp"
-            + ",rida,rcr,dida,dcr,actionDate";
+/*    protected static final String HEADER_PORTED = "portId,portType,action,numberFrom,numberTo,isMpp"
+              + ",rida,rcr,dida,dcr,actionDate";
+
+ */
 
     /** Formato Fecha. */
-    protected static final String FORMAT_DATE = "yyyyMMddhhmmss";
+/*    protected static final String FORMAT_DATE = "yyyyMMddhhmmss";
 
+
+ */
     /** bPortId. */
-    protected boolean bPortId = false;
+/*    protected boolean bPortId = false;
 
     protected boolean bPortType = false;
 
@@ -118,21 +426,30 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
 
     protected boolean bNumberOfMessages = false;
 
+
+ */
     /** numero tradado. */
-    protected Numero num = null;
+/*    protected Numero num = null;
 
+
+ */
     /** lista de rangos del numero. */
-    protected List<Rango> rangos = null;
+/*    protected List<Rango> rangos = null;
 
+
+ */
     /** Rango del numero. */
-    protected Rango rango = null;
+/*    protected Rango rango = null;
 
+
+ */
     /** Numeros leidos. */
-    protected long numLeidosTotal = 0;
+/*    protected long numLeidosTotal = 0;
 
+
+ */
     /** Numero total. */
-    protected long numTotal = 0;
-
+/*    protected long numTotal = 0;
     protected Date timeStamp;
 
     protected long numberOfMessages = 0;
@@ -144,7 +461,7 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
     /**
      * Constructor.
      */
-    public NumerosPortadosXmlParser() {
+/*    public NumerosPortadosXmlParser() {
         header = HEADER_PORTED;
     }
 
@@ -153,7 +470,7 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
      * @param filenameOut Nombre del fichero de salida.
      * @param res Resultado del Parseo.
      */
-    public void parse(String filename, File filenameOut, ResultadoParser res) {
+ /*   public void parse(String filename, File filenameOut, ResultadoParser res) {
 
         try {
 
@@ -197,7 +514,7 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
 
     @Override
     public void startElement(String uri, String localName, String qName,
-            Attributes attributes) throws SAXException {
+                             Attributes attributes) throws SAXException {
 
         if (qName.equalsIgnoreCase(ETIQUETA_TIMESTAMP)) {
             bTimeStamp = true;
@@ -239,7 +556,7 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
 
     @Override
     public void endElement(String uri, String localName,
-            String qName) throws SAXException {
+                           String qName) throws SAXException {
 
         if (ETIQUETA_PORT_DATA.equalsIgnoreCase(qName)) {
             if (rangos.size() > 0) {
@@ -377,4 +694,4 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
             bActionDate = false;
         }
     }
-}
+ */

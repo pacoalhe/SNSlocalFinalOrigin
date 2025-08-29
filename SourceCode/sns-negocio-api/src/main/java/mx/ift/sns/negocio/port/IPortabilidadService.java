@@ -7,6 +7,7 @@ import mx.ift.sns.modelo.port.NumeroCancelado;
 import mx.ift.sns.modelo.port.NumeroPortado;
 import mx.ift.sns.modelo.usu.Usuario;
 import mx.ift.sns.negocio.exceptions.SincronizacionABDException;
+import mx.ift.sns.negocio.ng.model.ResultadoValidacionCSV;
 
 /**
  * Interfaz del Servicio de Portabilidad.
@@ -77,13 +78,19 @@ public interface IPortabilidadService {
     void enviarMailSyncOk(EstatusSincronizacion status);
 
     /**
+     * @param status estado de la sincronizacion
+     */
+    void enviarMailSyncOkDetalle(EstatusSincronizacion status, ResultadoValidacionCSV res);
+
+    /**
      * Parsea fichero de cancelaciones.
-     * @param tmpDeleted fichero
+     * @param -tmpDeleted fichero
      * @param status estado de la sincronizacion
      * @return EstatusSincronizacion
      * @throws Exception error
      */
-    EstatusSincronizacion parseDeleted(File tmpDeleted, EstatusSincronizacion status) throws Exception;
+    //EstatusSincronizacion parseDeleted(File tmpDeleted, EstatusSincronizacion status) throws Exception;
+    ResultadoValidacionCSV parseDeleted(File tmpPorted, EstatusSincronizacion status) throws Exception;
 
     /**
      * Parsea el fichero de portabilidad.
@@ -92,7 +99,9 @@ public interface IPortabilidadService {
      * @return EstatusSincronizacion
      * @throws Exception errror
      */
-    EstatusSincronizacion parsePortabilidad(File tmpPorted, EstatusSincronizacion status) throws Exception;
+    //EstatusSincronizacion parsePortabilidad(File tmpPorted, EstatusSincronizacion status) throws Exception;
+    ResultadoValidacionCSV parsePortabilidad(File tmpPorted, EstatusSincronizacion status) throws Exception;
+
 
     /**
      * Recupera un número portado por su identificador.
