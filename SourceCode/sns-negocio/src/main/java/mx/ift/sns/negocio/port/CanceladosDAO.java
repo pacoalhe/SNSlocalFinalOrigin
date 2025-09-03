@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -358,22 +359,21 @@ public class CanceladosDAO {
 	}
 
 	// =======================================
-	// Paso 2: Borrar de PORT_NUM_CANCELADO
+	// Paso 2: Borrar de PORT_NUM_CANCELADO por fechaProceso
 	// =======================================
-	public void deleteCanceladosLote(List<NumeroCancelado> lote) {
-		String sql = "DELETE FROM PORT_NUM_CANCELADO WHERE NUMBERFROM=? AND ACTIONDATE=?";
+	public void deleteCanceladosPorFecha(Date fechaProceso) {
+		String sql = "DELETE FROM PORT_NUM_CANCELADO WHERE ACTIONDATE = ?";
 		try (Connection conn = dataSource.getConnection();
 			 PreparedStatement ps = conn.prepareStatement(sql)) {
 
-			for (NumeroCancelado n : lote) {
-				ps.setString(1, n.getNumberFrom());
-				ps.setTimestamp(2, new Timestamp(n.getActionDate().getTime()));
-				ps.addBatch();
-			}
-			ps.executeBatch();
-			LOGGER.info("Cancelados borrados en PORT_NUM_CANCELADO: {} registros", lote.size());
+			ps.setTimestamp(1, new Timestamp(fechaProceso.getTime()));
+			int eliminados = ps.executeUpdate();
+
+			LOGGER.info("Cancelados borrados en PORT_NUM_CANCELADO para fecha {}: {} registros",
+					fechaProceso, eliminados);
+
 		} catch (Exception e) {
-			LOGGER.error("Error borrando cancelados lote", e);
+			LOGGER.error("Error borrando cancelados por fecha {}", fechaProceso, e);
 		}
 	}
 
@@ -762,7 +762,11 @@ public class CanceladosDAO {
 	// usando BufferedWriter + StringBuilder para máxima velocidad.
 	// =======================================
 
-	public void generarXmlFallidosCanceladosBatch(String timestampOriginal) throws Exception {
+	/**
+	 * Genera un XML con los cancelados fallidos (modo batch).
+	 * Solo se genera cuando hay registros fallidos.
+	 */
+	public void generarXmlFallidosCanceladosBatch() throws Exception {
 		LOGGER.info("Iniciando generación de XML con cancelados fallidos (modo batch)...");
 
 		final String SQL_SELECT =
@@ -771,11 +775,6 @@ public class CanceladosDAO {
 						"FROM SNAPSHOT_PORT_NUM_CANCELADO " +
 						"WHERE ESTADO_FINAL_PORT = 'FALLIDO'";
 
-		final String SQL_COUNT =
-				"SELECT COUNT(*) FROM SNAPSHOT_PORT_NUM_CANCELADO " +
-						"WHERE ESTADO_FINAL_PORT = 'FALLIDO'";
-
-		// Ruta salida
 		String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
 		if (StringUtils.isEmpty(basePath)) {
 			LOGGER.warn("Parametro port_XMLLOG_path.portados no definido, usando directorio actual");
@@ -786,90 +785,83 @@ public class CanceladosDAO {
 			LOGGER.warn("Directorio {} no existe, verificar configuración de parámetros", basePath);
 		}
 
-		String fechaStr = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		File outFile = new File(dir, "port_num_cancelados_fallidos_" + fechaStr + ".xml");
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.DATE, -1);
+		String fechaArchivo = new SimpleDateFormat("yyyyMMdd").format(cal.getTime());
+		File outFile = new File(dir, "NumbersDeleted-" + fechaArchivo + ".xml");
 
 		SimpleDateFormat sdfActionDate = new SimpleDateFormat("yyyyMMddHHmmss");
 
-		int totalEsperado = 0;
+		int total = 0;
+		StringBuilder xmlContent = new StringBuilder(1024 * 1024);
 
-		try (Connection conn = dataSource.getConnection();
-			 Statement stCount = conn.createStatement();
-			 ResultSet rsCount = stCount.executeQuery(SQL_COUNT)) {
-			if (rsCount.next()) {
-				totalEsperado = rsCount.getInt(1);
-			}
-		}
+		xmlContent.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+		xmlContent.append("<NPCData>\n");
+		xmlContent.append("  <MessageName>Porting Data - Cancelados</MessageName>\n");
+
+		// Timestamp = fecha actual -1
+		String tsEncabezado = new SimpleDateFormat("yyyyMMddHHmmss").format(cal.getTime());
+		xmlContent.append("  <Timestamp>").append(tsEncabezado).append("</Timestamp>\n");
+
+		xmlContent.append("  <NumberOfMessages>PLACEHOLDER</NumberOfMessages>\n");
+		xmlContent.append("  <PortDataList>\n");
 
 		try (Connection conn = dataSource.getConnection();
 			 PreparedStatement ps = conn.prepareStatement(SQL_SELECT,
 					 ResultSet.TYPE_FORWARD_ONLY,
 					 ResultSet.CONCUR_READ_ONLY);
-			 ResultSet rs = ps.executeQuery();
-			 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-					 new FileOutputStream(outFile), "UTF-8"), 131072)) { // 128 KB buffer
+			 ResultSet rs = ps.executeQuery()) {
 
 			ps.setFetchSize(2000);
 
-			// Encabezado XML
-			writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-			writer.write("<NPCData>\n");
-			writer.write("  <MessageName>Porting Data - Cancelados</MessageName>\n");
-			writer.write("  <Timestamp>" + (timestampOriginal != null ? timestampOriginal : "") + "</Timestamp>\n");
-			writer.write("  <NumberOfMessages>" + totalEsperado + "</NumberOfMessages>\n");
-			writer.write("  <PortDataList>\n");
-
-			int total = 0;
-			StringBuilder sb = new StringBuilder(512);
-
 			while (rs.next()) {
 				total++;
-				sb.setLength(0); // limpiar
-
-				sb.append("    <PortData>\n");
-				sb.append("      <PortID>").append(rs.getString("PORTID")).append("</PortID>\n");
-				sb.append("      <PortType>").append(rs.getString("PORTTYPE")).append("</PortType>\n");
-				sb.append("      <Action>").append(rs.getString("ACTION")).append("</Action>\n");
-
-				sb.append("      <NumberRanges>\n");
-				sb.append("        <NumberRange>\n");
-				sb.append("          <NumberFrom>").append(rs.getString("NUMBERFROM")).append("</NumberFrom>\n");
-				sb.append("          <NumberTo>").append(rs.getString("NUMBERTO")).append("</NumberTo>\n");
-				sb.append("          <isMPP>").append(rs.getString("ISMPP")).append("</isMPP>\n");
-				sb.append("        </NumberRange>\n");
-				sb.append("      </NumberRanges>\n");
-
-				sb.append("      <RIDA>").append(rs.getString("RIDA")).append("</RIDA>\n");
-				sb.append("      <RCR>").append(rs.getString("RCR")).append("</RCR>\n");
-				sb.append("      <DIDA>").append(rs.getString("DIDA")).append("</DIDA>\n");
-				sb.append("      <DCR>").append(rs.getString("DCR")).append("</DCR>\n");
-
-				sb.append("      <AssigneeIDA>").append(rs.getString("ASSIGNEEIDA")).append("</AssigneeIDA>\n");
-				sb.append("      <AssigneeCR>").append(rs.getString("ASSIGNEECR")).append("</AssigneeCR>\n");
-
-				Timestamp ts = rs.getTimestamp("ACTIONDATE");
-				sb.append("      <ActionDate>")
-						.append(ts != null ? sdfActionDate.format(ts) : "")
-						.append("</ActionDate>\n");
-
-				sb.append("    </PortData>\n");
-
-				writer.write(sb.toString());
-
-				// log cada 10k
-				if (total % 10000 == 0) {
-					LOGGER.info("Escritos {} registros en XML (cancelados)...", total);
-				}
+				xmlContent.append("    <PortData>\n")
+						.append("      <PortID>").append(rs.getString("PORTID")).append("</PortID>\n")
+						.append("      <PortType>").append(rs.getString("PORTTYPE")).append("</PortType>\n")
+						.append("      <Action>").append(rs.getString("ACTION")).append("</Action>\n")
+						.append("      <NumberRanges>\n")
+						.append("        <NumberRange>\n")
+						.append("          <NumberFrom>").append(rs.getString("NUMBERFROM")).append("</NumberFrom>\n")
+						.append("          <NumberTo>").append(rs.getString("NUMBERTO")).append("</NumberTo>\n")
+						.append("          <isMPP>").append(rs.getString("ISMPP")).append("</isMPP>\n")
+						.append("        </NumberRange>\n")
+						.append("      </NumberRanges>\n")
+						.append("      <RIDA>").append(rs.getString("RIDA")).append("</RIDA>\n")
+						.append("      <RCR>").append(rs.getString("RCR")).append("</RCR>\n")
+						.append("      <DIDA>").append(rs.getString("DIDA")).append("</DIDA>\n")
+						.append("      <DCR>").append(rs.getString("DCR")).append("</DCR>\n")
+						.append("      <AssigneeIDA>").append(rs.getString("ASSIGNEEIDA")).append("</AssigneeIDA>\n")
+						.append("      <AssigneeCR>").append(rs.getString("ASSIGNEECR")).append("</AssigneeCR>\n")
+						.append("      <ActionDate>").append(sdfActionDate.format(new Date())).append("</ActionDate>\n")
+						.append("    </PortData>\n");
 			}
-
-			writer.write("  </PortDataList>\n");
-			writer.write("</NPCData>\n");
-			writer.flush();
-
-			LOGGER.info("Archivo XML (batch) de cancelados fallidos generado: {} (Esperados={}, Generados={})",
-					outFile.getAbsolutePath(), totalEsperado, total);
 		}
+
+		if (total == 0) {
+			LOGGER.info("No se generó XML de cancelados fallidos: no hay registros.");
+			return;
+		}
+
+		xmlContent.append("  </PortDataList>\n");
+		xmlContent.append("</NPCData>\n");
+
+		// Reemplazar placeholder con el total real
+		int idx = xmlContent.indexOf("PLACEHOLDER");
+		if (idx != -1) {
+			xmlContent.replace(idx, idx + "PLACEHOLDER".length(), String.valueOf(total));
+		}
+
+		try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+				new FileOutputStream(outFile), "UTF-8"), 131072)) {
+			writer.write(xmlContent.toString());
+		}
+
+		LOGGER.info("Archivo XML (batch) de cancelados fallidos generado: {} (Total={})",
+				outFile.getAbsolutePath(), total);
 	}
+
+
 
 }
 

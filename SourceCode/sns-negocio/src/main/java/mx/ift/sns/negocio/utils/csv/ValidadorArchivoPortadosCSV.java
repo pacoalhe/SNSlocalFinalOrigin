@@ -232,7 +232,7 @@ public class ValidadorArchivoPortadosCSV {
                 // Paso 7: generar XML de fallidos
                 LOGGER.info("<--- Paso 7: generar XML de fallidos ---->");
                 try {
-                    portadosDAO.generarXmlFallidosBatch(timestampOriginal);
+                    portadosDAO.generarXmlFallidosBatch();
                     LOGGER.info("XML de no persistidos generado correctamente (streaming desde BD).");
                 } catch (Exception e) {
                     LOGGER.error("Error generando XML de no persistidos (fallidos).", e);
@@ -549,13 +549,18 @@ public class ValidadorArchivoPortadosCSV {
         return num;
     }
 
-
-
-
     /**
-     * Paso 3. Genera un archivo .log con los registros inválidos de estructura.
+     * Paso 6: Genera un archivo .log con los registros inválidos de contenido CSV (Portados).
+     * idéntico a la estructura del insumo original de PORTADOS.
+     * Solo se genera cuando hay errores.
+     * Si no hay errores, no se crea ningún archivo.
      */
     private void generarLogInvalidos(List<String> registrosInvalidos) {
+        if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
+            LOGGER.info("No se generó archivo de inválidos CSV (Portados): no se detectaron errores.");
+            return;
+        }
+
         try {
             String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
             if (StringUtils.isEmpty(basePath)) {
@@ -568,8 +573,8 @@ public class ValidadorArchivoPortadosCSV {
                 LOGGER.warn("Directorio {} no existe, verificar configuración de parámetros", basePath);
             }
 
-            // Nombre con timestamp
-            String fechaStr = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            // Nombre con solo la fecha
+            String fechaStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
             File logFile = new File(dir, "port_num_portados_CSVinvalidos_" + fechaStr + ".log");
 
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(logFile))) {
@@ -579,18 +584,24 @@ public class ValidadorArchivoPortadosCSV {
                 }
             }
 
-            LOGGER.info("Archivo de inválidos generado: {}", logFile.getAbsolutePath());
+            LOGGER.info("Archivo de inválidos CSV generado: {}", logFile.getAbsolutePath());
         } catch (Exception e) {
-            LOGGER.error("Error al generar archivo de inválidos", e);
+            LOGGER.error("Error al generar archivo de inválidos CSV", e);
         }
     }
 
     /**
-     * Paso 6: genera un XML con los no persistidos,
+     * Paso 7: genera un XML con los no persistidos,
      * idéntico a la estructura del insumo original de PORTADOS.
+     * Solo se genera cuando hay registros fallidos.
      */
     private void generarXmlNoPersistidos(List<NumeroPortado> noPersistidos, String timestampOriginal) throws Exception {
-        LOGGER.info("Iniciando generación de XML con no persistidos...");
+        if (noPersistidos == null || noPersistidos.isEmpty()) {
+            LOGGER.info("No se generó XML de no persistidos (Portados): no hay registros fallidos.");
+            return;
+        }
+
+        LOGGER.info("Iniciando generación de XML con no persistidos (Portados)...");
 
         // Path desde parámetros
         String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
@@ -603,8 +614,8 @@ public class ValidadorArchivoPortadosCSV {
             LOGGER.warn("Directorio {} no existe, verificar configuración de parámetros", basePath);
         }
 
-        // Nombre con timestamp actual
-        String fechaStr = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        // Nombre con solo la fecha
+        String fechaStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
         File outFile = new File(dir, "port_num_portados_fallidos_" + fechaStr + ".xml");
 
         // Formato correcto para ActionDate
@@ -701,7 +712,7 @@ public class ValidadorArchivoPortadosCSV {
             writer.flush();
         }
 
-        LOGGER.info("Archivo XML de no persistidos generado: {} (Total={})", outFile.getAbsolutePath(), noPersistidos.size());
+        LOGGER.info("Archivo XML de no persistidos (Portados) generado: {} (Total={})", outFile.getAbsolutePath(), noPersistidos.size());
     }
 
     /**

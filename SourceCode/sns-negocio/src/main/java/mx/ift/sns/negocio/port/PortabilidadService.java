@@ -420,35 +420,16 @@ public class PortabilidadService implements IPortabilidadService {
             LOGGER.info("Total de registros (origen XML): {}", totalOrigen);
 
             InputSource sanitizedSource = sanitizeAndValidateXml(tmpPorted, registrosInvalidos, false);
-            if (sanitizedSource != null) {
-                saxParser.parse(sanitizedSource, parser);
-                if (parser != null) {
-                    try {
-                        Field writerField = NumerosPortadosXmlParser.class.getDeclaredField("writer");
-                        writerField.setAccessible(true);
-                        BufferedWriter bw = (BufferedWriter) writerField.get(parser);
-                        if (bw != null) {
-                            bw.flush();
-                            bw.close();
-                        }
-                        try (BufferedReader br = new BufferedReader(new FileReader(tmpPortedCSV))) {
-                            String linea;
-                            int contador = 0;
-                            while ((linea = br.readLine()) != null && contador < 5) {
-                                LOGGER.info("CSV TEMPORAL [{}]: {}", contador+1, linea);
-                                contador++;
-                            }
-                        } catch (Exception e) {
-                            LOGGER.error("Error leyendo CSV temporal", e);
-                        }
 
-                    } catch (Exception e) {
-                        LOGGER.warn("No se pudo cerrar el writer del parser", e);
-                    }
+            if (sanitizedSource == null) {
+                LOGGER.error("Archivo {} descartado por errores críticos en cabecera/pie", tmpPorted.getName());
+
+                // Generar log de inválidos para evidencias QA/Prod
+                if (!registrosInvalidos.isEmpty()) {
+                    generarLogInvalidos(registrosInvalidos, "Portados");
                 }
-            } else {
-                LOGGER.error("Archivo descartado por estructura inválida. Ver registrosInvalidos.");
-                generarLogInvalidos(registrosInvalidos, "Portados"); // guardamos detalle
+
+                // Retornamos resultado truncado sin tocar BD ni generar XML fallidos
                 ResultadoValidacionCSV resultadoFallback = new ResultadoValidacionCSV();
                 resultadoFallback.setIdEstatus(status.getId());
                 resultadoFallback.setTs(status.getTs());
@@ -458,9 +439,35 @@ public class PortabilidadService implements IPortabilidadService {
                 resultadoFallback.setPortProcesar(BigDecimal.ZERO);   // nada por procesar
                 resultadoFallback.setProcesadasTs(new Timestamp(System.currentTimeMillis()));
                 resultadoFallback.setActionDateLoteDate(new Date());
-                resultadoFallback.setTotalErrorEstructura(registrosInvalidos.size()); // total de errores encontrados
+                resultadoFallback.setTotalErrorEstructura(registrosInvalidos.size());
+                resultadoFallback.setTotalOrigen(0); // 🚫 origen inválido
+                return resultadoFallback;
+            }
 
-                return resultadoFallback; //salimos aquí mismo
+            saxParser.parse(sanitizedSource, parser);
+
+            if (parser != null) {
+                try {
+                    Field writerField = NumerosPortadosXmlParser.class.getDeclaredField("writer");
+                    writerField.setAccessible(true);
+                    BufferedWriter bw = (BufferedWriter) writerField.get(parser);
+                    if (bw != null) {
+                        bw.flush();
+                        bw.close();
+                    }
+                    try (BufferedReader br = new BufferedReader(new FileReader(tmpPortedCSV))) {
+                        String linea;
+                        int contador = 0;
+                        while ((linea = br.readLine()) != null && contador < 5) {
+                            LOGGER.info("CSV TEMPORAL [{}]: {}", contador + 1, linea);
+                            contador++;
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Error leyendo CSV temporal", e);
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("No se pudo cerrar el writer del parser", e);
+                }
             }
 
             int invalidosXml = 0;
@@ -541,8 +548,6 @@ public class PortabilidadService implements IPortabilidadService {
             resultadoValidacionCSV.setProcesadasTs(status.getProcesadasTs());
             resultadoValidacionCSV.setActionDateLoteDate(status.getActionDateLote());
 
-
-
             // Sumar los inválidos detectados en el XML
             int totalErroresEstructura = resultadoValidacionCSV.getTotalErrorEstructura() + invalidosXml;
             resultadoValidacionCSV.setTotalErrorEstructura(totalErroresEstructura);
@@ -554,13 +559,9 @@ public class PortabilidadService implements IPortabilidadService {
             LOGGER.info("ERROR INESPERADO: \n" + e.getMessage());
             throw e;
         } finally {
-//            if (tmpPorted != null) {
-//                FileUtils.deleteQuietly(tmpPorted);
-//            }
-//
-//            if (tmpPortedCSV != null) {
-//                FileUtils.deleteQuietly(tmpPortedCSV);
-//            }
+            if (tmpPortedCSV != null) {
+                FileUtils.deleteQuietly(tmpPortedCSV);
+            }
         }
     }
 
@@ -583,10 +584,18 @@ public class PortabilidadService implements IPortabilidadService {
 
     /**
      * Genera un archivo .log con los registros inválidos de estructura.
-     * Si no hay errores, crea un log con la leyenda "sin errores" y nombre con sufijo _SINERROR.
+     * Solo se genera cuando hay errores.
+     * Si no hay errores, no se crea ningún archivo.
      */
+
     private void generarLogInvalidos(List<String> registrosInvalidos, String Origen) {
         try {
+            // Si no hay errores, no generamos nada
+            if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
+                LOGGER.info("No se generó archivo de inválidos para {}: no se detectaron errores de estructura", Origen);
+                return;
+            }
+
             String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
             if (StringUtils.isEmpty(basePath)) {
                 LOGGER.warn("Parametro port_XMLLOG_path.portados no definido, usando directorio actual");
@@ -598,28 +607,16 @@ public class PortabilidadService implements IPortabilidadService {
                 LOGGER.warn("Directorio {} no existe, verificar configuración de parámetros", basePath);
             }
 
-            // Nombre con timestamp
-            String fechaStr = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-
-            // Si no hay errores → sufijo SINERROR
-            String fileName;
-            if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
-                fileName = "port_num_" + Origen + "_XML_estructuraInvalidos_SINERROR_" + fechaStr + ".log";
-            } else {
-                fileName = "port_num_" + Origen + "_XML_estructuraInvalidos_" + fechaStr + ".log";
-            }
+            // Nombre con solo la fecha
+            String fechaStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
+            String fileName = "port_num_" + Origen + "_XML_estructuraInvalidos_" + fechaStr + ".log";
 
             File logFile = new File(dir, fileName);
 
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(logFile))) {
-                if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
-                    bw.write("Validación completada - No se detectaron errores de estructura");
+                for (String linea : registrosInvalidos) {
+                    bw.write(linea);
                     bw.newLine();
-                } else {
-                    for (String linea : registrosInvalidos) {
-                        bw.write(linea);
-                        bw.newLine();
-                    }
                 }
             }
 
@@ -761,25 +758,16 @@ public class PortabilidadService implements IPortabilidadService {
             SAXParser saxParser = factory.newSAXParser();
 
             InputSource sanitizedSource = sanitizeAndValidateXml(tmpDeleted, registrosInvalidos, false);
-            if (sanitizedSource != null) {
-                saxParser.parse(sanitizedSource, parser);
 
-                if (parser != null) {
-                    try {
-                        Field writerField = NumerosDeletedXmlParser.class.getDeclaredField("writer");
-                        writerField.setAccessible(true);
-                        BufferedWriter bw = (BufferedWriter) writerField.get(parser);
-                        if (bw != null) {
-                            bw.flush();
-                            bw.close();
-                        }
-                    } catch (Exception e) {
-                        LOGGER.warn("No se pudo cerrar el writer del parser", e);
-                    }
+            if (sanitizedSource == null) {
+                LOGGER.error("Archivo {} descartado por errores críticos en cabecera/pie", tmpDeleted.getName());
+
+                // Generar log de inválidos para evidencias QA/Prod
+                if (!registrosInvalidos.isEmpty()) {
+                    generarLogInvalidos(registrosInvalidos, "Cancelados");
                 }
-            } else {
-                LOGGER.error("Archivo descartado por estructura inválida. Ver registrosInvalidos.");
-                generarLogInvalidos(registrosInvalidos, "Cancelados"); // guardamos detalle
+
+                // Retornamos resultado truncado sin tocar BD ni generar XML fallidos
                 ResultadoValidacionCSV resultadoFallback = new ResultadoValidacionCSV();
                 resultadoFallback.setIdEstatus(status.getId());
                 resultadoFallback.setTs(status.getTs());
@@ -790,8 +778,24 @@ public class PortabilidadService implements IPortabilidadService {
                 resultadoFallback.setCanceladasTs(new Timestamp(System.currentTimeMillis()));
                 resultadoFallback.setActionDateLoteDate(new Date());
                 resultadoFallback.setTotalErrorEstructuraCanc(registrosInvalidos.size());
-                resultadoFallback.setTotalOrigenCanc(registrosInvalidos.size());
+                resultadoFallback.setTotalOrigenCanc(0); //origen inválido
                 return resultadoFallback;
+            }
+
+            saxParser.parse(sanitizedSource, parser);
+
+            if (parser != null) {
+                try {
+                    Field writerField = NumerosDeletedXmlParser.class.getDeclaredField("writer");
+                    writerField.setAccessible(true);
+                    BufferedWriter bw = (BufferedWriter) writerField.get(parser);
+                    if (bw != null) {
+                        bw.flush();
+                        bw.close();
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("No se pudo cerrar el writer del parser", e);
+                }
             }
 
             // Contar inválidos a nivel de bloque
@@ -866,12 +870,12 @@ public class PortabilidadService implements IPortabilidadService {
 
     /**
      * Limpia un XML potencialmente mal formado (Portados o Cancelados) para que pueda ser parseado por SAX.
-     * Lo que no se pueda corregir se envía a registrosInvalidos y se reemplaza por <Invalid>.
+     * Valida cabecera, pie, y corrige PortData cuando es posible.
+     * Lo que no se pueda corregir se envía a registrosInvalidos y se descarta el bloque.
+     *
+     * Si la cabecera o pie son inválidos, retorna null y con ello se debe truncar el proceso
+     * (sólo se generan logs de estructura inválida).
      */
-
-    // ======================================================
-    // Sanitizer streaming (Portados y Cancelados)
-    // ======================================================
     private InputSource sanitizeAndValidateXml(final File original,
                                                final List<String> registrosInvalidos,
                                                final boolean isCancelados) throws IOException {
@@ -879,6 +883,12 @@ public class PortabilidadService implements IPortabilidadService {
         final StringBuilder sanitized = new StringBuilder();
         boolean headerOk = false;
         boolean footerOk = false;
+        boolean messageNameOk = false;
+        boolean timestampOk = false;
+        boolean numMessagesOk = false;
+        boolean portDataListOpen = false;
+        boolean portDataListClose = false;
+
         int expectedNumMessages = -1;
         int countedPortData = 0;
 
@@ -907,23 +917,45 @@ public class PortabilidadService implements IPortabilidadService {
                 }
 
                 // --- Cabecera interna ---
-                if (trimmed.startsWith("<MessageName") ||
-                        trimmed.startsWith("<Timestamp") ||
-                        trimmed.startsWith("<NumberOfMessages") ||
-                        trimmed.startsWith("<PortDataList") ||
-                        trimmed.startsWith("</PortDataList")) {
-
-                    if (trimmed.startsWith("<NumberOfMessages")) {
-                        try {
-                            expectedNumMessages = Integer.parseInt(
-                                    trimmed.replaceAll("\\D+", "")
-                            );
-                        } catch (Exception e) {
-                            registrosInvalidos.add("Error: No se pudo leer <NumberOfMessages>");
-                        }
+                if (trimmed.startsWith("<MessageName")) {
+                    if (trimmed.matches("<MessageName>.*</MessageName>")) {
+                        messageNameOk = true;
+                    } else {
+                        registrosInvalidos.add("Error crítico: Etiqueta <MessageName> mal formada.");
                     }
-
                     sanitized.append(line).append("\n");
+                    continue;
+                }
+
+                if (trimmed.startsWith("<Timestamp")) {
+                    if (trimmed.matches("<Timestamp>\\d{14}</Timestamp>")) { // yyyyMMddHHmmss
+                        timestampOk = true;
+                    } else {
+                        registrosInvalidos.add("Error crítico: <Timestamp> inválido o mal formado.");
+                    }
+                    sanitized.append(line).append("\n");
+                    continue;
+                }
+
+                if (trimmed.startsWith("<NumberOfMessages")) {
+                    try {
+                        expectedNumMessages = Integer.parseInt(trimmed.replaceAll("\\D+", ""));
+                        numMessagesOk = true;
+                    } catch (Exception e) {
+                        registrosInvalidos.add("Error crítico: No se pudo leer <NumberOfMessages>");
+                    }
+                    sanitized.append(line).append("\n");
+                    continue;
+                }
+
+                if (trimmed.startsWith("<PortDataList")) {
+                    sanitized.append(line).append("\n");
+                    portDataListOpen = true;
+                    continue;
+                }
+                if (trimmed.startsWith("</PortDataList")) {
+                    sanitized.append(line).append("\n");
+                    portDataListClose = true;
                     continue;
                 }
 
@@ -945,7 +977,6 @@ public class PortabilidadService implements IPortabilidadService {
                         if (validatePortDataBlock(bloque, portDataIndex, registrosInvalidos, isCancelados)) {
                             sanitized.append(bloque); // válido
                         }
-                        // else: no hacemos nada aquí, validatePortDataBlock ya se encargó
                         portDataBuffer = null;
                     } else {
                         // cierre sin apertura
@@ -968,13 +999,33 @@ public class PortabilidadService implements IPortabilidadService {
             }
         }
 
-        // --- Validación global ---
+        // --- Validación global crítica ---
         if (!headerOk) {
-            registrosInvalidos.add(0, "Error: Cabecera inválida o basura al inicio.");
+            registrosInvalidos.add(0, "Error crítico: Falta apertura <NPCData>.");
             return null;
         }
         if (!footerOk) {
-            registrosInvalidos.add(0, "Error: Falta cierre </NPCData>.");
+            registrosInvalidos.add(0, "Error crítico: Falta cierre </NPCData>.");
+            return null;
+        }
+        if (!messageNameOk) {
+            registrosInvalidos.add(0, "Error crítico: Falta o mal formada la etiqueta <MessageName>.");
+            return null;
+        }
+        if (!timestampOk) {
+            registrosInvalidos.add(0, "Error crítico: Falta o mal formado el <Timestamp>.");
+            return null;
+        }
+        if (!numMessagesOk) {
+            registrosInvalidos.add(0, "Error crítico: Falta o mal formado <NumberOfMessages>.");
+            return null;
+        }
+        if (!portDataListOpen) {
+            registrosInvalidos.add(0, "Error crítico: Falta apertura <PortDataList>.");
+            return null;
+        }
+        if (!portDataListClose) {
+            registrosInvalidos.add(0, "Error crítico: Falta cierre </PortDataList>.");
             return null;
         }
 
@@ -982,13 +1033,15 @@ public class PortabilidadService implements IPortabilidadService {
         if (expectedNumMessages >= 0 && expectedNumMessages != countedPortData) {
             String diffMsg = "Error: Registros encontrados " + countedPortData +
                     " difiere de lo señalado en el XML (" + expectedNumMessages + ")";
-            registrosInvalidos.add(0, diffMsg); // lo coloca al inicio del log
+            registrosInvalidos.add(0, diffMsg);
         }
 
-        // Generamos InputSource solo si pasó validación
+        // Generamos InputSource solo si pasó validación completa
         String sanitizedXml = sanitized.toString();
         return new InputSource(new StringReader(sanitizedXml));
     }
+
+
 
 
     /**
@@ -1258,11 +1311,49 @@ public class PortabilidadService implements IPortabilidadService {
             ar.getArchidosDiarios();
             LOGGER.info("[syncBDDPortabilidadAsync] Descarga finalizada.");
 
+            // ============================
+            // Validar existencia/estado de archivos
+            // ============================
+            boolean localMode = (remoteFilePortedPath != null && remoteFilePortedPath.startsWith("file:/"));
+
+            if (!tmpPorted.exists() || !tmpDeleted.exists() ||
+                    !tmpPorted.isFile() || !tmpDeleted.isFile() ||
+                    tmpPorted.length() == 0 || tmpDeleted.length() == 0) {
+
+                String causa;
+                if (!tmpPorted.exists() || !tmpDeleted.exists() ||
+                        !tmpPorted.isFile() || !tmpDeleted.isFile()) {
+                    causa = String.format(
+                            "Sincronización ABD: Directorio/archivos de portados/cancelados no encontrados en la ruta [%s].",
+                            remoteFilePortedPath
+                    );
+                } else {
+                    causa = String.format(
+                            "Sincronización ABD: Archivos de portados/cancelados encontrados en la ruta [%s], pero se detectaron vacíos.",
+                            remoteFilePortedPath
+                    );
+                }
+
+                LOGGER.error("[syncBDDPortabilidadAsync] {}", causa);
+                bitacoraService.add(causa);
+
+                if (status != null) {
+                    status.setEstatus(EstatusSincronizacion.ESTATUS_PORT_ERR_COMM);
+                    status.setTs(new Date());
+                }
+
+                enviarMailErrorABDDetalle(causa, localMode);
+                return;
+            }
+
+/*
             if (tmpPorted.length() == 0 || tmpDeleted.length() == 0) {
                 LOGGER.error("[syncBDDPortabilidadAsync] Algún archivo descargado está vacío. ported.length={}, deleted.length={}",
                         tmpPorted.length(), tmpDeleted.length());
                 throw new FileNotFoundException(remoteFilePortedPath);
             }
+
+ */
 
             // ============================
             // Procesamiento de portados
@@ -1330,7 +1421,11 @@ public class PortabilidadService implements IPortabilidadService {
             LOGGER.info("[syncBDDPortabilidadAsync] Mensaje a bitácora: {}", msg);
             bitacoraService.add(msg);
 
-            enviarMailSyncOkDetalle(status, res);
+            // Determinar si estamos en modo LOCAL o FTP
+            localMode = (remoteFilePortedPath != null && remoteFilePortedPath.startsWith("file:/"));
+
+            // Llamar correo con flag - En el flujo normal NO hay causa
+            enviarMailSyncOkDetalle(status, res, localMode, null);
             LOGGER.info("[syncBDDPortabilidadAsync] Sincronización ABD ejecutada en {}: {}", WeblogicNode.getName(), msg);
 
         } catch (FileNotFoundException e) {
@@ -1432,7 +1527,7 @@ public class PortabilidadService implements IPortabilidadService {
                     status.setTs(new Date());
                     //status.setTs(FECHA_PROCESO); // FJAH 28.05.2025 Refactorizada
                     moverArchivo(tmpPorted);
-                    enviarMailErrorABD("Error inespedado en el archivo de portaciones: "+tmpPorted.getName()+"\n" + e.getMessage());
+                    enviarMailErrorABD("Error inesperado en el archivo de portaciones: "+tmpPorted.getName()+"\n" + e.getMessage());
                 } finally {
 
                     me.saveStatus(status);
@@ -1747,86 +1842,242 @@ public class PortabilidadService implements IPortabilidadService {
      * @param res
      */
     @Override
-    public void enviarMailSyncOkDetalle(EstatusSincronizacion status, ResultadoValidacionCSV res) {
+    public void enviarMailSyncOkDetalle(EstatusSincronizacion status, ResultadoValidacionCSV res, boolean localMode, String causa) {
         final String subject = "SNS-Notificación Sincronizacion ABD (Detalle)";
-        StringBuilder subjectWithHost = new StringBuilder();
         String to = paramService.getParamByName(ParametrosABD.ABD_MAIL_LIST);
 
-        StringBuilder body = new StringBuilder();
-        body.append("Resumen sincronización portados/cancelados\n\n");
+        StringBuilder subjectWithHost = new StringBuilder();
+        subjectWithHost.append(subject).append(":Host:").append(getHostName());
 
         try {
-            // ====== Estatus de Sincronizacion ======
-            //body.append("Número de portaciones a procesar : ").append(status.getPortProcesar()).append("\n");
-            //body.append("Número de portaciones procesadas : ").append(status.getPortProcesadas()).append("\n");
-            //body.append("Número de portaciones a cancelar : ").append(status.getPortCancelar()).append("\n");
-            //body.append("Número de portaciones canceladas : ").append(status.getPortCanceladas()).append("\n\n");
-
-            if (res != null) {
-                // ====== Totales Portados ======
-                body.append("Totales procesados (Portados)\n");
-                body.append("   - Origen archivo XML: ").append(res.getTotalOrigen()).append("\n");
-                body.append("   - Insertados BD: ").append(res.getTotalInsertados()).append("\n");
-                body.append("   - Actualizados BD: ").append(res.getTotalActualizados()).append("\n");
-                body.append("   - Total Persistidos BD (Insertados + Actualizados): ").append(res.getTotalProcesados()).append("\n");
-                body.append("   - No persistidos BD: ").append(res.getTotalNoPersistidos()).append("\n");
-                body.append("   - Errores de estructura y contenido : ").append(res.getTotalErrorEstructura()).append("\n");
-                body.append("   - Fallidos (No persistidos + Estructura y contenido): ").append(res.getTotalFallidosGlobal()).append("\n\n");
-
-                // ====== Totales Cancelados ======
-                body.append("Totales procesados (Cancelados)\n");
-                body.append("   - Origen archivo XML: ").append(res.getTotalOrigenCanc()).append("\n");
-                body.append("   - Procesados BD (Cancelados efectivos): ").append(res.getTotalProcesadosCanc()).append("\n");
-                body.append("   - No persistidos BD: ").append(res.getTotalFallidosInsercionCanc()).append("\n");
-                body.append("   - Errores de estructura y contenido: ").append(res.getTotalErrorEstructuraCanc()).append("\n");
-                body.append("   - Fallidos (No persistidos + Estructura y contenido): ").append(res.getTotalFallidosCanc()).append("\n\n");
-
-                // ====== Archivos generados ======
-                String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
-                if (StringUtils.isEmpty(basePath)) {
-                    basePath = ".";
-                }
-                String fechaStr = (res.getActionDateLote() != null) ?
-                        res.getActionDateLote().replaceAll("[^0-9]", "") : "sinFecha";
-
-                File logFile = new File(basePath, "port_num_portados_" + fechaStr + ".log");
-                if (logFile.exists()) {
-                    body.append("Log inválidos de estructura: ").append(logFile.getAbsolutePath()).append("\n");
-                }
-
-                File xmlFile = new File(basePath, "port_num_portados_fallidos_" + fechaStr + ".xml");
-                if (xmlFile.exists()) {
-                    body.append("XML no persistidos portados: ").append(xmlFile.getAbsolutePath()).append("\n");
-                }
-
-                File xmlCancFile = new File(basePath, "port_num_cancelados_fallidos_" + fechaStr + ".xml");
-                if (xmlCancFile.exists()) {
-                    body.append("XML no persistidos cancelados: ").append(xmlCancFile.getAbsolutePath()).append("\n");
-                }
-
-                // ====== Espejo en archivo físico (siempre) ======
-                File mailLogFile = new File(basePath, "correo_sincronizacion_" + fechaStr + ".txt");
-                try (FileWriter fw = new FileWriter(mailLogFile, false);
-                     BufferedWriter bw = new BufferedWriter(fw)) {
-                    bw.write("Asunto: " + subject + ":Host:" + getHostName() + "\n\n");
-                    bw.write(body.toString());
-                }
-                LOGGER.info("Copia física del correo generada en: {}", mailLogFile.getAbsolutePath());
+            // ====== Directorio base ======
+            String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
+            if (StringUtils.isEmpty(basePath)) {
+                basePath = ".";
             }
+
+            // Fecha actual (para logs)
+            String fechaLogs = new SimpleDateFormat("yyyyMMdd").format(new Date());
+
+            // Fecha -1 día (para XMLs NumbersPorted / NumbersDeleted)
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.DATE, -1);
+            String fechaXmls = new SimpleDateFormat("yyyyMMdd").format(cal.getTime());
+
+            // ====== Archivos PORTADOS ======
+            File logEstructuraPort = new File(basePath, "port_num_Portados_XML_estructuraInvalidos_" + fechaLogs + ".log");
+            File logCsvPort        = new File(basePath, "port_num_portados_CSVinvalidos_" + fechaLogs + ".log");
+            File xmlFallidosPort   = new File(basePath, "NumbersPorted-" + fechaXmls + ".xml");
+
+            int origenPort         = res != null ? res.getTotalOrigen() : 0;
+            int errEstructuraPort  = logEstructuraPort.exists() ? contarErroresEstructura(logEstructuraPort) : 0;
+            int errCsvPort         = logCsvPort.exists() ? contarErroresCSV(logCsvPort) : 0;
+            int fallidosXmlPort    = xmlFallidosPort.exists() ? contarFallidosXML(xmlFallidosPort) : 0;
+            int totalFallidosPort  = errEstructuraPort + errCsvPort + fallidosXmlPort;
+            int totalProcesadosPort = Math.max(0, origenPort - totalFallidosPort);
+
+            // ====== Archivos CANCELADOS ======
+            File logEstructuraCanc = new File(basePath, "port_num_Cancelados_XML_estructuraInvalidos_" + fechaLogs + ".log");
+            File logCsvCanc        = new File(basePath, "port_num_cancelados_CSVinvalidos_" + fechaLogs + ".log");
+            File xmlFallidosCanc   = new File(basePath, "NumbersDeleted-" + fechaXmls + ".xml");
+
+            int origenCanc         = res != null ? res.getTotalOrigenCanc() : 0;
+            int errEstructuraCanc  = logEstructuraCanc.exists() ? contarErroresEstructura(logEstructuraCanc) : 0;
+            int errCsvCanc         = logCsvCanc.exists() ? contarErroresCSV(logCsvCanc) : 0;
+            int fallidosXmlCanc    = xmlFallidosCanc.exists() ? contarFallidosXML(xmlFallidosCanc) : 0;
+            int totalFallidosCanc  = errEstructuraCanc + errCsvCanc + fallidosXmlCanc;
+            int totalProcesadosCanc = Math.max(0, origenCanc - totalFallidosCanc);
+
+            // ====== Construir body ======
+            StringBuilder body = new StringBuilder();
+            body.append("Resumen sincronización portados/cancelados\n\n");
+
+            if (causa != null && !causa.isEmpty()) {
+                body.append("Causa: ").append(causa).append("\n\n");
+            }
+
+            // ====== Totales PORTADOS ======
+            body.append("Totales procesados (Portados)\n");
+            body.append("   - Origen archivo XML: ").append(origenPort).append("\n");
+            body.append("   - Insertados BD: ").append(res != null ? res.getTotalInsertados() : 0).append("\n");
+            body.append("   - Actualizados BD: ").append(res != null ? res.getTotalActualizados() : 0).append("\n");
+            body.append("   - Procesados BD (Insertados + Actualizados): ").append(totalProcesadosPort).append("\n");
+            body.append("   - Errores de estructura: ").append(errEstructuraPort).append("\n");
+            body.append("   - Errores de contenido (CSV): ").append(errCsvPort).append("\n");
+            body.append("   - Fallidos (no persistidos XML): ").append(fallidosXmlPort).append("\n");
+            body.append("   - Fallidos global: ").append(totalFallidosPort).append("\n\n");
+
+            // ====== Totales CANCELADOS ======
+            body.append("Totales procesados (Cancelados)\n");
+            body.append("   - Origen archivo XML: ").append(origenCanc).append("\n");
+            body.append("   - Procesados BD (Cancelados efectivos): ").append(totalProcesadosCanc).append("\n");
+            body.append("   - Errores de estructura: ").append(errEstructuraCanc).append("\n");
+            body.append("   - Errores de contenido (CSV): ").append(errCsvCanc).append("\n");
+            body.append("   - Fallidos (no persistidos XML): ").append(fallidosXmlCanc).append("\n");
+            body.append("   - Fallidos global: ").append(totalFallidosCanc).append("\n\n");
+
+            // ====== Rutas de archivos realmente generados ======
+            body.append("Ruta de archivos generados logs/xml:\n");
+
+            if (logEstructuraPort.exists()) body.append("   - ").append(logEstructuraPort.getAbsolutePath()).append("\n");
+            if (logCsvPort.exists())        body.append("   - ").append(logCsvPort.getAbsolutePath()).append("\n");
+            if (xmlFallidosPort.exists())   body.append("   - ").append(xmlFallidosPort.getAbsolutePath()).append("\n");
+            if (logEstructuraCanc.exists()) body.append("   - ").append(logEstructuraCanc.getAbsolutePath()).append("\n");
+            if (logCsvCanc.exists())        body.append("   - ").append(logCsvCanc.getAbsolutePath()).append("\n");
+            if (xmlFallidosCanc.exists())   body.append("   - ").append(xmlFallidosCanc.getAbsolutePath()).append("\n");
 
             body.append("\nFin del reporte automático.\n");
 
-            // ====== Enviar correo siempre ======
-            try {
-                subjectWithHost.append(subject).append(":Host:").append(getHostName());
-                mailService.sendEmail(to, subjectWithHost.toString(), body.toString());
-                LOGGER.info("Correo de resumen detallado enviado correctamente.");
-            } catch (Exception mailEx) {
-                LOGGER.info("Error enviando mail detallado", mailEx);
+            // ====== Archivo espejo en local ======
+            if (localMode) {
+                generarArchivoEspejoCorreo(subject, body.toString(), basePath, fechaLogs);
+                LOGGER.info("[LocalMode] Archivo espejo generado en {}", basePath);
+            } else {
+                LOGGER.info("[FTPMODE] No se genera archivo espejo en PROD");
             }
+
+            // ====== Enviar correo ======
+            mailService.sendEmail(to, subjectWithHost.toString(), body.toString());
+            LOGGER.info("Correo de resumen detallado enviado correctamente.");
 
         } catch (Exception e) {
             LOGGER.error("Error general en armado/envío de mail detallado", e);
+        }
+    }
+
+
+    // Estructura inválida: deduplicar por PortID
+    private int contarErroresEstructura(File logFile) {
+        Set<String> ids = new HashSet<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(logFile))) {
+            String line;
+            String currentPortId = null;
+            while ((line = br.readLine()) != null) {
+                if (line.contains("<PortID>")) {
+                    currentPortId = line.replaceAll(".*<PortID>(.*?)</PortID>.*", "$1").trim();
+                }
+                if (line.startsWith("Error:") && currentPortId != null) {
+                    ids.add(currentPortId);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("No se pudo contar errores de estructura en {}", logFile.getName(), e);
+        }
+        return ids.size();
+    }
+
+    // Contenido inválido: deduplicar por PortID
+    private int contarErroresCSV(File logFile) {
+        Set<String> ids = new HashSet<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(logFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.contains("<PortID>")) {
+                    String id = line.replaceAll(".*<PortID>(.*?)</PortID>.*", "$1").trim();
+                    ids.add(id);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("No se pudo contar errores CSV en {}", logFile.getName(), e);
+        }
+        return ids.size();
+    }
+
+    // Fallidos XML: cuenta PortData
+    private int contarFallidosXML(File xmlFile) {
+        int count = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(xmlFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.contains("<PortData>")) {
+                    count++;
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("No se pudo contar fallidos XML en {}", xmlFile.getName(), e);
+        }
+        return count;
+    }
+
+    private void generarArchivoEspejoCorreo(String subject, String body, String basePath, String fechaActualStr) {
+        try {
+            // Limpieza de la ruta base (quita espacios y saltos de línea)
+            if (basePath == null || basePath.trim().isEmpty()) {
+                LOGGER.warn("Parametro basePath vacío o nulo, se usará directorio actual");
+                basePath = ".";
+            }
+            basePath = basePath.trim();
+
+            // Validar/crear directorio
+            File dir = new File(basePath);
+            if (!dir.exists()) {
+                if (dir.mkdirs()) {
+                    LOGGER.info("Directorio {} creado para archivo espejo de correo", dir.getAbsolutePath());
+                } else {
+                    LOGGER.warn("No se pudo crear directorio {}, se usará directorio actual", basePath);
+                    dir = new File(".");
+                }
+            }
+
+            // Construir archivo dentro del directorio limpio
+            File mailLogFile = new File(dir, "correo_sincronizacion_" + fechaActualStr + ".txt");
+
+            try (FileWriter fw = new FileWriter(mailLogFile, false);
+                 BufferedWriter bw = new BufferedWriter(fw)) {
+
+                bw.write("Asunto: " + subject + " | Host: " + getHostName() + "\n\n");
+                bw.write(body);
+
+                LOGGER.info("Copia física del correo generada en: {}", mailLogFile.getAbsolutePath());
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Error generando archivo espejo del correo", e);
+        }
+    }
+
+    @Override
+    public void enviarMailErrorABDDetalle(String causa, boolean localMode) {
+        try {
+            final String subject = "SNS-Error conexión SFTP-ABD";
+            String to = paramService.getParamByName(ParametrosABD.ABD_MAIL_LIST);
+
+            StringBuilder subjectWithHost = new StringBuilder();
+            subjectWithHost.append(subject).append(":Host:").append(getHostName());
+
+            StringBuilder sbBody = new StringBuilder();
+            sbBody.append(paramService.getParamByName(ParametrosABD.ABD_ERROR_SERVIDOR));
+            sbBody.append("\nDescripción detallada del error: ").append(causa);
+
+            // === Enviar correo normal
+            mailService.sendEmail(to, subjectWithHost.toString(), sbBody.toString());
+
+            // === Generar espejo solo en modo local/QA
+            LOGGER.info("[LocalMode] valor localmodel: {}", localMode);
+            if (localMode) {
+                String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
+                LOGGER.info("[LocalMode] Archivo espejo ruta: {}", basePath);
+                if (basePath == null || basePath.trim().isEmpty()) {
+                    basePath = ".";
+                }
+                File dir = new File(basePath.trim());
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+
+                String fechaActualStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
+                File espejo = new File(dir, "correo_errorABD_" + fechaActualStr + ".txt");
+
+                try (BufferedWriter bw = new BufferedWriter(new FileWriter(espejo, false))) {
+                    bw.write("Asunto: " + subjectWithHost.toString() + "\n\n");
+                    bw.write(sbBody.toString());
+                }
+
+                LOGGER.info("[LocalMode] Archivo espejo del correo de error generado en: {}", espejo.getAbsolutePath());
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Error enviando/generando correo de error detallado", e);
         }
     }
 

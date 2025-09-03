@@ -119,6 +119,7 @@ public class ProcesarRegistrosCancelados {
 			}
 
 			// 2. Eliminación segura del número existente
+			/*
 			try {
 				if (canceladosDAO != null) {
 					canceladosDAO.delete(numberFrom);
@@ -130,6 +131,7 @@ public class ProcesarRegistrosCancelados {
 				LOGGER.error("Error al eliminar número {}: {}", numberFrom, e.toString());
 				// Continuamos a pesar del error (puede que el número no exista)
 			}
+			 */
 
 			// 3. Construcción segura del objeto NumeroCancelado
 			NumeroCancelado num = new NumeroCancelado();

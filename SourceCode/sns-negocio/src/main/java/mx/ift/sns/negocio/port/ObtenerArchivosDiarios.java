@@ -31,10 +31,10 @@ public class ObtenerArchivosDiarios {
 		this.remoteFileDeletedPath=remoteFileDeletedPath;
 				
 	}
-	
-	
-	
-	public void getArchidosDiarios(){
+
+
+
+	public void getArchidosDiarios() {
 
 		ExecutorService executor = Executors.newFixedThreadPool(2);
 
@@ -44,8 +44,17 @@ public class ObtenerArchivosDiarios {
 				String localPath = remoteFilePortedPath.replace("file:/", "");
 				File origen = new File(localPath);
 
-				Files.copy(origen.toPath(), new File(archivoPortados).toPath(), StandardCopyOption.REPLACE_EXISTING);
+				if (!origen.exists()) {
+					LOGGER.warn("[LocalMode] Archivo PORTADOS no encontrado en {}", origen.getAbsolutePath());
+					// borrar temporal para que se detecte como inexistente
+					File tmp = new File(archivoPortados);
+					if (tmp.exists()) {
+						tmp.delete();
+					}
+					return; // devolvemos sin romper el flujo
+				}
 
+				Files.copy(origen.toPath(), new File(archivoPortados).toPath(), StandardCopyOption.REPLACE_EXISTING);
 				LOGGER.info("[LocalMode] Archivo PORTADOS leído localmente desde {}", origen.getAbsolutePath());
 			} catch (Exception e) {
 				LOGGER.error("[LocalMode] Error leyendo archivo PORTADOS local", e);
@@ -61,8 +70,17 @@ public class ObtenerArchivosDiarios {
 				String localPath = remoteFileDeletedPath.replace("file:/", "");
 				File origen = new File(localPath);
 
-				Files.copy(origen.toPath(), new File(archivoCancelados).toPath(), StandardCopyOption.REPLACE_EXISTING);
+				if (!origen.exists()) {
+					LOGGER.warn("[LocalMode] Archivo CANCELADOS no encontrado en {}", origen.getAbsolutePath());
+					// borrar temporal para que se detecte como inexistente
+					File tmp = new File(archivoCancelados);
+					if (tmp.exists()) {
+						tmp.delete();
+					}
+					return;
+				}
 
+				Files.copy(origen.toPath(), new File(archivoCancelados).toPath(), StandardCopyOption.REPLACE_EXISTING);
 				LOGGER.info("[LocalMode] Archivo CANCELADOS leído localmente desde {}", origen.getAbsolutePath());
 			} catch (Exception e) {
 				LOGGER.error("[LocalMode] Error leyendo archivo CANCELADOS local", e);
@@ -78,22 +96,8 @@ public class ObtenerArchivosDiarios {
 		}
 
 		LOGGER.info("Finished all threads SFTP/Local downloads");
-		
-		/*ExecutorService executor = Executors.newFixedThreadPool(2);
-		
-		Runnable worker1=new RunnableSFTPConection(connectionParams, this.archivoPortados, this.remoteFilePortedPath);
-		executor.execute(worker1);
-					
-		
-		Runnable worker2=new RunnableSFTPConection(connectionParams, this.archivoCancelados, this.remoteFileDeletedPath);
-		executor.execute(worker2);
-
-		executor.shutdown();
-        while (!executor.isTerminated()) {
-        }
-        LOGGER.info("Finished all threads SFTP downloads");*/
-		
 	}
+
 
 	public String getArchivoPortados() {
 		return archivoPortados;

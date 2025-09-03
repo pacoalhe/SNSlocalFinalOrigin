@@ -181,8 +181,12 @@ public class ValidadorArchivoDeletedCSV {
 
                 // Paso 2: limpiar previos (delete en cancelados)
                 LOGGER.info("<--- Paso 2: borrar previos en PORT_NUM_CANCELADO ---->");
-                //TODO Caso de prueba 1 bloquear llamado
-                canceladosDAO.deleteCanceladosLote(loteTotal);
+                if (actionDateLote != null) {
+                    Date fechaProceso = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(actionDateLote);
+                    canceladosDAO.deleteCanceladosPorFecha(fechaProceso);
+                } else {
+                    LOGGER.warn("No se pudo determinar actionDate del lote, no se ejecuta borrado en PORT_NUM_CANCELADO");
+                }
 
                 // Paso 3: insertar en cancelados Fallback
                 LOGGER.info("<--- Paso 3: insertar en PORT_NUM_CANCELADO ---->");
@@ -227,10 +231,10 @@ public class ValidadorArchivoDeletedCSV {
                     generarLogInvalidos(registrosInvalidos);
                 }
 
-                // Paso 9: generar XML de fallidos
+                // Paso 9: generar XML de fallidos (cancelados)
                 LOGGER.info("<--- Paso 9: generar XML de fallidos (cancelados) ---->");
                 try {
-                    canceladosDAO.generarXmlFallidosCanceladosBatch(timestampOriginal);
+                    canceladosDAO.generarXmlFallidosCanceladosBatch();
                     LOGGER.info("XML de no persistidos cancelados generado correctamente (streaming desde BD).");
                 } catch (Exception e) {
                     LOGGER.error("Error generando XML de no persistidos en cancelados.", e);
@@ -248,7 +252,6 @@ public class ValidadorArchivoDeletedCSV {
         res.setActionDateLote(actionDateLote);
         return res;
     }
-
 
     private boolean isNumeric(String str) {
         if (str == null || str.trim().isEmpty()) return false;
@@ -333,10 +336,14 @@ public class ValidadorArchivoDeletedCSV {
         }
     }
 
-
+    /**
+     * PASO 8: Genera un archivo .log con los registros inválidos de contenido CSV (Cancelados).
+     * Solo se genera cuando hay errores.
+     * Si no hay errores, no se crea ningún archivo.
+     */
     private void generarLogInvalidos(List<String> registrosInvalidos) {
         if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
-            LOGGER.info("No hay registros inválidos para generar log.");
+            LOGGER.info("No se generó archivo de inválidos CSV (Cancelados): no se detectaron errores.");
             return;
         }
 
@@ -350,8 +357,9 @@ public class ValidadorArchivoDeletedCSV {
                 basePath = System.getProperty("java.io.tmpdir"); // fallback
             }
 
-            String fileName = "port_num_cancelados_CSVinvalidos_" +
-                    new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
+            // Nombre con solo la fecha
+            String fechaStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
+            String fileName = "port_num_cancelados_CSVinvalidos_" + fechaStr + ".log";
             File logFile = new File(basePath + File.separator + fileName);
 
             // Asegurar que el directorio exista
@@ -390,16 +398,16 @@ public class ValidadorArchivoDeletedCSV {
             }
 
             bw.flush();
-            LOGGER.info("Archivo de inválidos generado: {}", logFile.getAbsolutePath());
+            LOGGER.info("Archivo de inválidos CSV generado: {}", logFile.getAbsolutePath());
 
         } catch (Exception e) {
-            LOGGER.error("Error al generar log de inválidos", e);
+            LOGGER.error("Error al generar log de inválidos CSV", e);
         } finally {
             try {
                 if (bw != null) bw.close();
                 if (writer != null) writer.close();
             } catch (IOException ex) {
-                LOGGER.error("Error cerrando writer de log inválidos", ex);
+                LOGGER.error("Error cerrando writer de log inválidos CSV", ex);
             }
         }
     }

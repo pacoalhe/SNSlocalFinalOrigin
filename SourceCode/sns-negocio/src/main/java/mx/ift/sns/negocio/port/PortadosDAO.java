@@ -65,14 +65,37 @@ public class PortadosDAO {
 			this.csvFallidosPath = csvFallidosPath;
 		}
 
-		public int getTotalOrigen() { return totalOrigen; }
-		public int getTotalInsertados() { return totalInsertados; }
-		public int getTotalActualizados() { return totalActualizados; }
-		public int getTotalFallidos() { return totalFallidos; }
-		public int getTotalOk() { return totalOk; }
-		public int getTotalDiferentes() { return totalDiferentes; }
-		public int getTotalFallidosLista() { return totalFallidosLista; }
-		public java.nio.file.Path getCsvFallidosPath() { return csvFallidosPath; }
+		public int getTotalOrigen() {
+			return totalOrigen;
+		}
+
+		public int getTotalInsertados() {
+			return totalInsertados;
+		}
+
+		public int getTotalActualizados() {
+			return totalActualizados;
+		}
+
+		public int getTotalFallidos() {
+			return totalFallidos;
+		}
+
+		public int getTotalOk() {
+			return totalOk;
+		}
+
+		public int getTotalDiferentes() {
+			return totalDiferentes;
+		}
+
+		public int getTotalFallidosLista() {
+			return totalFallidosLista;
+		}
+
+		public java.nio.file.Path getCsvFallidosPath() {
+			return csvFallidosPath;
+		}
 	}
 
 
@@ -102,7 +125,9 @@ public class PortadosDAO {
 	private final ReentrantLock lock = new ReentrantLock();
 	private static final long LOCK_TIMEOUT = 30; // segundos
 
-	/** Servicio configuracion. */
+	/**
+	 * Servicio configuracion.
+	 */
 	@EJB
 	private IParametrosService paramService;
 
@@ -241,7 +266,7 @@ public class PortadosDAO {
 
 	//FJAH 26052025 Refactorización en lotes
 	@PostConstruct
-	public void init(){
+	public void init() {
 
 	}
 
@@ -283,8 +308,14 @@ public class PortadosDAO {
 			}
 			ps.executeBatch();
 		} finally {
-			if (ps != null) try { ps.close(); } catch (Exception ignore) {}
-			if (conn != null) try { conn.close(); } catch (Exception ignore) {}
+			if (ps != null) try {
+				ps.close();
+			} catch (Exception ignore) {
+			}
+			if (conn != null) try {
+				conn.close();
+			} catch (Exception ignore) {
+			}
 		}
 	}
 
@@ -481,18 +512,24 @@ public class PortadosDAO {
 		return totalExitos;
 	}
 
-	/** Escapa strings para SQL (maneja NULL y comillas simples). */
+	/**
+	 * Escapa strings para SQL (maneja NULL y comillas simples).
+	 */
 	private String quote(String val) {
 		if (val == null) return "NULL";
 		return "'" + val.trim().replace("'", "''") + "'";
 	}
 
-	/** Convierte BigDecimal a SQL literal. */
+	/**
+	 * Convierte BigDecimal a SQL literal.
+	 */
 	private String toSqlNumber(BigDecimal val) {
 		return (val != null) ? val.toPlainString() : "NULL";
 	}
 
-	/** Convierte Timestamp a SQL TO_TIMESTAMP. */
+	/**
+	 * Convierte Timestamp a SQL TO_TIMESTAMP.
+	 */
 	private String toSqlTimestamp(Timestamp ts) {
 		if (ts == null) return "NULL";
 		String formatted = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(ts);
@@ -640,8 +677,9 @@ public class PortadosDAO {
 	/**
 	 * PASO 7: Genera un XML con los no persistidos (fallidos),
 	 * usando BufferedWriter + StringBuilder para máxima velocidad.
+	 * Solo se genera cuando hay registros fallidos.
 	 */
-	public void generarXmlFallidosBatch(String timestampOriginal) throws Exception {
+	public void generarXmlFallidosBatch() throws Exception {
 		LOGGER.info("Iniciando generación de XML con no persistidos (modo batch)...");
 
 		final String SQL_SELECT =
@@ -661,19 +699,26 @@ public class PortadosDAO {
 			LOGGER.warn("Directorio {} no existe, verificar configuración de parámetros", basePath);
 		}
 
-		String fechaStr = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		File outFile = new File(dir, "port_num_portados_fallidos_" + fechaStr + ".xml");
+		// Nombre archivo: fecha actual -1
+		Calendar calArchivo = Calendar.getInstance();
+		calArchivo.add(Calendar.DATE, -1);
+		String fechaArchivo = new SimpleDateFormat("yyyyMMdd").format(calArchivo.getTime());
+		File outFile = new File(dir, "NumbersPorted-" + fechaArchivo + ".xml");
 
-		SimpleDateFormat sdfActionDate = new SimpleDateFormat("yyyyMMddHHmmss");
+		// Timestamp encabezado: fecha actual -1 (con hora)
+		String tsEncabezado = new SimpleDateFormat("yyyyMMddHHmmss").format(calArchivo.getTime());
 
-		// Usamos buffer dinámico en memoria (StringBuilder) para poder ajustar cabecera al final
-		StringBuilder xmlContent = new StringBuilder(1024 * 1024); // 1 MB inicial
+		// ActionDate por registro: fecha/hora actual
+		String actionDateActual = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+
 		int total = 0;
+		StringBuilder xmlContent = new StringBuilder(1024 * 1024); // buffer inicial de 1 MB
 
+		// Encabezado inicial
 		xmlContent.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 		xmlContent.append("<NPCData>\n");
 		xmlContent.append("  <MessageName>Porting Data</MessageName>\n");
-		xmlContent.append("  <Timestamp>").append(timestampOriginal != null ? timestampOriginal : "").append("</Timestamp>\n");
+		xmlContent.append("  <Timestamp>").append(tsEncabezado).append("</Timestamp>\n");
 		xmlContent.append("  <NumberOfMessages>PLACEHOLDER</NumberOfMessages>\n");
 		xmlContent.append("  <PortDataList>\n");
 
@@ -702,17 +747,24 @@ public class PortadosDAO {
 						.append("      <RCR>").append(rs.getString("RCR")).append("</RCR>\n")
 						.append("      <DIDA>").append(rs.getString("DIDA")).append("</DIDA>\n")
 						.append("      <DCR>").append(rs.getString("DCR")).append("</DCR>\n")
-						.append("      <ActionDate>")
-						.append(rs.getTimestamp("ACTIONDATE") != null ? sdfActionDate.format(rs.getTimestamp("ACTIONDATE")) : "")
-						.append("</ActionDate>\n")
+						.append("      <ActionDate>").append(actionDateActual).append("</ActionDate>\n")
 						.append("    </PortData>\n");
+
+				if (total % 10000 == 0) {
+					LOGGER.info("Escritos {} registros en XML (portados)...", total);
+				}
 			}
+		}
+
+		if (total == 0) {
+			LOGGER.info("No se generó XML de portados fallidos: no hay registros.");
+			return;
 		}
 
 		xmlContent.append("  </PortDataList>\n");
 		xmlContent.append("</NPCData>\n");
 
-		// Reemplazar el marcador con el valor real
+		// Reemplazar el marcador con el total real
 		int idx = xmlContent.indexOf("PLACEHOLDER");
 		if (idx != -1) {
 			xmlContent.replace(idx, idx + "PLACEHOLDER".length(), String.valueOf(total));
@@ -723,14 +775,13 @@ public class PortadosDAO {
 			writer.write(xmlContent.toString());
 		}
 
-		LOGGER.info("Archivo XML (batch) de no persistidos generado: {} (Generados={})",
+		LOGGER.info("Archivo XML (batch) de portados fallidos generado: {} (Total={})",
 				outFile.getAbsolutePath(), total);
 	}
 
-	/**
-	 * PASO 7: Genera un XML con los no persistidos (fallidos),
-	 * escribiendo directamente desde la BD al archivo, sin cargar lista en memoria.
-	 */
+}
+
+/*
 	public void generarXmlFallidosDirecto(String timestampOriginal) throws Exception {
 		LOGGER.info("Iniciando generación de XML con no persistidos (directo desde BD)...");
 
@@ -885,7 +936,9 @@ public class PortadosDAO {
 		}
 	}
 
-}
+ */
+
+
 
 
 	/**

@@ -78,9 +78,29 @@ public interface IPortabilidadService {
     void enviarMailSyncOk(EstatusSincronizacion status);
 
     /**
-     * @param status estado de la sincronizacion
+     * Envía correo de sincronización ABD con detalle de totales procesados.
+     * Si se pasa una causa no nula, se incluye en el cuerpo como explicación.
+     * En local/QA genera también archivo espejo.
+     *
+     * @param status   Estatus de la sincronización
+     * @param res      Resultado detallado de la validación de archivos
+     * @param localMode Indica si se debe generar archivo espejo (true en local/QA, false en Prod)
+     * @param causa     Texto explicativo opcional (ej. archivos vacíos/no encontrados). Puede ser null.
      */
-    void enviarMailSyncOkDetalle(EstatusSincronizacion status, ResultadoValidacionCSV res);
+    void enviarMailSyncOkDetalle(EstatusSincronizacion status,
+                                 ResultadoValidacionCSV res,
+                                 boolean localMode,
+                                 String causa);
+
+    /**
+     * Envía correo de error detallado de la sincronización ABD,
+     * incluyendo la causa y opcionalmente un archivo espejo en local/QA.
+     *
+     * @param causa     Descripción detallada del error (archivos no encontrados, vacíos, etc.)
+     * @param localMode Indica si se debe generar archivo espejo (true en local/QA, false en Prod)
+     */
+    void enviarMailErrorABDDetalle(String causa, boolean localMode);
+
 
     /**
      * Parsea fichero de cancelaciones.
