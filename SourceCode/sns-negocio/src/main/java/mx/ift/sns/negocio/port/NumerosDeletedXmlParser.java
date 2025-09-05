@@ -92,8 +92,7 @@ public class NumerosDeletedXmlParser extends DefaultHandler {
                 currentNumero.setPortId(value);
 
             } else if ("FolioID".equalsIgnoreCase(qName)) {
-                // En Cancelados NO existe este campo en la tabla.
-                // Se ignora para no romper el CSV.
+                // En Cancelados NO existe este campo en la tabla → se ignora
                 LOGGER.debug("FolioID ignorado en Cancelados: {}", value);
 
             } else if ("PortType".equalsIgnoreCase(qName)) {
@@ -118,9 +117,11 @@ public class NumerosDeletedXmlParser extends DefaultHandler {
                 currentNumero.setRcr(toBigDecimal(value));
 
             } else if ("DIDA".equalsIgnoreCase(qName)) {
+                // Opcional
                 currentNumero.setDida(toBigDecimal(value));
 
             } else if ("DCR".equalsIgnoreCase(qName)) {
+                // Opcional
                 currentNumero.setDcr(toBigDecimal(value));
 
             } else if ("AssigneeIDA".equalsIgnoreCase(qName)) {
@@ -137,12 +138,31 @@ public class NumerosDeletedXmlParser extends DefaultHandler {
                                 "$1-$2-$3 $4:$5:$6"
                         );
                         Timestamp ts = Timestamp.valueOf(formatted);
-                        currentNumero.setActionDate((Timestamp) ts); //fuerza a Timestamp
+                        currentNumero.setActionDate(ts);
                     }
                 } catch (Exception e) {
                     LOGGER.warn("ActionDate inválido: {}", value);
-                    currentNumero.setActionDate((Timestamp) null); //fuerza a Timestamp
+                    currentNumero.setActionDate((Timestamp) null); // fuerza a Timestamp
                 }
+
+            } else if ("NumberRanges".equalsIgnoreCase(qName)) {
+                // Validar que se haya cerrado correctamente con NumberFrom, NumberTo e isMPP
+                if (currentNumero.getNumberFrom() == null ||
+                        currentNumero.getNumberTo() == null ||
+                        currentNumero.getIsMpp() == null) {
+
+                    String msg = "Error: PortData #" + totalDeclarados +
+                            " descartado por estructura inválida. Falta NumberRange bien formado (NumberFrom/NumberTo/isMPP).";
+                    LOGGER.warn(msg);
+                    if (registrosInvalidosGlobal != null) {
+                        registrosInvalidosGlobal.add(msg);
+                    }
+                    invalidosXml++;
+                    currentNumero = null; // descartar registro
+                }
+
+            } else if ("NumberRange".equalsIgnoreCase(qName)) {
+                // Nada que hacer aquí → la validación se hace al cerrar NumberRanges
 
             } else if ("PortData".equalsIgnoreCase(qName)) {
                 if (isRegistroValido(currentNumero)) {
@@ -157,17 +177,35 @@ public class NumerosDeletedXmlParser extends DefaultHandler {
                     }
                 } else {
                     invalidosXml++;
-                    LOGGER.warn("Registro Cancelado inválido descartado: {}", currentNumero);
+                    String msg = "Registro Cancelado inválido descartado: " + currentNumero;
+                    LOGGER.warn(msg);
+                    if (registrosInvalidosGlobal != null) {
+                        registrosInvalidosGlobal.add(msg);
+                    }
                 }
                 currentNumero = null;
 
-            } else if ("NumberRanges".equalsIgnoreCase(qName) || "NumberRange".equalsIgnoreCase(qName)) {
-                // ignoramos contenedores vacíos
             } else {
-                // ignorar silenciosamente otras etiquetas ya validadas
+                // Etiqueta inesperada → marcar como error estructural
+                String msg = "Error: PortData #" + totalDeclarados +
+                        " descartado por contenido inválido. Etiqueta inesperada: <" + qName + ">";
+                LOGGER.warn(msg);
+                if (registrosInvalidosGlobal != null) {
+                    registrosInvalidosGlobal.add(msg);
+                }
+            }
+        } else {
+            // Texto basura fuera de PortData
+            if (value != null && !value.isEmpty()) {
+                String msg = "Error: Texto basura fuera de PortData: '" + value + "'";
+                LOGGER.warn(msg);
+                if (registrosInvalidosGlobal != null) {
+                    registrosInvalidosGlobal.add(msg);
+                }
             }
         }
     }
+
 
 
     // Conversión segura
@@ -182,10 +220,23 @@ public class NumerosDeletedXmlParser extends DefaultHandler {
         return null;
     }
 
+    /**
+     * Validación mínima conforme a la tabla PORT_NUM_CANCELADO.
+     * Solo se permiten nulos en DIDA y DCR.
+     */
     private boolean isRegistroValido(NumeroCancelado nc) {
         return nc != null &&
                 nc.getPortId() != null && !nc.getPortId().isEmpty() &&
-                nc.getNumberFrom() != null && !nc.getNumberFrom().isEmpty();
+                nc.getPortType() != null && !nc.getPortType().isEmpty() &&
+                nc.getAction() != null && !nc.getAction().isEmpty() &&
+                nc.getNumberFrom() != null && !nc.getNumberFrom().isEmpty() &&
+                nc.getNumberTo() != null && !nc.getNumberTo().isEmpty() &&
+                nc.getIsMpp() != null && !nc.getIsMpp().isEmpty() &&
+                nc.getRida() != null &&
+                nc.getRcr() != null &&
+                nc.getActionDate() != null &&
+                nc.getAssigneeIda() != null &&
+                nc.getAssigneeCr() != null;
     }
 
     private String toCsvRow(NumeroCancelado n) {

@@ -274,12 +274,28 @@ public class PortadosDAO {
 	// SNAPSHOTS HIBRIDO FALLBACK 27.08.2025
 	// =========================================================
 
+	// =========================================================
+	// Paso Sub0: limpiar snapshots persistentes
+	// =========================================================
+	public void limpiarSnapshotPortado() {
+		final String SQL = "DELETE FROM SS_PORT_NUM_PORTADO";
+		try (Connection conn = dataSource.getConnection();
+			 PreparedStatement ps = conn.prepareStatement(SQL)) {
+
+			int borrados = ps.executeUpdate();
+			LOGGER.info("Tabla SS_PORT_NUM_PORTADO limpiada. Registros eliminados={}", borrados);
+
+		} catch (Exception e) {
+			LOGGER.error("Error limpiando SS_PORT_NUM_PORTADO", e);
+		}
+	}
+
 	/**
 	 * Paso 1: Inserta en snapshot las filas originales del archivo procesado (estado ORIGEN).
 	 */
 	public void insertSnapshotOrigen(List<NumeroPortado> lote) throws SQLException {
 		final String SQL =
-				"INSERT INTO SNAPSHOT_PORT_NUM_PORTADO " +
+				"INSERT INTO SS_PORT_NUM_PORTADO " +
 						"(PORTID, PORTTYPE, ACTION, NUMBERFROM, NUMBERTO, ISMPP, RIDA, RCR, DIDA, DCR, ACTIONDATE, ESTADO, FECHA_SNAPSHOT) " +
 						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ORIGEN', SYSDATE)";
 
@@ -324,7 +340,7 @@ public class PortadosDAO {
 	 */
 	public void clasificarSnapshot() throws SQLException {
 		final String SQL =
-				"UPDATE SNAPSHOT_PORT_NUM_PORTADO s " +
+				"UPDATE SS_PORT_NUM_PORTADO s " +
 						"SET ESTADO = ( " +
 						"   SELECT CASE WHEN COUNT(*) > 0 THEN 'ACTUALIZAR' ELSE 'INSERTAR' END " +
 						"   FROM PORT_NUM_PORTADO t " +
@@ -354,7 +370,7 @@ public class PortadosDAO {
 			// 1. Validar snapshot vs total CSV
 			int totalSnapshot = 0;
 			try (ResultSet rs = st.executeQuery(
-					"SELECT COUNT(*) FROM SNAPSHOT_PORT_NUM_PORTADO")) {
+					"SELECT COUNT(*) FROM SS_PORT_NUM_PORTADO")) {
 				if (rs.next()) {
 					totalSnapshot = rs.getInt(1);
 				}
@@ -371,7 +387,7 @@ public class PortadosDAO {
 								"USING ( " +
 								"  SELECT portid, porttype, action, numberfrom, numberto, actiondate, " +
 								"         ismpp, rida, rcr, dida, dcr " +
-								"  FROM SNAPSHOT_PORT_NUM_PORTADO " +
+								"  FROM SS_PORT_NUM_PORTADO " +
 								") s " +
 								"ON (t.numberfrom = s.numberfrom) " +  //Sin TRIM(), índice usable
 								"WHEN MATCHED THEN UPDATE SET " +
@@ -581,7 +597,7 @@ public class PortadosDAO {
 	 */
 	public void actualizarEstadoFinalInsertar() throws SQLException {
 		final String SQL =
-				"UPDATE SNAPSHOT_PORT_NUM_PORTADO s " +
+				"UPDATE SS_PORT_NUM_PORTADO s " +
 						"SET ESTADO_FINAL = ( " +
 						"   SELECT CASE WHEN COUNT(*) > 0 THEN 'INSERTADO' ELSE 'FALLIDO' END " +
 						"   FROM PORT_NUM_PORTADO t " +
@@ -603,7 +619,7 @@ public class PortadosDAO {
 	 */
 	public void actualizarEstadoFinalActualizar() throws SQLException {
 		final String SQL =
-				"UPDATE SNAPSHOT_PORT_NUM_PORTADO s " +
+				"UPDATE SS_PORT_NUM_PORTADO s " +
 						"SET ESTADO_FINAL = ( " +
 						"   SELECT CASE " +
 						"            WHEN NOT EXISTS ( " +
@@ -649,7 +665,7 @@ public class PortadosDAO {
 						" SUM(CASE WHEN ESTADO_FINAL = 'FALLIDO' THEN 1 ELSE 0 END) AS TOTAL_NOPERSISTIDOS, " +
 						" SUM(CASE WHEN ESTADO = 'INSERTAR' THEN 1 ELSE 0 END) AS TOTAL_PENDIENTES_INSERTAR, " +
 						" SUM(CASE WHEN ESTADO = 'ACTUALIZAR' THEN 1 ELSE 0 END) AS TOTAL_PENDIENTES_ACTUALIZAR " +
-						"FROM SNAPSHOT_PORT_NUM_PORTADO";
+						"FROM SS_PORT_NUM_PORTADO";
 
 		try (Connection conn = dataSource.getConnection();
 			 Statement st = conn.createStatement();
@@ -685,7 +701,7 @@ public class PortadosDAO {
 		final String SQL_SELECT =
 				"SELECT PORTID, PORTTYPE, ACTION, NUMBERFROM, NUMBERTO, ISMPP, " +
 						"       RIDA, RCR, DIDA, DCR, ACTIONDATE " +
-						"FROM SNAPSHOT_PORT_NUM_PORTADO " +
+						"FROM SS_PORT_NUM_PORTADO " +
 						"WHERE ESTADO_FINAL='FALLIDO'";
 
 		// Ruta salida
@@ -788,11 +804,11 @@ public class PortadosDAO {
 		final String SQL_SELECT =
 				"SELECT PORTID, PORTTYPE, ACTION, NUMBERFROM, NUMBERTO, ISMPP, " +
 						"       RIDA, RCR, DIDA, DCR, ACTIONDATE " +
-						"FROM SNAPSHOT_PORT_NUM_PORTADO " +
+						"FROM SS_PORT_NUM_PORTADO " +
 						"WHERE ESTADO_FINAL='FALLIDO'";
 
 		final String SQL_COUNT =
-				"SELECT COUNT(*) FROM SNAPSHOT_PORT_NUM_PORTADO WHERE ESTADO_FINAL='FALLIDO'";
+				"SELECT COUNT(*) FROM SS_PORT_NUM_PORTADO WHERE ESTADO_FINAL='FALLIDO'";
 
 		// Ruta de salida
 		LOGGER.info("Ruta de salida");
@@ -955,7 +971,7 @@ public class PortadosDAO {
 
 			// 1. Insertar claves en snapshot con ESTADO='CLAVES'
 			final String SQL_INSERT_CLAVES =
-					"INSERT INTO SNAPSHOT_PORT_NUM_PORTADO (NUMBERFROM, ESTADO, FECHA_SNAPSHOT) VALUES (?, 'CLAVES', SYSDATE)";
+					"INSERT INTO SS_PORT_NUM_PORTADO (NUMBERFROM, ESTADO, FECHA_SNAPSHOT) VALUES (?, 'CLAVES', SYSDATE)";
 			ps = conn.prepareStatement(SQL_INSERT_CLAVES);
 			for (String nf : numbersOrigen) {
 				ps.setString(1, nf);
@@ -966,19 +982,19 @@ public class PortadosDAO {
 
 			// 2. Insertar snapshot ANTES haciendo JOIN contra las claves
 			final String SQL_ANTES =
-					"INSERT INTO SNAPSHOT_PORT_NUM_PORTADO " +
+					"INSERT INTO SS_PORT_NUM_PORTADO " +
 							"(PORTID, PORTTYPE, ACTION, NUMBERFROM, NUMBERTO, ISMPP, RIDA, RCR, DIDA, DCR, ACTIONDATE, ESTADO, FECHA_SNAPSHOT) " +
 							"SELECT p.PORTID, p.PORTTYPE, p.ACTION, p.NUMBERFROM, p.NUMBERTO, p.ISMPP, " +
 							"       p.RIDA, p.RCR, p.DIDA, p.DCR, p.ACTIONDATE, 'ANTES', SYSDATE " +
 							"FROM PORT_NUM_PORTADO p " +
-							"JOIN SNAPSHOT_PORT_NUM_PORTADO claves ON claves.NUMBERFROM = p.NUMBERFROM " +
+							"JOIN SS_PORT_NUM_PORTADO claves ON claves.NUMBERFROM = p.NUMBERFROM " +
 							"WHERE claves.ESTADO = 'CLAVES'";
 			ps = conn.prepareStatement(SQL_ANTES);
 			ps.executeUpdate();
 			ps.close();
 
 			// 3. Limpiar claves
-			final String SQL_DELETE_CLAVES = "DELETE FROM SNAPSHOT_PORT_NUM_PORTADO WHERE ESTADO='CLAVES'";
+			final String SQL_DELETE_CLAVES = "DELETE FROM SS_PORT_NUM_PORTADO WHERE ESTADO='CLAVES'";
 			ps = conn.prepareStatement(SQL_DELETE_CLAVES);
 			ps.executeUpdate();
 
@@ -1005,7 +1021,7 @@ public class PortadosDAO {
 
 			// 1. Insertar claves en snapshot con ESTADO='CLAVES'
 			final String SQL_INSERT_CLAVES =
-					"INSERT INTO SNAPSHOT_PORT_NUM_PORTADO (NUMBERFROM, ESTADO, FECHA_SNAPSHOT) VALUES (?, 'CLAVES', SYSDATE)";
+					"INSERT INTO SS_PORT_NUM_PORTADO (NUMBERFROM, ESTADO, FECHA_SNAPSHOT) VALUES (?, 'CLAVES', SYSDATE)";
 			ps = conn.prepareStatement(SQL_INSERT_CLAVES);
 			for (String nf : numbersOrigen) {
 				ps.setString(1, nf);
@@ -1016,19 +1032,19 @@ public class PortadosDAO {
 
 			// 2. Insertar snapshot DESPUES haciendo JOIN contra las claves
 			final String SQL_DESPUES =
-					"INSERT INTO SNAPSHOT_PORT_NUM_PORTADO " +
+					"INSERT INTO SS_PORT_NUM_PORTADO " +
 							"(PORTID, PORTTYPE, ACTION, NUMBERFROM, NUMBERTO, ISMPP, RIDA, RCR, DIDA, DCR, ACTIONDATE, ESTADO, FECHA_SNAPSHOT) " +
 							"SELECT p.PORTID, p.PORTTYPE, p.ACTION, p.NUMBERFROM, p.NUMBERTO, p.ISMPP, " +
 							"       p.RIDA, p.RCR, p.DIDA, p.DCR, p.ACTIONDATE, 'DESPUES', SYSDATE " +
 							"FROM PORT_NUM_PORTADO p " +
-							"JOIN SNAPSHOT_PORT_NUM_PORTADO claves ON claves.NUMBERFROM = p.NUMBERFROM " +
+							"JOIN SS_PORT_NUM_PORTADO claves ON claves.NUMBERFROM = p.NUMBERFROM " +
 							"WHERE claves.ESTADO = 'CLAVES'";
 			ps = conn.prepareStatement(SQL_DESPUES);
 			ps.executeUpdate();
 			ps.close();
 
 			// 3. Limpiar claves
-			final String SQL_DELETE_CLAVES = "DELETE FROM SNAPSHOT_PORT_NUM_PORTADO WHERE ESTADO='CLAVES'";
+			final String SQL_DELETE_CLAVES = "DELETE FROM SS_PORT_NUM_PORTADO WHERE ESTADO='CLAVES'";
 			ps = conn.prepareStatement(SQL_DELETE_CLAVES);
 			ps.executeUpdate();
 
@@ -1046,15 +1062,15 @@ public class PortadosDAO {
 	public int getInsertados() throws SQLException {
 		final String SQL =
 				"SELECT COUNT(*) " +
-						"FROM SNAPSHOT_PORT_NUM_PORTADO o " +
+						"FROM SS_PORT_NUM_PORTADO o " +
 						"WHERE o.ESTADO = 'ORIGEN' " +
 						"  AND EXISTS ( " +
-						"       SELECT 1 FROM SNAPSHOT_PORT_NUM_PORTADO d " +
+						"       SELECT 1 FROM SS_PORT_NUM_PORTADO d " +
 						"       WHERE d.ESTADO='DESPUES' " +
 						"         AND d.NUMBERFROM = o.NUMBERFROM " +
 						"  ) " +
 						"  AND NOT EXISTS ( " +
-						"       SELECT 1 FROM SNAPSHOT_PORT_NUM_PORTADO a " +
+						"       SELECT 1 FROM SS_PORT_NUM_PORTADO a " +
 						"       WHERE a.ESTADO='ANTES' " +
 						"         AND a.NUMBERFROM = o.NUMBERFROM " +
 						"  )";
@@ -1077,8 +1093,8 @@ public class PortadosDAO {
 	public int getActualizados() throws SQLException {
 		final String SQL =
 				"SELECT COUNT(*) " +
-						"FROM SNAPSHOT_PORT_NUM_PORTADO a " +
-						"JOIN SNAPSHOT_PORT_NUM_PORTADO d " +
+						"FROM SS_PORT_NUM_PORTADO a " +
+						"JOIN SS_PORT_NUM_PORTADO d " +
 						"  ON a.NUMBERFROM = d.NUMBERFROM " +
 						"WHERE a.ESTADO='ANTES' AND d.ESTADO='DESPUES' " +
 						"  AND (NVL(a.NUMBERTO,'X') <> NVL(d.NUMBERTO,'X') " +
@@ -1105,7 +1121,7 @@ public class PortadosDAO {
 		final String SQL =
 				"SELECT o.PORTID, o.PORTTYPE, o.ACTION, o.NUMBERFROM, o.NUMBERTO, " +
 						"       o.ISMPP, o.RIDA, o.RCR, o.DIDA, o.DCR, o.ACTIONDATE " +
-						"FROM SNAPSHOT_PORT_NUM_PORTADO o " +
+						"FROM SS_PORT_NUM_PORTADO o " +
 						"WHERE o.ESTADO = 'ORIGEN' " +
 						"  AND NOT EXISTS ( " +
 						"      SELECT 1 " +

@@ -316,14 +316,30 @@ public class CanceladosDAO {
 	// SNAPSHOTS HIBRIDO FALLBACK 27.08.2025
 	// =========================================================
 
+	// =========================================================
+	// Paso Sub0: limpiar snapshots persistentes
+	// =========================================================
+	public void limpiarSnapshotCancelado() {
+		final String SQL = "DELETE FROM SS_PORT_NUM_CANCELADO";
+		try (Connection conn = dataSource.getConnection();
+			 PreparedStatement ps = conn.prepareStatement(SQL)) {
+
+			int borrados = ps.executeUpdate();
+			LOGGER.info("Tabla SS_PORT_NUM_CANCELADO limpiada. Registros eliminados={}", borrados);
+
+		} catch (Exception e) {
+			LOGGER.error("Error limpiando SS_PORT_NUM_CANCELADO", e);
+		}
+	}
+
 	// =======================================
 	// Paso 1: Insertar Snapshot ORIGEN (cancelados)
 	// =======================================
 	public void insertSnapshotOrigen(List<NumeroCancelado> lote) {
-		String sql = "INSERT INTO SNAPSHOT_PORT_NUM_CANCELADO (" +
+		String sql = "INSERT INTO SS_PORT_NUM_CANCELADO (" +
 				"PORTID, PORTTYPE, ACTION, NUMBERFROM, NUMBERTO, ISMPP," +
 				"RIDA, RCR, DIDA, DCR, ACTIONDATE, ASSIGNEEIDA, ASSIGNEECR, ESTADO) " +
-				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Origen')";
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ORIGEN')";
 
 		try (Connection conn = dataSource.getConnection();
 			 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -378,8 +394,8 @@ public class CanceladosDAO {
 	}
 
 	// =======================================
-	// Paso 3: Insertar en PORT_NUM_CANCELADO (batch con fallback)
-	// =======================================
+// Paso 3: Insertar en PORT_NUM_CANCELADO (batch con fallback)
+// =======================================
 	public int upsertHibridoCancelados(List<NumeroCancelado> origen, int totalFilasCsv) throws SQLException {
 		int totalExitos = 0;
 
@@ -389,7 +405,7 @@ public class CanceladosDAO {
 			// 1. Validar snapshot vs total CSV
 			int totalSnapshot = 0;
 			try (ResultSet rs = st.executeQuery(
-					"SELECT COUNT(*) FROM SNAPSHOT_PORT_NUM_CANCELADO")) {
+					"SELECT COUNT(*) FROM SS_PORT_NUM_CANCELADO")) {
 				if (rs.next()) {
 					totalSnapshot = rs.getInt(1);
 				}
@@ -406,9 +422,9 @@ public class CanceladosDAO {
 								"USING ( " +
 								"  SELECT portid, porttype, action, numberfrom, numberto, ismpp, " +
 								"         rida, rcr, dida, dcr, actiondate, assigneeida, assigneecr " +
-								"  FROM SNAPSHOT_PORT_NUM_CANCELADO " +
+								"  FROM SS_PORT_NUM_CANCELADO " +
 								") s " +
-								"ON (t.numberfrom = s.numberfrom AND t.actiondate = s.actiondate) " + // match compuesto
+								"ON (t.numberfrom = s.numberfrom AND TRUNC(t.actiondate) = TRUNC(s.actiondate)) " +
 								"WHEN MATCHED THEN UPDATE SET " +
 								"   t.portid       = s.portid, " +
 								"   t.porttype     = s.porttype, " +
@@ -419,11 +435,12 @@ public class CanceladosDAO {
 								"   t.rcr          = s.rcr, " +
 								"   t.dida         = s.dida, " +
 								"   t.dcr          = s.dcr, " +
+								//Se elimina actiondate del UPDATE
 								"   t.assigneeida  = s.assigneeida, " +
 								"   t.assigneecr   = s.assigneecr " +
-								"WHEN NOT MATCHED THEN INSERT " +
-								" (portid, porttype, action, numberfrom, numberto, ismpp, " +
-								"  rida, rcr, dida, dcr, actiondate, assigneeida, assigneecr) " +
+								"WHEN NOT MATCHED THEN INSERT ( " +
+								"   portid, porttype, action, numberfrom, numberto, ismpp, " +
+								"   rida, rcr, dida, dcr, actiondate, assigneeida, assigneecr) " +
 								"VALUES (s.portid, s.porttype, s.action, s.numberfrom, s.numberto, s.ismpp, " +
 								"        s.rida, s.rcr, s.dida, s.dcr, s.actiondate, s.assigneeida, s.assigneecr)";
 
@@ -451,6 +468,7 @@ public class CanceladosDAO {
 		return totalExitos;
 	}
 
+
 	// =======================================
 	// Paso BATCH: inserción cancelados con fallback fila a fila
 	// =======================================
@@ -474,13 +492,20 @@ public class CanceladosDAO {
 					ps.setString(4, n.getNumberFrom());
 					ps.setString(5, n.getNumberTo());
 					ps.setString(6, n.getIsMpp());
-					ps.setBigDecimal(7, n.getRida());
-					ps.setBigDecimal(8, n.getRcr());
-					ps.setBigDecimal(9, n.getDida());
-					ps.setBigDecimal(10, n.getDcr());
-					ps.setTimestamp(11, new Timestamp(n.getActionDate().getTime()));
-					ps.setBigDecimal(12, n.getAssigneeIda());
-					ps.setBigDecimal(13, n.getAssigneeCr());
+
+					if (n.getRida() != null) ps.setBigDecimal(7, n.getRida()); else ps.setNull(7, Types.NUMERIC);
+					if (n.getRcr() != null)  ps.setBigDecimal(8, n.getRcr());  else ps.setNull(8, Types.NUMERIC);
+					if (n.getDida() != null) ps.setBigDecimal(9, n.getDida()); else ps.setNull(9, Types.NUMERIC);
+					if (n.getDcr() != null)  ps.setBigDecimal(10, n.getDcr()); else ps.setNull(10, Types.NUMERIC);
+
+					if (n.getActionDate() != null)
+						ps.setTimestamp(11, new Timestamp(n.getActionDate().getTime()));
+					else
+						ps.setNull(11, Types.TIMESTAMP);
+
+					if (n.getAssigneeIda() != null) ps.setBigDecimal(12, n.getAssigneeIda()); else ps.setNull(12, Types.NUMERIC);
+					if (n.getAssigneeCr() != null)  ps.setBigDecimal(13, n.getAssigneeCr());  else ps.setNull(13, Types.NUMERIC);
+
 					ps.addBatch();
 					bloque.add(n);
 
@@ -520,13 +545,20 @@ public class CanceladosDAO {
 					psSingle.setString(4, f.getNumberFrom());
 					psSingle.setString(5, f.getNumberTo());
 					psSingle.setString(6, f.getIsMpp());
-					psSingle.setBigDecimal(7, f.getRida());
-					psSingle.setBigDecimal(8, f.getRcr());
-					psSingle.setBigDecimal(9, f.getDida());
-					psSingle.setBigDecimal(10, f.getDcr());
-					psSingle.setTimestamp(11, new Timestamp(f.getActionDate().getTime()));
-					psSingle.setBigDecimal(12, f.getAssigneeIda());
-					psSingle.setBigDecimal(13, f.getAssigneeCr());
+
+					if (f.getRida() != null) psSingle.setBigDecimal(7, f.getRida()); else psSingle.setNull(7, Types.NUMERIC);
+					if (f.getRcr() != null)  psSingle.setBigDecimal(8, f.getRcr());  else psSingle.setNull(8, Types.NUMERIC);
+					if (f.getDida() != null) psSingle.setBigDecimal(9, f.getDida()); else psSingle.setNull(9, Types.NUMERIC);
+					if (f.getDcr() != null)  psSingle.setBigDecimal(10, f.getDcr()); else psSingle.setNull(10, Types.NUMERIC);
+
+					if (f.getActionDate() != null)
+						psSingle.setTimestamp(11, new Timestamp(f.getActionDate().getTime()));
+					else
+						psSingle.setNull(11, Types.TIMESTAMP);
+
+					if (f.getAssigneeIda() != null) psSingle.setBigDecimal(12, f.getAssigneeIda()); else psSingle.setNull(12, Types.NUMERIC);
+					if (f.getAssigneeCr() != null)  psSingle.setBigDecimal(13, f.getAssigneeCr());  else psSingle.setNull(13, Types.NUMERIC);
+
 					psSingle.executeUpdate();
 					insertados++;
 
@@ -544,6 +576,7 @@ public class CanceladosDAO {
 	}
 
 
+
 	// =======================================
 	// Paso 4: Eliminar de PORT_NUM_PORTADO (híbrido: express + batch+fallback)
 	// =======================================
@@ -555,7 +588,7 @@ public class CanceladosDAO {
 
 			// 1. Validar snapshot vs total CSV
 			int totalSnapshot = 0;
-			try (ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM SNAPSHOT_PORT_NUM_CANCELADO")) {
+			try (ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM SS_PORT_NUM_CANCELADO")) {
 				if (rs.next()) {
 					totalSnapshot = rs.getInt(1);
 				}
@@ -570,9 +603,8 @@ public class CanceladosDAO {
 				String sql =
 						"DELETE FROM PORT_NUM_PORTADO p " +
 								"WHERE EXISTS ( " +
-								"   SELECT 1 FROM SNAPSHOT_PORT_NUM_CANCELADO s " +
+								"   SELECT 1 FROM SS_PORT_NUM_CANCELADO s " +
 								"   WHERE s.numberfrom = p.numberfrom " +
-								"     AND s.actiondate = p.actiondate " +
 								")";
 
 				try {
@@ -602,7 +634,7 @@ public class CanceladosDAO {
 	// Paso 4: Batch con fallback por fila
 	// =======================================
 	private int deleteFromPortadosBatchFallback(List<NumeroCancelado> lote) {
-		String sql = "DELETE FROM PORT_NUM_PORTADO WHERE NUMBERFROM=? AND ACTIONDATE=?";
+		String sql = "DELETE FROM PORT_NUM_PORTADO WHERE NUMBERFROM=?";
 		final int BATCH_SIZE = 5000;
 		int totalEliminados = 0;
 
@@ -678,19 +710,25 @@ public class CanceladosDAO {
 	public void updateSnapshotEstadoFinalCanc() {
 		try (Connection conn = dataSource.getConnection();
 			 Statement st = conn.createStatement()) {
+
+			// 1. Marcar como INSERTADO si el registro existe en PORT_NUM_CANCELADO
 			st.executeUpdate(
-					"UPDATE SNAPSHOT_PORT_NUM_CANCELADO s " +
+					"UPDATE SS_PORT_NUM_CANCELADO s " +
 							"SET ESTADO_FINAL_CANC = 'INSERTADO' " +
-							"WHERE EXISTS (" +
+							"WHERE EXISTS ( " +
 							"  SELECT 1 FROM PORT_NUM_CANCELADO c " +
 							"  WHERE c.NUMBERFROM = s.NUMBERFROM " +
-							"    AND c.ACTIONDATE = s.ACTIONDATE)"
+							"    AND TRUNC(c.ACTIONDATE) = TRUNC(s.ACTIONDATE) " +
+							")"
 			);
+
+			// 2. Marcar como FALLIDO los que no se insertaron
 			st.executeUpdate(
-					"UPDATE SNAPSHOT_PORT_NUM_CANCELADO " +
+					"UPDATE SS_PORT_NUM_CANCELADO " +
 							"SET ESTADO_FINAL_CANC = 'FALLIDO' " +
 							"WHERE ESTADO_FINAL_CANC IS NULL"
 			);
+
 		} catch (Exception e) {
 			LOGGER.error("Error actualizando ESTADO_FINAL_CANC", e);
 		}
@@ -702,18 +740,24 @@ public class CanceladosDAO {
 	public void updateSnapshotEstadoFinalPort() {
 		try (Connection conn = dataSource.getConnection();
 			 Statement st = conn.createStatement()) {
+
+			// 1. Marcar como ELIMINADO cuando el número YA NO existe en portados
 			st.executeUpdate(
-					"UPDATE SNAPSHOT_PORT_NUM_CANCELADO s " +
+					"UPDATE SS_PORT_NUM_CANCELADO s " +
 							"SET ESTADO_FINAL_PORT = 'ELIMINADO' " +
-							"WHERE EXISTS (" +
+							"WHERE NOT EXISTS ( " +
 							"  SELECT 1 FROM PORT_NUM_PORTADO p " +
-							"  WHERE p.NUMBERFROM = s.NUMBERFROM)"
+							"  WHERE p.NUMBERFROM = s.NUMBERFROM " +
+							"    AND p.ACTIONDATE = s.ACTIONDATE)"
 			);
+
+			// 2. Los que queden sin estado_final_port se marcan como FALLIDO
 			st.executeUpdate(
-					"UPDATE SNAPSHOT_PORT_NUM_CANCELADO " +
+					"UPDATE SS_PORT_NUM_CANCELADO " +
 							"SET ESTADO_FINAL_PORT = 'FALLIDO' " +
 							"WHERE ESTADO_FINAL_PORT IS NULL"
 			);
+
 		} catch (Exception e) {
 			LOGGER.error("Error actualizando ESTADO_FINAL_PORT", e);
 		}
@@ -733,7 +777,7 @@ public class CanceladosDAO {
 						" SUM(CASE WHEN ESTADO_FINAL_CANC = 'FALLIDO' THEN 1 ELSE 0 END) AS TOTAL_FALLIDOS_INSERCION, " +
 						" SUM(CASE WHEN ESTADO_FINAL_PORT = 'FALLIDO' THEN 1 ELSE 0 END) AS TOTAL_FALLIDOS_ELIMINACION, " +
 						" SUM(CASE WHEN ESTADO_FINAL_CANC = 'INSERTADO' AND ESTADO_FINAL_PORT = 'ELIMINADO' THEN 1 ELSE 0 END) AS TOTAL_PROCESADOS " +
-						"FROM SNAPSHOT_PORT_NUM_CANCELADO";
+						"FROM SS_PORT_NUM_CANCELADO";
 
 		try (Connection conn = dataSource.getConnection();
 			 Statement st = conn.createStatement();
@@ -746,8 +790,8 @@ public class CanceladosDAO {
 				resultado.setTotalFallidosInsercionCanc(rs.getInt("TOTAL_FALLIDOS_INSERCION"));
 				resultado.setTotalFallidosEliminacionCanc(rs.getInt("TOTAL_FALLIDOS_ELIMINACION"));
 				resultado.setTotalProcesadosCanc(rs.getInt("TOTAL_PROCESADOS"));
-				// 🔑 No seteamos totalFallidosCanc aquí,
-				//     se calcula automáticamente en ResultadoValidacionCSV
+				//No seteamos totalFallidosCanc aquí,
+				//se calcula automáticamente en ResultadoValidacionCSV
 			}
 
 		} catch (Exception e) {
@@ -772,7 +816,7 @@ public class CanceladosDAO {
 		final String SQL_SELECT =
 				"SELECT PORTID, PORTTYPE, ACTION, NUMBERFROM, NUMBERTO, ISMPP, " +
 						"       RIDA, RCR, DIDA, DCR, ACTIONDATE, ASSIGNEEIDA, ASSIGNEECR " +
-						"FROM SNAPSHOT_PORT_NUM_CANCELADO " +
+						"FROM SS_PORT_NUM_CANCELADO " +
 						"WHERE ESTADO_FINAL_PORT = 'FALLIDO'";
 
 		String basePath = paramService.getParamByName("port_XMLLOG_path.portados");

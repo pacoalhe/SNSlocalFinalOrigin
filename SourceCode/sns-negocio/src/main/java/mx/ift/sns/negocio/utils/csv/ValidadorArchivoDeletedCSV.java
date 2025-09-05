@@ -3,6 +3,7 @@ package mx.ift.sns.negocio.utils.csv;
 import java.io.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -175,11 +176,17 @@ public class ValidadorArchivoDeletedCSV {
                     }
                 }
 
+                // Paso Sub0: limpiar snapshots persistentes
+                LOGGER.info("<--- Paso Sub0: limpiar snapshots SS ---->");
+                canceladosDAO.limpiarSnapshotCancelado();
+
                 // Paso 1: snapshot ORIGEN
                 LOGGER.info("<--- Paso 1: guardar snapshot ORIGEN ---->");
                 canceladosDAO.insertSnapshotOrigen(loteTotal);
 
                 // Paso 2: limpiar previos (delete en cancelados)
+                //SE OMITE PASO POR TENER EL MERGE EN CANCELADOS
+                /*
                 LOGGER.info("<--- Paso 2: borrar previos en PORT_NUM_CANCELADO ---->");
                 if (actionDateLote != null) {
                     Date fechaProceso = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(actionDateLote);
@@ -187,6 +194,7 @@ public class ValidadorArchivoDeletedCSV {
                 } else {
                     LOGGER.warn("No se pudo determinar actionDate del lote, no se ejecuta borrado en PORT_NUM_CANCELADO");
                 }
+                 */
 
                 // Paso 3: insertar en cancelados Fallback
                 LOGGER.info("<--- Paso 3: insertar en PORT_NUM_CANCELADO ---->");
@@ -263,37 +271,64 @@ public class ValidadorArchivoDeletedCSV {
         }
     }
 
+    private static final SimpleDateFormat ACTIONDATE_FORMAT_COMPACT = new SimpleDateFormat("yyyyMMddHHmmss");
+    private static final SimpleDateFormat ACTIONDATE_FORMAT_EXTENDED = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    static {
+        ACTIONDATE_FORMAT_COMPACT.setLenient(false);
+        ACTIONDATE_FORMAT_EXTENDED.setLenient(false);
+    }
+
     private NumeroCancelado mapRowANumeroCancelado(String[] valores, List<String> registrosInvalidos) {
         try {
             if (valores == null || valores.length < 13) {
-                if (registrosInvalidos != null) {
-                    registrosInvalidos.add("Fila inválida (menos de 13 columnas): " + Arrays.toString(valores));
-                }
-                return null;
+                return invalid("Error mapeando fila CSV: Fila inválida (menos de 13 columnas)", valores, registrosInvalidos);
             }
+
+            // === Sanitizar valores para evitar símbolos raros ===
+            for (int i = 0; i < valores.length; i++) {
+                if (valores[i] != null) {
+                    valores[i] = valores[i].replaceAll("[^0-9A-Za-z@\\-:\\.]", "").trim();
+                }
+            }
+
+            // === Validar longitudes según BD ===
+            if (valores[0].length() > 22) return invalid("Error mapeando fila CSV: PORTID demasiado largo", valores, registrosInvalidos);
+            if (valores[1].length() != 1) return invalid("Error mapeando fila CSV: PORTTYPE inválido", valores, registrosInvalidos);
+            if (valores[2].length() > 20) return invalid("Error mapeando fila CSV: ACTION demasiado largo", valores, registrosInvalidos);
+            if (valores[3].length() > 10) return invalid("Error mapeando fila CSV: NUMBERFROM demasiado largo", valores, registrosInvalidos);
+            if (valores[4].length() > 20) return invalid("Error mapeando fila CSV: NUMBERTO demasiado largo", valores, registrosInvalidos);
+            if (valores[5].length() != 1) return invalid("Error mapeando fila CSV: ISMPP inválido (longitud != 1)", valores, registrosInvalidos);
+            if (valores[6].length() > 3 || valores[7].length() > 3) return invalid("Error mapeando fila CSV: RIDA/RCR fuera de rango", valores, registrosInvalidos);
+            if (valores[8].length() > 3 || valores[9].length() > 3) return invalid("Error mapeando fila CSV: DIDA/DCR fuera de rango", valores, registrosInvalidos);
+            if (valores[11].length() > 3 || valores[12].length() > 3) return invalid("Error mapeando fila CSV: ASSIGNEEIDA/CR fuera de rango", valores, registrosInvalidos);
 
             NumeroCancelado num = new NumeroCancelado();
             num.setPortId(StringUtils.trimToEmpty(valores[0]));
             num.setPortType(StringUtils.trimToEmpty(valores[1]));
-            num.setAction(StringUtils.trimToEmpty(valores[2]));
+
+            // === Validar ACTION permitido ===
+            //String action = StringUtils.trimToEmpty(valores[2]);
+            //if (!("Port".equalsIgnoreCase(action) || "Reverse".equalsIgnoreCase(action) || "Delete".equalsIgnoreCase(action))) {
+            //    return invalid("Error mapeando fila CSV:  ACTION inválido: " + action, valores, registrosInvalidos);
+            //}
+            //num.setAction(action);
+            num.setAction(StringUtils.trim(valores[2]));
+
             num.setNumberFrom(StringUtils.trimToEmpty(valores[3]));
             num.setNumberTo(StringUtils.trimToEmpty(valores[4]));
-            num.setIsMpp(StringUtils.defaultIfBlank(StringUtils.trim(valores[5]), "N"));
+
+            // === Validar ISMPP ===
+            //String isMpp = StringUtils.defaultIfBlank(StringUtils.trim(valores[5]), "N");
+            //if (!(isMpp.equalsIgnoreCase("N") || isMpp.equalsIgnoreCase("Y"))) {
+            //    return invalid("Error mapeando fila CSV:  ISMPP inválido: " + isMpp, valores, registrosInvalidos);
+            //}
+            //num.setIsMpp(isMpp);
+            num.setIsMpp(StringUtils.trim(valores[5]));
 
             // === Validar numéricos obligatorios ===
             if (!isNumeric(valores[6]) || !isNumeric(valores[7]) ||
                     !isNumeric(valores[11]) || !isNumeric(valores[12])) {
-
-                if (registrosInvalidos != null) {
-                    // reconstruir fila limpia con "|"
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < valores.length; i++) {
-                        if (i > 0) sb.append("|");
-                        sb.append(valores[i] != null ? valores[i] : "");
-                    }
-                    registrosInvalidos.add(sb.toString());
-                }
-                return null;
+                return invalid("Error mapeando fila CSV: Valores numéricos obligatorios inválidos", valores, registrosInvalidos);
             }
 
             // === Asignar obligatorios ===
@@ -310,19 +345,29 @@ public class ValidadorArchivoDeletedCSV {
                 num.setDcr(new BigDecimal(valores[9]));
             }
 
-            // === Fecha (col 10: yyyyMMddHHmmss) ===
-            String dateStr = StringUtils.trimToNull(valores[10]);
-            try {
-                if (dateStr != null) {
-                    SimpleDateFormat sourceFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-                    Date parsedDate = sourceFormat.parse(dateStr);
-                    num.setActionDate(new java.sql.Timestamp(parsedDate.getTime()));
-                } else {
-                    num.setActionDate(new java.sql.Timestamp(System.currentTimeMillis()));
+            // === Fecha (col 10) ===
+            String rawDate = StringUtils.trimToNull(valores[10]);
+            if (rawDate != null) {
+                Date parsed = null;
+                try {
+                    if (rawDate.matches("\\d{8}")) {
+                        parsed = ACTIONDATE_FORMAT_COMPACT.parse(rawDate);
+                    } else if (rawDate.matches("\\d{4}-\\d{2}-\\d{2}.*")) {
+                        try {
+                            parsed = ACTIONDATE_FORMAT_EXTENDED.parse(rawDate);
+                        } catch (ParseException e2) {
+                            String sanitized = rawDate.replace("T", " ").split("\\.")[0];
+                            parsed = ACTIONDATE_FORMAT_EXTENDED.parse(sanitized);
+                        }
+                    } else {
+                        throw new ParseException("Formato inválido ActionDate=" + rawDate, 0);
+                    }
+                } catch (Exception e) {
+                    return invalid("Error mapeando fila CSV: ActionDate inválido: " + rawDate, valores, registrosInvalidos);
                 }
-            } catch (Exception e) {
-                LOGGER.warn("Fecha inválida en Cancelados, se asigna fecha actual. Fila: {}", Arrays.toString(valores));
-                num.setActionDate(new java.sql.Timestamp(System.currentTimeMillis()));
+                num.setActionDate(new java.sql.Timestamp(parsed.getTime()));
+            } else {
+                return invalid("Error mapeando fila CSV: ActionDate vacío", valores, registrosInvalidos);
             }
 
             return num;
@@ -330,11 +375,20 @@ public class ValidadorArchivoDeletedCSV {
         } catch (Exception ex) {
             LOGGER.error("Error inesperado mapeando fila Cancelados: {}", Arrays.toString(valores), ex);
             if (registrosInvalidos != null) {
-                registrosInvalidos.add("Error inesperado fila Cancelados: " + Arrays.toString(valores));
+                registrosInvalidos.add("Error mapeando fila CSV: " + Arrays.toString(valores));
             }
             return null;
         }
     }
+
+    // Helper
+    private NumeroCancelado invalid(String causa, String[] valores, List<String> registrosInvalidos) {
+        String msg = causa + " fila=" + Arrays.toString(valores);
+        LOGGER.error(msg);
+        if (registrosInvalidos != null) registrosInvalidos.add(msg);
+        return null;
+    }
+
 
     /**
      * PASO 8: Genera un archivo .log con los registros inválidos de contenido CSV (Cancelados).

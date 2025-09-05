@@ -459,7 +459,7 @@ public class PortabilidadService implements IPortabilidadService {
                         String linea;
                         int contador = 0;
                         while ((linea = br.readLine()) != null && contador < 5) {
-                            LOGGER.info("CSV TEMPORAL [{}]: {}", contador + 1, linea);
+                            //LOGGER.info("CSV TEMPORAL [{}]: {}", contador + 1, linea);
                             contador++;
                         }
                     } catch (Exception e) {
@@ -1256,6 +1256,11 @@ public class PortabilidadService implements IPortabilidadService {
                 return;
             }
 
+            // ============================
+            // Limpieza de directorio destino (logs/xml/html)
+            // ============================
+            limpiarDirectorio(paramService.getParamByName("port_XMLLOG_path.portados"));
+
             status = getStatus();  // <<-- inicializado aquí
             LOGGER.info("[syncBDDPortabilidadAsync] Estatus inicial: {}", status);
 
@@ -1606,6 +1611,36 @@ public class PortabilidadService implements IPortabilidadService {
 
     }
 
+    /**
+     * Elimina todos los archivos de un directorio dado.
+     * No elimina subdirectorios.
+     */
+    private void limpiarDirectorio(String basePath) {
+        try {
+            if (StringUtils.isNotEmpty(basePath)) {
+                File dir = new File(basePath);
+                if (dir.exists() && dir.isDirectory()) {
+                    File[] files = dir.listFiles();
+                    if (files != null) {
+                        for (File f : files) {
+                            if (f.isFile()) {
+                                if (f.delete()) {
+                                    LOGGER.debug("[syncBDDPortabilidadAsync] Archivo previo eliminado: {}", f.getName());
+                                } else {
+                                    LOGGER.warn("[syncBDDPortabilidadAsync] No se pudo eliminar archivo previo: {}", f.getName());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.error("[syncBDDPortabilidadAsync] Error limpiando directorio de salida {}", basePath, ex);
+        }
+    }
+
+
+
     private void moverArchivo(File file){
 
         try {
@@ -1850,16 +1885,13 @@ public class PortabilidadService implements IPortabilidadService {
         subjectWithHost.append(subject).append(":Host:").append(getHostName());
 
         try {
-            // ====== Directorio base ======
             String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
             if (StringUtils.isEmpty(basePath)) {
                 basePath = ".";
             }
 
-            // Fecha actual (para logs)
             String fechaLogs = new SimpleDateFormat("yyyyMMdd").format(new Date());
 
-            // Fecha -1 día (para XMLs NumbersPorted / NumbersDeleted)
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.DATE, -1);
             String fechaXmls = new SimpleDateFormat("yyyyMMdd").format(cal.getTime());
@@ -1869,64 +1901,71 @@ public class PortabilidadService implements IPortabilidadService {
             File logCsvPort        = new File(basePath, "port_num_portados_CSVinvalidos_" + fechaLogs + ".log");
             File xmlFallidosPort   = new File(basePath, "NumbersPorted-" + fechaXmls + ".xml");
 
-            int origenPort         = res != null ? res.getTotalOrigen() : 0;
             int errEstructuraPort  = logEstructuraPort.exists() ? contarErroresEstructura(logEstructuraPort) : 0;
             int errCsvPort         = logCsvPort.exists() ? contarErroresCSV(logCsvPort) : 0;
             int fallidosXmlPort    = xmlFallidosPort.exists() ? contarFallidosXML(xmlFallidosPort) : 0;
             int totalFallidosPort  = errEstructuraPort + errCsvPort + fallidosXmlPort;
-            int totalProcesadosPort = Math.max(0, origenPort - totalFallidosPort);
+            int totalProcesadosPort = (res != null ? res.getTotalInsertados() + res.getTotalActualizados() : 0);
+            int origenPort = totalProcesadosPort + totalFallidosPort; // <<=== calculado
 
             // ====== Archivos CANCELADOS ======
             File logEstructuraCanc = new File(basePath, "port_num_Cancelados_XML_estructuraInvalidos_" + fechaLogs + ".log");
             File logCsvCanc        = new File(basePath, "port_num_cancelados_CSVinvalidos_" + fechaLogs + ".log");
             File xmlFallidosCanc   = new File(basePath, "NumbersDeleted-" + fechaXmls + ".xml");
 
-            int origenCanc         = res != null ? res.getTotalOrigenCanc() : 0;
             int errEstructuraCanc  = logEstructuraCanc.exists() ? contarErroresEstructura(logEstructuraCanc) : 0;
             int errCsvCanc         = logCsvCanc.exists() ? contarErroresCSV(logCsvCanc) : 0;
             int fallidosXmlCanc    = xmlFallidosCanc.exists() ? contarFallidosXML(xmlFallidosCanc) : 0;
             int totalFallidosCanc  = errEstructuraCanc + errCsvCanc + fallidosXmlCanc;
-            int totalProcesadosCanc = Math.max(0, origenCanc - totalFallidosCanc);
+            int totalProcesadosCanc = res != null ? res.getTotalProcesadosCanc() : 0;
+            int origenCanc = totalProcesadosCanc + totalFallidosCanc; // <<=== calculado
 
-            // ====== Construir body ======
+            // ====== Construir body HTML ======
             StringBuilder body = new StringBuilder();
-            body.append("Resumen sincronización portados/cancelados\n\n");
+            body.append("<html><body style='font-family: monospace;'>");
+            body.append("Resumen sincronización portados/cancelados<br><br>");
 
             if (causa != null && !causa.isEmpty()) {
-                body.append("Causa: ").append(causa).append("\n\n");
+                body.append("Causa: ").append(causa).append("<br><br>");
             }
 
             // ====== Totales PORTADOS ======
-            body.append("Totales procesados (Portados)\n");
-            body.append("   - Origen archivo XML: ").append(origenPort).append("\n");
-            body.append("   - Insertados BD: ").append(res != null ? res.getTotalInsertados() : 0).append("\n");
-            body.append("   - Actualizados BD: ").append(res != null ? res.getTotalActualizados() : 0).append("\n");
-            body.append("   - Procesados BD (Insertados + Actualizados): ").append(totalProcesadosPort).append("\n");
-            body.append("   - Errores de estructura: ").append(errEstructuraPort).append("\n");
-            body.append("   - Errores de contenido (CSV): ").append(errCsvPort).append("\n");
-            body.append("   - Fallidos (no persistidos XML): ").append(fallidosXmlPort).append("\n");
-            body.append("   - Fallidos global: ").append(totalFallidosPort).append("\n\n");
+            body.append("<b>Totales procesados (Portados)</b><br>");
+            body.append("&nbsp;&nbsp;- Origen archivo XML: ").append(origenPort).append("<br>");
+            body.append("&nbsp;&nbsp;- Insertados BD: ").append(res != null ? res.getTotalInsertados() : 0).append("<br>");
+            body.append("&nbsp;&nbsp;- Actualizados BD: ").append(res != null ? res.getTotalActualizados() : 0).append("<br>");
+            body.append("&nbsp;&nbsp;- Procesados BD (Insertados + Actualizados): ").append(totalProcesadosPort).append("<br>");
+            body.append("&nbsp;&nbsp;- Errores de estructura: ").append(errEstructuraPort).append("<br>");
+            body.append("&nbsp;&nbsp;- Errores de contenido (CSV): ").append(errCsvPort).append("<br>");
+            body.append("&nbsp;&nbsp;- Fallidos (no persistidos XML): ").append(fallidosXmlPort).append("<br>");
+            body.append("&nbsp;&nbsp;- Fallidos global: ").append(totalFallidosPort).append("<br><br>");
 
             // ====== Totales CANCELADOS ======
-            body.append("Totales procesados (Cancelados)\n");
-            body.append("   - Origen archivo XML: ").append(origenCanc).append("\n");
-            body.append("   - Procesados BD (Cancelados efectivos): ").append(totalProcesadosCanc).append("\n");
-            body.append("   - Errores de estructura: ").append(errEstructuraCanc).append("\n");
-            body.append("   - Errores de contenido (CSV): ").append(errCsvCanc).append("\n");
-            body.append("   - Fallidos (no persistidos XML): ").append(fallidosXmlCanc).append("\n");
-            body.append("   - Fallidos global: ").append(totalFallidosCanc).append("\n\n");
+            body.append("<b>Totales procesados (Cancelados)</b><br>");
+            body.append("&nbsp;&nbsp;- Origen archivo XML: ").append(origenCanc).append("<br>");
+            body.append("&nbsp;&nbsp;- Procesados BD (Cancelados efectivos): ").append(totalProcesadosCanc).append("<br>");
+            body.append("&nbsp;&nbsp;- Errores de estructura: ").append(errEstructuraCanc).append("<br>");
+            body.append("&nbsp;&nbsp;- Errores de contenido (CSV): ").append(errCsvCanc).append("<br>");
+            body.append("&nbsp;&nbsp;- Fallidos (no persistidos XML): ").append(fallidosXmlCanc).append("<br>");
+            body.append("&nbsp;&nbsp;- Fallidos global: ").append(totalFallidosCanc).append("<br><br>");
 
             // ====== Rutas de archivos realmente generados ======
-            body.append("Ruta de archivos generados logs/xml:\n");
+            StringBuilder rutas = new StringBuilder();
+            if (logEstructuraPort.exists()) rutas.append("&nbsp;&nbsp;- ").append(logEstructuraPort.getAbsolutePath()).append("<br>");
+            if (logCsvPort.exists())        rutas.append("&nbsp;&nbsp;- ").append(logCsvPort.getAbsolutePath()).append("<br>");
+            if (xmlFallidosPort.exists())   rutas.append("&nbsp;&nbsp;- ").append(xmlFallidosPort.getAbsolutePath()).append("<br>");
+            if (logEstructuraCanc.exists()) rutas.append("&nbsp;&nbsp;- ").append(logEstructuraCanc.getAbsolutePath()).append("<br>");
+            if (logCsvCanc.exists())        rutas.append("&nbsp;&nbsp;- ").append(logCsvCanc.getAbsolutePath()).append("<br>");
+            if (xmlFallidosCanc.exists())   rutas.append("&nbsp;&nbsp;- ").append(xmlFallidosCanc.getAbsolutePath()).append("<br>");
 
-            if (logEstructuraPort.exists()) body.append("   - ").append(logEstructuraPort.getAbsolutePath()).append("\n");
-            if (logCsvPort.exists())        body.append("   - ").append(logCsvPort.getAbsolutePath()).append("\n");
-            if (xmlFallidosPort.exists())   body.append("   - ").append(xmlFallidosPort.getAbsolutePath()).append("\n");
-            if (logEstructuraCanc.exists()) body.append("   - ").append(logEstructuraCanc.getAbsolutePath()).append("\n");
-            if (logCsvCanc.exists())        body.append("   - ").append(logCsvCanc.getAbsolutePath()).append("\n");
-            if (xmlFallidosCanc.exists())   body.append("   - ").append(xmlFallidosCanc.getAbsolutePath()).append("\n");
+            if (rutas.length() > 0) {
+                body.append("Ruta de archivos generados logs/xml:<br>");
+                body.append(rutas);
+                body.append("<br>");
+            }
 
-            body.append("\nFin del reporte automático.\n");
+            body.append("Fin del reporte automático.<br>");
+            body.append("</body></html>");
 
             // ====== Archivo espejo en local ======
             if (localMode) {
@@ -1945,6 +1984,24 @@ public class PortabilidadService implements IPortabilidadService {
         }
     }
 
+
+
+    // Contar PortData en cualquier XML (para origen real)
+    private int contarPortDataXML(File xmlFile) {
+        int count = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(xmlFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String trimmed = line.trim();
+                if (trimmed.startsWith("<PortData") && !trimmed.startsWith("</PortData")) {
+                    count++;
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("No se pudo contar PortData en {}", xmlFile.getName(), e);
+        }
+        return count;
+    }
 
     // Estructura inválida: deduplicar por PortID
     private int contarErroresEstructura(File logFile) {
@@ -1999,9 +2056,9 @@ public class PortabilidadService implements IPortabilidadService {
         return count;
     }
 
-    private void generarArchivoEspejoCorreo(String subject, String body, String basePath, String fechaActualStr) {
+    private void generarArchivoEspejoCorreo(String subject, String bodyHtml, String basePath, String fechaActualStr) {
         try {
-            // Limpieza de la ruta base (quita espacios y saltos de línea)
+            // Validar basePath
             if (basePath == null || basePath.trim().isEmpty()) {
                 LOGGER.warn("Parametro basePath vacío o nulo, se usará directorio actual");
                 basePath = ".";
@@ -2019,17 +2076,21 @@ public class PortabilidadService implements IPortabilidadService {
                 }
             }
 
-            // Construir archivo dentro del directorio limpio
-            File mailLogFile = new File(dir, "correo_sincronizacion_" + fechaActualStr + ".txt");
+            // Archivo espejo en HTML
+            File mailLogFile = new File(dir, "correo_sincronizacion_" + fechaActualStr + ".html");
 
-            try (FileWriter fw = new FileWriter(mailLogFile, false);
-                 BufferedWriter bw = new BufferedWriter(fw)) {
-
-                bw.write("Asunto: " + subject + " | Host: " + getHostName() + "\n\n");
-                bw.write(body);
-
-                LOGGER.info("Copia física del correo generada en: {}", mailLogFile.getAbsolutePath());
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(mailLogFile, false))) {
+                // Encabezado HTML básico
+                bw.write("<!DOCTYPE html>\n");
+                bw.write("<html><head><meta charset='UTF-8'></head><body style='font-family: monospace;'>\n");
+                bw.write("<p><strong>Asunto:</strong> " + subject + " | Host: " + getHostName() + "</p>\n");
+                // Cuerpo del correo tal cual lo armaste en enviarMailSyncOkDetalle
+                bw.write(bodyHtml);
+                // Cierre HTML
+                bw.write("\n</body></html>");
             }
+
+            LOGGER.info("Copia física del correo generada en: {}", mailLogFile.getAbsolutePath());
 
         } catch (Exception e) {
             LOGGER.error("Error generando archivo espejo del correo", e);

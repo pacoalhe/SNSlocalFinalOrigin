@@ -88,7 +88,6 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
         String value = currentValue.toString().trim();
 
         if (currentNumero != null) {
-
             if ("PortID".equalsIgnoreCase(qName)) {
                 currentNumero.setPortId(value);
 
@@ -114,9 +113,11 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
                 currentNumero.setRcr(toBigDecimal(value));
 
             } else if ("DIDA".equalsIgnoreCase(qName)) {
+                // Opcional
                 currentNumero.setDida(toBigDecimal(value));
 
             } else if ("DCR".equalsIgnoreCase(qName)) {
+                // Opcional
                 currentNumero.setDcr(toBigDecimal(value));
 
             } else if ("ActionDate".equalsIgnoreCase(qName)) {
@@ -127,11 +128,11 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
                                 "$1-$2-$3 $4:$5:$6"
                         );
                         Timestamp ts = Timestamp.valueOf(formatted);
-                        currentNumero.setActionDate((Timestamp) ts); //fuerza a Timestamp
+                        currentNumero.setActionDate(ts);
                     }
                 } catch (Exception e) {
                     LOGGER.warn("ActionDate inválido: {}", value);
-                    currentNumero.setActionDate((Timestamp) null); //fuerza a Timestamp
+                    currentNumero.setActionDate((Timestamp) null);
                 }
 
             } else if ("PortData".equalsIgnoreCase(qName)) {
@@ -147,19 +148,128 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
                     }
                 } else {
                     invalidosXml++;
-                    LOGGER.warn("Registro Portado inválido descartado: {}", currentNumero);
+                    String msg = "Error: PortData #" + totalDeclarados +
+                            " descartado por contenido inválido en el bloque.";
+                    LOGGER.warn(msg + " Registro: {}", currentNumero);
+                    if (registrosInvalidosGlobal != null) {
+                        registrosInvalidosGlobal.add(msg);
+                    }
                 }
                 currentNumero = null;
 
+            } else if ("FolioID".equalsIgnoreCase(qName)) {
+                // No se usa en Portados → ignorar
+                LOGGER.debug("Etiqueta FolioID ignorada en Portados: {}", value);
+
             } else {
-                //String msg = "Etiqueta XML inesperada encontrada: <" + qName + "> con valor='" + value + "'";
-                //LOGGER.warn(msg);
-                //if (registrosInvalidosGlobal != null) registrosInvalidosGlobal.add(msg);
+                // Etiqueta inesperada dentro de PortData
+                String msg = "Error: PortData #" + totalDeclarados +
+                        " descartado por contenido inválido. Etiqueta inesperada: <" + qName + ">";
+                LOGGER.warn(msg);
+                if (registrosInvalidosGlobal != null) {
+                    registrosInvalidosGlobal.add(msg);
+                }
+            }
+        } else {
+            // Texto basura fuera de PortData
+            if (value != null && !value.isEmpty()) {
+                String msg = "Error: Texto basura fuera de PortData: '" + value + "'";
+                LOGGER.warn(msg);
+                if (registrosInvalidosGlobal != null) {
+                    registrosInvalidosGlobal.add(msg);
+                }
             }
         }
     }
 
-    /*@Override
+
+    // Conversión segura
+    private BigDecimal toBigDecimal(String value) {
+        try {
+            if (value != null && !value.isEmpty()) {
+                return new BigDecimal(value);
+            }
+        } catch (NumberFormatException e) {
+            LOGGER.warn("Valor no numérico para campo BigDecimal en Portados: '{}'", value);
+        }
+        return null;
+    }
+
+    /**
+     * Validación mínima conforme a la tabla PORT_NUM_PORTADO.
+     * Solo se permiten nulos en DIDA y DCR.
+     */
+    private boolean isRegistroValido(NumeroPortado np) {
+        return np != null &&
+                np.getPortId() != null && !np.getPortId().isEmpty() &&
+                np.getPortType() != null && !np.getPortType().isEmpty() &&
+                np.getAction() != null && !np.getAction().isEmpty() &&
+                np.getNumberFrom() != null && !np.getNumberFrom().isEmpty() &&
+                np.getNumberTo() != null && !np.getNumberTo().isEmpty() &&
+                np.getIsMpp() != null && !np.getIsMpp().isEmpty() &&
+                np.getRida() != null &&
+                np.getRcr() != null &&
+                np.getActionDate() != null;
+    }
+
+    private String toCsvRow(NumeroPortado np) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(safe(np.getPortId())).append("|")
+                .append(safe(np.getPortType())).append("|")
+                .append(safe(np.getAction())).append("|")
+                .append(safe(np.getNumberFrom())).append("|")
+                .append(safe(np.getNumberTo())).append("|")
+                .append(safe(np.getIsMpp())).append("|")
+                .append(safeBD(np.getRida())).append("|")
+                .append(safeBD(np.getRcr())).append("|")
+                .append(safeBD(np.getDida())).append("|")
+                .append(safeBD(np.getDcr())).append("|")
+                .append(safeDate(np.getActionDate()));
+        //return sb.toString();
+        String linea = sb.toString();
+
+        //Validación rápida: contar cuántos separadores trae
+        int pipes = linea.length() - linea.replace("|", "").length();
+        if (pipes < 10) {
+            LOGGER.warn("Línea CSV generada con {} columnas (esperado 11): {}",
+            pipes+1, linea);
+        } else if (totalGenerados < 5) {
+            // Solo para debug: loguear las primeras 5 filas válidas
+            //LOGGER.info("Fila CSV generada [{}]: {}", totalGenerados+1, linea);
+        }
+
+        return linea;
+    }
+
+    private String safe(String v) {
+        return v != null ? v : "";
+    }
+
+    private String safeBD(BigDecimal v) {
+        return v != null ? v.toString() : "";
+    }
+
+    private String safeDate(Timestamp ts) {
+        if (ts != null) {
+            return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(ts);
+        }
+        return "";
+    }
+
+    private List<String> registrosInvalidosGlobal;
+
+    public void setRegistrosInvalidosGlobal(List<String> registrosInvalidosGlobal) {
+        this.registrosInvalidosGlobal = registrosInvalidosGlobal;
+    }
+
+    // === Getters para validación externa ===
+    public int getTotalDeclarados() { return totalDeclarados; }
+    public int getTotalGenerados() { return totalGenerados; }
+    public int getInvalidosXml() { return invalidosXml; }
+
+}
+
+/*@Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
         String value = currentValue.toString().trim();
         String tag = qName.toLowerCase();
@@ -225,82 +335,6 @@ public class NumerosPortadosXmlParser extends DefaultHandler {
     }
 
      */
-
-    // Conversión segura
-    private BigDecimal toBigDecimal(String value) {
-        try {
-            if (value != null && !value.isEmpty()) {
-                return new BigDecimal(value);
-            }
-        } catch (NumberFormatException e) {
-            LOGGER.warn("Valor no numérico para campo BigDecimal en Portados: '{}'", value);
-        }
-        return null;
-    }
-
-    private boolean isRegistroValido(NumeroPortado np) {
-        return np != null &&
-                np.getPortId() != null && !np.getPortId().isEmpty() &&
-                np.getNumberFrom() != null && !np.getNumberFrom().isEmpty();
-    }
-
-    private String toCsvRow(NumeroPortado np) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(safe(np.getPortId())).append("|")
-                .append(safe(np.getPortType())).append("|")
-                .append(safe(np.getAction())).append("|")
-                .append(safe(np.getNumberFrom())).append("|")
-                .append(safe(np.getNumberTo())).append("|")
-                .append(safe(np.getIsMpp())).append("|")
-                .append(safeBD(np.getRida())).append("|")
-                .append(safeBD(np.getRcr())).append("|")
-                .append(safeBD(np.getDida())).append("|")
-                .append(safeBD(np.getDcr())).append("|")
-                .append(safeDate(np.getActionDate()));
-        //return sb.toString();
-        String linea = sb.toString();
-
-        //Validación rápida: contar cuántos separadores trae
-        int pipes = linea.length() - linea.replace("|", "").length();
-        if (pipes < 10) {
-            LOGGER.warn("Línea CSV generada con {} columnas (esperado 11): {}",
-                    pipes+1, linea);
-        } else if (totalGenerados < 5) {
-            // Solo para debug: loguear las primeras 5 filas válidas
-            LOGGER.info("Fila CSV generada [{}]: {}", totalGenerados+1, linea);
-        }
-
-        return linea;
-    }
-
-    private String safe(String v) {
-        return v != null ? v : "";
-    }
-
-    private String safeBD(BigDecimal v) {
-        return v != null ? v.toString() : "";
-    }
-
-    private String safeDate(Timestamp ts) {
-        if (ts != null) {
-            return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(ts);
-        }
-        return "";
-    }
-
-    private List<String> registrosInvalidosGlobal;
-
-    public void setRegistrosInvalidosGlobal(List<String> registrosInvalidosGlobal) {
-        this.registrosInvalidosGlobal = registrosInvalidosGlobal;
-    }
-
-    // === Getters para validación externa ===
-    public int getTotalDeclarados() { return totalDeclarados; }
-    public int getTotalGenerados() { return totalGenerados; }
-    public int getInvalidosXml() { return invalidosXml; }
-
-}
-
 
 
 

@@ -573,7 +573,7 @@ public class Scheduler implements IScheduler {
      */
     private boolean testMode = true; // TODO FJAH: Cambiar a true para habilitar pruebas
 
-    @Schedule(hour = "12", minute = "06", persistent = false)
+    @Schedule(hour = "17", minute = "20", persistent = false)
 
     void timeoutPruebas() {
         LOGGER.info("Inicio del timer timeoutPruebas");
