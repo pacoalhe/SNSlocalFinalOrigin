@@ -440,7 +440,7 @@ public class PortabilidadService implements IPortabilidadService {
                 resultadoFallback.setProcesadasTs(new Timestamp(System.currentTimeMillis()));
                 resultadoFallback.setActionDateLoteDate(new Date());
                 resultadoFallback.setTotalErrorEstructura(registrosInvalidos.size());
-                resultadoFallback.setTotalOrigen(0); // 🚫 origen inválido
+                resultadoFallback.setTotalOrigen(0); //origen inválido
                 return resultadoFallback;
             }
 
@@ -583,14 +583,23 @@ public class PortabilidadService implements IPortabilidadService {
     }
 
     /**
-     * Genera un archivo .log con los registros inválidos de estructura.
-     * Solo se genera cuando hay errores.
-     * Si no hay errores, no se crea ningún archivo.
+     * Auxiliar para registrar errores de estructura.
+     * Guarda el mensaje requerido y el bloque/linea problemática como contexto.
      */
+    private void invalidEstructura(String mensaje, String bloque, List<String> registrosInvalidos) {
+        // Log técnico para depuración
+        LOGGER.error("{} {}", mensaje, bloque);
+
+        if (registrosInvalidos != null) {
+            registrosInvalidos.add(mensaje); // mensaje requerido
+            if (bloque != null && !bloque.trim().isEmpty()) {
+                registrosInvalidos.add(bloque.trim()); // bloque o linea problemática
+            }
+        }
+    }
 
     private void generarLogInvalidos(List<String> registrosInvalidos, String Origen) {
         try {
-            // Si no hay errores, no generamos nada
             if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
                 LOGGER.info("No se generó archivo de inválidos para {}: no se detectaron errores de estructura", Origen);
                 return;
@@ -607,16 +616,35 @@ public class PortabilidadService implements IPortabilidadService {
                 LOGGER.warn("Directorio {} no existe, verificar configuración de parámetros", basePath);
             }
 
-            // Nombre con solo la fecha
             String fechaStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
             String fileName = "port_num_" + Origen + "_XML_estructuraInvalidos_" + fechaStr + ".log";
-
             File logFile = new File(dir, fileName);
 
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(logFile))) {
+            BufferedWriter bw = null;
+            try {
+                bw = new BufferedWriter(new FileWriter(logFile));
+                bw.write("==== Errores de estructura detectados en " + Origen + " ====\n\n");
+
                 for (String linea : registrosInvalidos) {
-                    bw.write(linea);
-                    bw.newLine();
+                    if (linea.startsWith("Error")) {
+                        // Mensaje del error
+                        bw.write(linea);
+                        bw.newLine();
+                    } else if (linea.startsWith("[")) {
+                        // Descartar basura tipo Arrays.toString(...)
+                        LOGGER.warn("Descartando fila inválida con formato Arrays.toString: {}", linea);
+                        continue;
+                    } else {
+                        // Bloque asociado al error
+                        bw.write(">> Contexto:\n");
+                        bw.write(linea);
+                        bw.newLine();
+                        bw.newLine();
+                    }
+                }
+            } finally {
+                if (bw != null) {
+                    bw.close();
                 }
             }
 
@@ -625,6 +653,66 @@ public class PortabilidadService implements IPortabilidadService {
             LOGGER.error("Error al generar archivo de inválidos", e);
         }
     }
+
+    /**
+     * Genera un archivo .log con los registros inválidos de estructura.
+     * Solo se genera cuando hay errores.
+     * Si no hay errores, no se crea ningún archivo.
+     */
+
+    /*
+    private void generarLogInvalidos(List<String> registrosInvalidos, String Origen) {
+        try {
+            if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
+                LOGGER.info("No se generó archivo de inválidos para {}: no se detectaron errores de estructura", Origen);
+                return;
+            }
+
+            String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
+            if (StringUtils.isEmpty(basePath)) {
+                LOGGER.warn("Parametro port_XMLLOG_path.portados no definido, usando directorio actual");
+                basePath = ".";
+            }
+
+            File dir = new File(basePath);
+            if (!dir.exists()) {
+                LOGGER.warn("Directorio {} no existe, verificar configuración de parámetros", basePath);
+            }
+
+            String fechaStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
+            String fileName = "port_num_" + Origen + "_XML_estructuraInvalidos_" + fechaStr + ".log";
+            File logFile = new File(dir, fileName);
+
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(logFile))) {
+                bw.write("==== Errores de estructura detectados en " + Origen + " ====\n\n");
+
+                for (int i = 0; i < registrosInvalidos.size(); i++) {
+                    String linea = registrosInvalidos.get(i);
+                    bw.write(linea);
+                    bw.newLine();
+
+                    // Si es error y la siguiente línea no es otro error → la tratamos como bloque/línea inválida
+                    if (linea.startsWith("Error:") && i + 1 < registrosInvalidos.size()) {
+                        String posibleBloque = registrosInvalidos.get(i + 1);
+                        if (!posibleBloque.startsWith("Error:")) {
+                            bw.write(">> Contexto:\n");
+                            bw.write(posibleBloque);
+                            bw.newLine();
+                            bw.newLine();
+                            i++; // saltamos el bloque ya escrito
+                        }
+                    }
+                }
+            }
+
+            LOGGER.info("Archivo de inválidos generado: {}", logFile.getAbsolutePath());
+        } catch (Exception e) {
+            LOGGER.error("Error al generar archivo de inválidos", e);
+        }
+    }
+
+     */
+
 
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public EstatusSincronizacion parsePortabilidadManual(File tmpPorted, EstatusSincronizacion status) throws Exception {
@@ -896,9 +984,219 @@ public class PortabilidadService implements IPortabilidadService {
             String line;
             StringBuilder portDataBuffer = null;
             int portDataIndex = 0;
+            boolean portDataMalFormado = false;
 
             while ((line = br.readLine()) != null) {
                 String trimmed = line.trim();
+
+                // --- Cabecera raíz ---
+                if (trimmed.startsWith("<?xml")) {
+                    sanitized.append(line).append("\n");
+                    continue;
+                }
+                if (trimmed.startsWith("<NPCData")) {
+                    sanitized.append(line).append("\n");
+                    headerOk = true;
+                    continue;
+                }
+                if (trimmed.startsWith("</NPCData")) {
+                    sanitized.append(line).append("\n");
+                    footerOk = true;
+                    break;
+                }
+
+                // --- Cabecera interna ---
+                if (trimmed.startsWith("<MessageName")) {
+                    if (trimmed.matches("<MessageName>.*</MessageName>")) {
+                        messageNameOk = true;
+                    } else {
+                        invalidEstructura("Error crítico: Etiqueta <MessageName> mal formada.", line, registrosInvalidos);
+                    }
+                    sanitized.append(line).append("\n");
+                    continue;
+                }
+
+                if (trimmed.startsWith("<Timestamp")) {
+                    if (trimmed.matches("<Timestamp>\\d{14}</Timestamp>")) {
+                        timestampOk = true;
+                    } else {
+                        invalidEstructura("Error crítico: <Timestamp> inválido o mal formado.", line, registrosInvalidos);
+                    }
+                    sanitized.append(line).append("\n");
+                    continue;
+                }
+
+                if (trimmed.startsWith("<NumberOfMessages")) {
+                    try {
+                        expectedNumMessages = Integer.parseInt(trimmed.replaceAll("\\D+", ""));
+                        numMessagesOk = true;
+                    } catch (Exception e) {
+                        invalidEstructura("Error crítico: No se pudo leer <NumberOfMessages>", line, registrosInvalidos);
+                    }
+                    sanitized.append(line).append("\n");
+                    continue;
+                }
+
+                if (trimmed.startsWith("<PortDataList")) {
+                    sanitized.append(line).append("\n");
+                    portDataListOpen = true;
+                    continue;
+                }
+                if (trimmed.startsWith("</PortDataList")) {
+                    sanitized.append(line).append("\n");
+                    portDataListClose = true;
+                    continue;
+                }
+
+                // --- PortData open ---
+                if (trimmed.startsWith("<PortData")) {
+                    // Si ya había un PortData abierto sin cierre, lo descartamos como inválido
+                    if (portDataBuffer != null) {
+                        portDataIndex++;
+                        String bloqueIncompleto = portDataBuffer.toString();
+                        invalidEstructura("Error: PortData #" + portDataIndex +
+                                " descartado por apertura sin cierre previo.", bloqueIncompleto, registrosInvalidos);
+                        portDataBuffer = null;
+                        portDataMalFormado = false;
+                    }
+
+                    portDataIndex++;
+                    portDataBuffer = new StringBuilder();
+                    portDataBuffer.append(line).append("\n");
+
+                    if (!trimmed.endsWith(">")) {
+                        portDataMalFormado = true;
+                    }
+                    continue;
+                }
+
+                // --- PortData close ---
+                if (trimmed.startsWith("</PortData")) {
+                    if (portDataBuffer != null) {
+                        portDataBuffer.append(line).append("\n");
+
+                        if (!trimmed.endsWith(">")) {
+                            portDataMalFormado = true;
+                        }
+
+                        countedPortData++;
+                        String bloque = portDataBuffer.toString();
+
+                        if (portDataMalFormado) {
+                            invalidEstructura("Error: PortData #" + portDataIndex +
+                                    " descartado por apertura/cierre mal formada (faltaba '>').", bloque, registrosInvalidos);
+                        } else if (validatePortDataBlock(bloque, portDataIndex, registrosInvalidos, isCancelados)) {
+                            sanitized.append(bloque);
+                        } else {
+                            invalidEstructura("Error: PortData #" + portDataIndex +
+                                    " descartado por bloque incompleto o basura intermedia.", bloque, registrosInvalidos);
+                        }
+
+                        portDataBuffer = null;
+                        portDataMalFormado = false;
+                    } else {
+                        // cierre sin apertura
+                        portDataIndex++;
+                        invalidEstructura("Error: PortData #" + portDataIndex +
+                                " descartado por cierre sin apertura válida.", line, registrosInvalidos);
+                    }
+                    continue;
+                }
+
+                // --- Dentro de PortData ---
+                if (portDataBuffer != null) {
+                    portDataBuffer.append(line).append("\n");
+                } else {
+                    if (!trimmed.isEmpty()) {
+                        invalidEstructura("Error: Texto basura fuera de PortData.", line, registrosInvalidos);
+                    }
+                }
+            }
+
+            // --- Si quedó un PortData abierto al final ---
+            if (portDataBuffer != null) {
+                String bloqueIncompleto = portDataBuffer.toString();
+                invalidEstructura("Error: PortData #" + portDataIndex +
+                        " descartado por falta de cierre </PortData>.", bloqueIncompleto, registrosInvalidos);
+            }
+        }
+
+        // --- Validación global crítica ---
+        if (!headerOk) {
+            invalidEstructura("Error crítico: Falta apertura <NPCData>.", null, registrosInvalidos);
+            return null;
+        }
+        if (!footerOk) {
+            invalidEstructura("Error crítico: Falta cierre </NPCData>.", null, registrosInvalidos);
+            return null;
+        }
+        if (!messageNameOk) {
+            invalidEstructura("Error crítico: Falta o mal formada la etiqueta <MessageName>.", null, registrosInvalidos);
+            return null;
+        }
+        if (!timestampOk) {
+            invalidEstructura("Error crítico: Falta o mal formado el <Timestamp>.", null, registrosInvalidos);
+            return null;
+        }
+        if (!numMessagesOk) {
+            invalidEstructura("Error crítico: Falta o mal formado <NumberOfMessages>.", null, registrosInvalidos);
+            return null;
+        }
+        if (!portDataListOpen) {
+            invalidEstructura("Error crítico: Falta apertura <PortDataList>.", null, registrosInvalidos);
+            return null;
+        }
+        if (!portDataListClose) {
+            invalidEstructura("Error crítico: Falta cierre </PortDataList>.", null, registrosInvalidos);
+            return null;
+        }
+
+        if (expectedNumMessages >= 0 && expectedNumMessages != countedPortData) {
+            String diffMsg = "Error: Registros encontrados " + countedPortData +
+                    " difiere de lo señalado en el XML (" + expectedNumMessages + ")";
+            invalidEstructura(diffMsg, null, registrosInvalidos);
+        }
+
+        return new InputSource(new StringReader(sanitized.toString()));
+    }
+
+
+   /*
+    private InputSource sanitizeAndValidateXml(final File original,
+                                               final List<String> registrosInvalidos,
+                                               final boolean isCancelados) throws IOException {
+
+        final StringBuilder sanitized = new StringBuilder();
+        boolean headerOk = false;
+        boolean footerOk = false;
+        boolean messageNameOk = false;
+        boolean timestampOk = false;
+        boolean numMessagesOk = false;
+        boolean portDataListOpen = false;
+        boolean portDataListClose = false;
+
+        int expectedNumMessages = -1;
+        int countedPortData = 0;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(original))) {
+            String line;
+            StringBuilder portDataBuffer = null;
+            int portDataIndex = 0;
+
+            while ((line = br.readLine()) != null) {
+                String trimmed = line.trim();
+
+                // --- Validación global de etiquetas mal formadas ---
+                if ((trimmed.startsWith("<") || trimmed.startsWith("</")) && !trimmed.endsWith(">")) {
+                    invalidEstructura("Error: Etiqueta mal formada detectada", line, registrosInvalidos);
+                    if (portDataBuffer != null) {
+                        portDataIndex++;
+                        invalidEstructura("PortData #" + portDataIndex +
+                                " descartado por contener etiqueta mal formada.", portDataBuffer.toString(), registrosInvalidos);
+                        portDataBuffer = null;
+                    }
+                    continue;
+                }
 
                 // --- Cabecera raíz ---
                 if (trimmed.startsWith("<?xml")) {
@@ -921,7 +1219,7 @@ public class PortabilidadService implements IPortabilidadService {
                     if (trimmed.matches("<MessageName>.*</MessageName>")) {
                         messageNameOk = true;
                     } else {
-                        registrosInvalidos.add("Error crítico: Etiqueta <MessageName> mal formada.");
+                        invalidEstructura("Error crítico: Etiqueta <MessageName> mal formada.", line, registrosInvalidos);
                     }
                     sanitized.append(line).append("\n");
                     continue;
@@ -931,7 +1229,7 @@ public class PortabilidadService implements IPortabilidadService {
                     if (trimmed.matches("<Timestamp>\\d{14}</Timestamp>")) { // yyyyMMddHHmmss
                         timestampOk = true;
                     } else {
-                        registrosInvalidos.add("Error crítico: <Timestamp> inválido o mal formado.");
+                        invalidEstructura("Error crítico: <Timestamp> inválido o mal formado.", line, registrosInvalidos);
                     }
                     sanitized.append(line).append("\n");
                     continue;
@@ -942,7 +1240,7 @@ public class PortabilidadService implements IPortabilidadService {
                         expectedNumMessages = Integer.parseInt(trimmed.replaceAll("\\D+", ""));
                         numMessagesOk = true;
                     } catch (Exception e) {
-                        registrosInvalidos.add("Error crítico: No se pudo leer <NumberOfMessages>");
+                        invalidEstructura("Error crítico: No se pudo leer <NumberOfMessages>", line, registrosInvalidos);
                     }
                     sanitized.append(line).append("\n");
                     continue;
@@ -976,13 +1274,16 @@ public class PortabilidadService implements IPortabilidadService {
                         String bloque = portDataBuffer.toString();
                         if (validatePortDataBlock(bloque, portDataIndex, registrosInvalidos, isCancelados)) {
                             sanitized.append(bloque); // válido
+                        } else {
+                            invalidEstructura("Error: PortData #" + portDataIndex +
+                                    " descartado por bloque incompleto o basura intermedia.", bloque, registrosInvalidos);
                         }
                         portDataBuffer = null;
                     } else {
                         // cierre sin apertura
                         portDataIndex++;
-                        registrosInvalidos.add("Error: PortData #" + portDataIndex +
-                                " descartado por estructura inválida en la apertura/cierre del bloque.");
+                        invalidEstructura("Error: PortData #" + portDataIndex +
+                                " descartado por estructura inválida en la apertura/cierre del bloque.", line, registrosInvalidos);
                     }
                     continue;
                 }
@@ -993,7 +1294,7 @@ public class PortabilidadService implements IPortabilidadService {
                 } else {
                     // Texto fuera de PortData pero no cabecera → basura real
                     if (!trimmed.isEmpty()) {
-                        registrosInvalidos.add("Error: Texto basura fuera de PortData.");
+                        invalidEstructura("Error: Texto basura fuera de PortData.", line, registrosInvalidos);
                     }
                 }
             }
@@ -1001,45 +1302,48 @@ public class PortabilidadService implements IPortabilidadService {
 
         // --- Validación global crítica ---
         if (!headerOk) {
-            registrosInvalidos.add(0, "Error crítico: Falta apertura <NPCData>.");
+            invalidEstructura("Error crítico: Falta apertura <NPCData>.", null, registrosInvalidos);
             return null;
         }
         if (!footerOk) {
-            registrosInvalidos.add(0, "Error crítico: Falta cierre </NPCData>.");
+            invalidEstructura("Error crítico: Falta cierre </NPCData>.", null, registrosInvalidos);
             return null;
         }
         if (!messageNameOk) {
-            registrosInvalidos.add(0, "Error crítico: Falta o mal formada la etiqueta <MessageName>.");
+            invalidEstructura("Error crítico: Falta o mal formada la etiqueta <MessageName>.", null, registrosInvalidos);
             return null;
         }
         if (!timestampOk) {
-            registrosInvalidos.add(0, "Error crítico: Falta o mal formado el <Timestamp>.");
+            invalidEstructura("Error crítico: Falta o mal formado el <Timestamp>.", null, registrosInvalidos);
             return null;
         }
         if (!numMessagesOk) {
-            registrosInvalidos.add(0, "Error crítico: Falta o mal formado <NumberOfMessages>.");
+            invalidEstructura("Error crítico: Falta o mal formado <NumberOfMessages>.", null, registrosInvalidos);
             return null;
         }
         if (!portDataListOpen) {
-            registrosInvalidos.add(0, "Error crítico: Falta apertura <PortDataList>.");
+            invalidEstructura("Error crítico: Falta apertura <PortDataList>.", null, registrosInvalidos);
             return null;
         }
         if (!portDataListClose) {
-            registrosInvalidos.add(0, "Error crítico: Falta cierre </PortDataList>.");
+            invalidEstructura("Error crítico: Falta cierre </PortDataList>.", null, registrosInvalidos);
             return null;
         }
 
-        // Validación de conteo de mensajes → mensaje se inserta al inicio
+        // Validación de conteo de mensajes
         if (expectedNumMessages >= 0 && expectedNumMessages != countedPortData) {
             String diffMsg = "Error: Registros encontrados " + countedPortData +
                     " difiere de lo señalado en el XML (" + expectedNumMessages + ")";
-            registrosInvalidos.add(0, diffMsg);
+            invalidEstructura(diffMsg, null, registrosInvalidos);
         }
 
         // Generamos InputSource solo si pasó validación completa
         String sanitizedXml = sanitized.toString();
         return new InputSource(new StringReader(sanitizedXml));
     }
+
+    */
+
 
 
 
@@ -1063,14 +1367,14 @@ public class PortabilidadService implements IPortabilidadService {
         List<String> expectedPortados = Arrays.asList(
                 "PortID", "PortType", "Action",
                 "NumberRanges", "NumberRange", "NumberFrom", "NumberTo", "isMPP",
-                "RIDA", "RCR", "DIDA", "DCR", "ActionDate"
+                "RIDA", "RCR", "ActionDate"
         );
 
         // Tags obligatorios para CANCELADOS
         List<String> expectedCancelados = Arrays.asList(
                 "PortID", "FolioID", "PortType", "Action",
                 "NumberRanges", "NumberRange", "NumberFrom", "NumberTo", "isMPP",
-                "RIDA", "RCR", "DIDA", "DCR",
+                "RIDA", "RCR",
                 "AssigneeIDA", "AssigneeCR", "ActionDate"
         );
 

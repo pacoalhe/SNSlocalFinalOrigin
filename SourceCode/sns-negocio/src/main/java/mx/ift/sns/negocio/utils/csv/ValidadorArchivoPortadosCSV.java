@@ -490,121 +490,127 @@ public class ValidadorArchivoPortadosCSV {
     }
 
     private NumeroPortado mapeaRowANumeroPortado(String[] valores, List<String> registrosInvalidos) {
-        // Validación previa
+        // Validación previa: columnas mínimas
         if (valores == null || valores.length < 11) {
-            String msg = "Error mapeando fila CSV: Fila inválida en CSV: esperado 11 columnas, recibidas "
-                    + (valores != null ? valores.length : -1) + " Contenido=" + Arrays.toString(valores);
-            LOGGER.error(msg);
-            if (registrosInvalidos != null) registrosInvalidos.add(msg);
-            return null;
+            return invalid("Fila inválida en CSV: esperado 11 columnas, recibidas "
+                    + (valores != null ? valores.length : -1), valores, registrosInvalidos);
         }
 
         NumeroPortado num = new NumeroPortado();
 
         try {
-            // === Sanitizar valores para evitar símbolos raros ($%&/ etc.) ===
-            for (int i = 0; i < valores.length; i++) {
-                if (valores[i] != null) {
-                    valores[i] = valores[i].replaceAll("[^0-9A-Za-z@\\-:\\.]", "").trim();
-                }
+            // ==== Validación de longitudes según BD ====
+            if (valores[0] != null && valores[0].length() > 22) {
+                return invalid("PortID demasiado largo (" + valores[0].length() + " > 22)", valores, registrosInvalidos);
+            }
+            if (valores[1] != null && valores[1].length() > 1) {
+                return invalid("PortType demasiado largo (" + valores[1].length() + " > 1)", valores, registrosInvalidos);
+            }
+            if (valores[2] != null && valores[2].length() > 20) {
+                return invalid("Action demasiado largo (" + valores[2].length() + " > 20)", valores, registrosInvalidos);
+            }
+            if (valores[3] != null && valores[3].length() > 10) {
+                return invalid("NumberFrom demasiado largo (" + valores[3].length() + " > 10)", valores, registrosInvalidos);
+            }
+            if (valores[4] != null && valores[4].length() > 20) {
+                return invalid("NumberTo demasiado largo (" + valores[4].length() + " > 20)", valores, registrosInvalidos);
+            }
+            if (valores[5] != null && valores[5].length() > 1) {
+                return invalid("isMPP demasiado largo (" + valores[5].length() + " > 1)", valores, registrosInvalidos);
             }
 
-            // === Validar longitudes antes de mapear ===
-            if (valores[0].length() > 22) return invalid("Error mapeando fila CSV: PORTID demasiado largo", valores, registrosInvalidos);
-            if (valores[1].length() != 1) return invalid("Error mapeando fila CSV: PORTTYPE inválido", valores, registrosInvalidos);
-            if (valores[2].length() > 20) return invalid("Error mapeando fila CSV: ACTION demasiado largo", valores, registrosInvalidos);
-            if (valores[3].length() > 10) return invalid("Error mapeando fila CSV: NUMBERFROM demasiado largo", valores, registrosInvalidos);
-            if (valores[4].length() > 20) return invalid("Error mapeando fila CSV: NUMBERTO demasiado largo", valores, registrosInvalidos);
-            if (valores[5].length() != 1) return invalid("Error mapeando fila CSV: ISMPP inválido (longitud != 1)", valores, registrosInvalidos);
-            if (valores[6].length() > 3 || valores[7].length() > 3) return invalid("Error mapeando fila CSV: RIDA/RCR fuera de rango (max 3 dígitos)", valores, registrosInvalidos);
-            if (valores[8].length() > 3 || valores[9].length() > 3) return invalid("Error mapeando fila CSV: DIDA/DCR fuera de rango (max 3 dígitos)", valores, registrosInvalidos);
-
-            // === Mapear campos ===
+            // ==== Seteo de campos ====
             num.setPortId(StringUtils.trim(valores[0]));
             num.setPortType(StringUtils.trim(valores[1]));
-
-            // Validar ACTION permitido
-            //String action = StringUtils.trim(valores[2]);
-            //if (!("Port".equalsIgnoreCase(action) || "Reverse".equalsIgnoreCase(action) || "Delete".equalsIgnoreCase(action))) {
-            //    return invalid("Error mapeando fila CSV: ACTION inválido: " + action, valores, registrosInvalidos);
-            //}
-            //num.setAction(action);
             num.setAction(StringUtils.trim(valores[2]));
-
             num.setNumberFrom(StringUtils.trim(valores[3]));
             num.setNumberTo(StringUtils.trim(valores[4]));
-
-            // Validar ISMPP permitido
-            //String isMpp = StringUtils.trim(valores[5]);
-            //if (!(isMpp.equalsIgnoreCase("N") || isMpp.equalsIgnoreCase("Y"))) {
-            //    return invalid("Error mapeando fila CSV: ISMPP inválido: " + isMpp, valores, registrosInvalidos);
-            //}
-            //num.setIsMpp(isMpp);
             num.setIsMpp(StringUtils.trim(valores[5]));
 
-            // === Validar numéricos ===
-            if (!isNumeric(valores[6]) || !isNumeric(valores[7]) ||
+            // ==== Validar RIDA, RCR, DIDA, DCR ====
+            if (!isNumeric(valores[6]) ||
+                    !isNumeric(valores[7]) ||
                     (!"null".equalsIgnoreCase(valores[8]) && !isNumeric(valores[8])) ||
                     (!"null".equalsIgnoreCase(valores[9]) && !isNumeric(valores[9]))) {
-                return invalid("Error mapeando fila CSV: valores no numéricos en RIDA/RCR/DIDA/DCR ", valores, registrosInvalidos);
+                return invalid("Valores no numéricos en RIDA/RCR/DIDA/DCR", valores, registrosInvalidos);
             }
 
-            // Asignar numéricos
+            // ==== Validación de rango numérico (NUMBER(3,0)) ====
+            if (valores[6] != null && valores[6].length() > 3) {
+                return invalid("RIDA fuera de rango (" + valores[6] + " > 3 dígitos)", valores, registrosInvalidos);
+            }
+            if (valores[7] != null && valores[7].length() > 3) {
+                return invalid("RCR fuera de rango (" + valores[7] + " > 3 dígitos)", valores, registrosInvalidos);
+            }
+            if (valores[8] != null && !"null".equalsIgnoreCase(valores[8]) && valores[8].length() > 3) {
+                return invalid("DIDA fuera de rango (" + valores[8] + " > 3 dígitos)", valores, registrosInvalidos);
+            }
+            if (valores[9] != null && !"null".equalsIgnoreCase(valores[9]) && valores[9].length() > 3) {
+                return invalid("DCR fuera de rango (" + valores[9] + " > 3 dígitos)", valores, registrosInvalidos);
+            }
+
+            // ==== Si son válidos, convertir ====
             num.setRida(new BigDecimal(valores[6]));
             num.setRcr(new BigDecimal(valores[7]));
             num.setDida(!"null".equalsIgnoreCase(valores[8]) ? new BigDecimal(valores[8]) : null);
             num.setDcr(!"null".equalsIgnoreCase(valores[9]) ? new BigDecimal(valores[9]) : null);
 
-            // === Parsear ActionDate ===
+            // ==== Parsear ActionDate ====
             String rawDate = StringUtils.trim(valores[10]);
             if (StringUtils.isNotEmpty(rawDate)) {
                 Date parsed = null;
                 try {
-                    if (rawDate.matches("\\d{8}")) {
-                        parsed = ACTIONDATE_FORMAT_COMPACT.parse(rawDate);
-                    } else if (rawDate.matches("\\d{4}-\\d{2}-\\d{2}.*")) {
+                    parsed = ACTIONDATE_FORMAT_COMPACT.parse(rawDate); // yyyyMMddHHmmss
+                } catch (ParseException e1) {
+                    try {
+                        parsed = ACTIONDATE_FORMAT_EXTENDED.parse(rawDate); // yyyy-MM-dd HH:mm:ss
+                    } catch (ParseException e2) {
                         try {
-                            parsed = ACTIONDATE_FORMAT_EXTENDED.parse(rawDate);
-                        } catch (ParseException e2) {
                             String sanitized = rawDate.replace("T", " ").split("\\.")[0];
                             parsed = ACTIONDATE_FORMAT_EXTENDED.parse(sanitized);
+                        } catch (ParseException ignored) {
+                            return invalid("ActionDate inválido: " + rawDate, valores, registrosInvalidos);
                         }
-                    } else {
-                        throw new ParseException("Formato inválido ActionDate=" + rawDate, 0);
                     }
-                } catch (Exception e) {
-                    return invalid("Error mapeando fila CSV: ActionDate inválido: " + rawDate, valores, registrosInvalidos);
                 }
                 num.setActionDate(new Timestamp(parsed.getTime()));
             } else {
-                return invalid("Error mapeando fila CSV: ActionDate vacío", valores, registrosInvalidos);
+                return invalid("ActionDate vacío", valores, registrosInvalidos);
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error inesperado mapeando fila CSV: {}", Arrays.toString(valores), e);
-            if (registrosInvalidos != null) registrosInvalidos.add("Error mapeando fila CSV: " + Arrays.toString(valores));
-            return null;
+            return invalid("Error inesperado", valores, registrosInvalidos);
         }
 
         return num;
     }
 
     /**
-     * Helper para loggear y devolver null
+     * Método auxiliar para marcar fila inválida en formato estándar.
+     * Guarda primero el mensaje de error y después la fila CSV limpia.
      */
-    private NumeroPortado invalid(String causa, String[] valores, List<String> registrosInvalidos) {
-        String msg = causa + " fila=" + Arrays.toString(valores);
-        LOGGER.error(msg);
-        if (registrosInvalidos != null) registrosInvalidos.add(msg);
+    private NumeroPortado invalid(String motivo, String[] valores, List<String> registrosInvalidos) {
+        String msg = "Error mapeando fila CSV: " + motivo;
+        // Log técnico detallado (no afecta al archivo final)
+        LOGGER.error("{} Contenido={}", msg, Arrays.toString(valores));
+
+        if (registrosInvalidos != null) {
+            registrosInvalidos.add(msg); // encabezado del error
+            if (valores != null && valores.length > 0) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < valores.length; i++) {
+                    if (i > 0) sb.append("|");
+                    sb.append(valores[i] != null ? valores[i].trim() : "");
+                }
+                registrosInvalidos.add(sb.toString()); // fila limpia como CSV
+            }
+        }
         return null;
     }
 
-
     /**
      * Paso 6: Genera un archivo .log con los registros inválidos de contenido CSV (Portados).
-     * idéntico a la estructura del insumo original de PORTADOS.
-     * Solo se genera cuando hay errores.
-     * Si no hay errores, no se crea ningún archivo.
+     * Con filtro para descartar duplicados tipo [col0, col1, ...]
      */
     private void generarLogInvalidos(List<String> registrosInvalidos) {
         if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
@@ -624,14 +630,51 @@ public class ValidadorArchivoPortadosCSV {
                 LOGGER.warn("Directorio {} no existe, verificar configuración de parámetros", basePath);
             }
 
-            // Nombre con solo la fecha
             String fechaStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
             File logFile = new File(dir, "port_num_portados_CSVinvalidos_" + fechaStr + ".log");
 
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(logFile))) {
-                for (String linea : registrosInvalidos) {
-                    bw.write(linea);
-                    bw.newLine();
+            BufferedWriter bw = null;
+            try {
+                bw = new BufferedWriter(new FileWriter(logFile));
+                bw.write("==== Registros inválidos detectados en portados ====\n\n");
+
+                for (String row : registrosInvalidos) {
+                    if (row.startsWith("Error mapeando")) {
+                        // Encabezado del error, fuera del PortData
+                        bw.write(row);
+                        bw.newLine();
+                    } else if (row.startsWith("[")) {
+                        // Evitar filas en formato Arrays.toString(...) que causan duplicados
+                        LOGGER.warn("Descartando fila inválida con formato Arrays.toString: {}", row);
+                        continue;
+                    } else {
+                        // Registro CSV → mostrar en formato PortData
+                        String[] cols = row.split("\\|", -1);
+
+                        bw.write("<PortData>\n");
+                        bw.write("   <PortID>"     + safe(cols,0)  + "</PortID>\n");
+                        bw.write("   <PortType>"   + safe(cols,1)  + "</PortType>\n");
+                        bw.write("   <Action>"     + safe(cols,2)  + "</Action>\n");
+
+                        bw.write("   <NumberRanges>\n");
+                        bw.write("      <NumberRange>\n");
+                        bw.write("         <NumberFrom>" + safe(cols,3) + "</NumberFrom>\n");
+                        bw.write("         <NumberTo>"   + safe(cols,4) + "</NumberTo>\n");
+                        bw.write("         <isMPP>"      + safe(cols,5) + "</isMPP>\n");
+                        bw.write("      </NumberRange>\n");
+                        bw.write("   </NumberRanges>\n");
+
+                        bw.write("   <RIDA>"      + safe(cols,6)  + "</RIDA>\n");
+                        bw.write("   <RCR>"       + safe(cols,7)  + "</RCR>\n");
+                        bw.write("   <DIDA>"      + safe(cols,8)  + "</DIDA>\n");
+                        bw.write("   <DCR>"       + safe(cols,9)  + "</DCR>\n");
+                        bw.write("   <ActionDate>"+ safe(cols,10) + "</ActionDate>\n");
+                        bw.write("</PortData>\n\n");
+                    }
+                }
+            } finally {
+                if (bw != null) {
+                    bw.close();
                 }
             }
 
@@ -639,6 +682,11 @@ public class ValidadorArchivoPortadosCSV {
         } catch (Exception e) {
             LOGGER.error("Error al generar archivo de inválidos CSV", e);
         }
+    }
+
+    // Utilidad segura para evitar IndexOutOfBounds
+    private String safe(String[] cols, int idx) {
+        return (cols != null && idx < cols.length && cols[idx] != null) ? cols[idx].trim() : "";
     }
 
     /**

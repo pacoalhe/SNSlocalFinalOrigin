@@ -127,7 +127,7 @@ public class ValidadorArchivoDeletedCSV {
         String actionDateLote = null;
         String timestampOriginal = null;
 
-        List<String> registrosInvalidos = new ArrayList<>();
+        List<RegistroInvalido> registrosInvalidos = new ArrayList<>();
         List<NumeroCancelado> loteTotal = new ArrayList<>();
 
         if (StringUtils.isEmpty(fileName)) {
@@ -166,13 +166,19 @@ public class ValidadorArchivoDeletedCSV {
                     } else {
                         failCount++;
                         // Reconstruir fila limpia con '|', compatible con Java 1.7
+                        /*
                         StringBuilder sb = new StringBuilder();
                         for (int i = 0; i < row.length; i++) {
                             if (i > 0) sb.append("|");
                             sb.append(row[i] != null ? row[i] : "");
                         }
-                        String lineaCruda = sb.toString();
-                        registrosInvalidos.add(lineaCruda);
+                        //String lineaCruda = sb.toString();
+                        //registrosInvalidos.add(new RegistroInvalido("Error genérico en validación", lineaCruda));
+                        //Ahora, solo usa invalidCancelado:
+                        String filaCsv = sb.toString();
+                        registrosInvalidos.add(new RegistroInvalido("Error mapeando fila CSV: validación estructural", filaCsv));
+                        return null; // <- importante: no intentes seguir mapeando
+                         */
                     }
                 }
 
@@ -278,197 +284,197 @@ public class ValidadorArchivoDeletedCSV {
         ACTIONDATE_FORMAT_EXTENDED.setLenient(false);
     }
 
-    private NumeroCancelado mapRowANumeroCancelado(String[] valores, List<String> registrosInvalidos) {
+    private NumeroCancelado mapRowANumeroCancelado(String[] valores, List<RegistroInvalido> registrosInvalidos) {
         try {
             if (valores == null || valores.length < 13) {
-                return invalid("Error mapeando fila CSV: Fila inválida (menos de 13 columnas)", valores, registrosInvalidos);
+                return invalidCancelado("Fila inválida (menos de 13 columnas)", valores, registrosInvalidos);
             }
 
-            // === Sanitizar valores para evitar símbolos raros ===
-            for (int i = 0; i < valores.length; i++) {
-                if (valores[i] != null) {
-                    valores[i] = valores[i].replaceAll("[^0-9A-Za-z@\\-:\\.]", "").trim();
-                }
+            // ==== Validación de longitudes (VARCHAR2/CHAR) ====
+            if (valores[0] != null && valores[0].length() > 22) {
+                return invalidCancelado("PortID demasiado largo (" + valores[0].length() + " > 22)", valores, registrosInvalidos);
             }
-
-            // === Validar longitudes según BD ===
-            if (valores[0].length() > 22) return invalid("Error mapeando fila CSV: PORTID demasiado largo", valores, registrosInvalidos);
-            if (valores[1].length() != 1) return invalid("Error mapeando fila CSV: PORTTYPE inválido", valores, registrosInvalidos);
-            if (valores[2].length() > 20) return invalid("Error mapeando fila CSV: ACTION demasiado largo", valores, registrosInvalidos);
-            if (valores[3].length() > 10) return invalid("Error mapeando fila CSV: NUMBERFROM demasiado largo", valores, registrosInvalidos);
-            if (valores[4].length() > 20) return invalid("Error mapeando fila CSV: NUMBERTO demasiado largo", valores, registrosInvalidos);
-            if (valores[5].length() != 1) return invalid("Error mapeando fila CSV: ISMPP inválido (longitud != 1)", valores, registrosInvalidos);
-            if (valores[6].length() > 3 || valores[7].length() > 3) return invalid("Error mapeando fila CSV: RIDA/RCR fuera de rango", valores, registrosInvalidos);
-            if (valores[8].length() > 3 || valores[9].length() > 3) return invalid("Error mapeando fila CSV: DIDA/DCR fuera de rango", valores, registrosInvalidos);
-            if (valores[11].length() > 3 || valores[12].length() > 3) return invalid("Error mapeando fila CSV: ASSIGNEEIDA/CR fuera de rango", valores, registrosInvalidos);
+            if (valores[1] != null && valores[1].length() > 1) {
+                return invalidCancelado("PortType demasiado largo (" + valores[1].length() + " > 1)", valores, registrosInvalidos);
+            }
+            if (valores[2] != null && valores[2].length() > 20) {
+                return invalidCancelado("Action demasiado largo (" + valores[2].length() + " > 20)", valores, registrosInvalidos);
+            }
+            if (valores[3] != null && valores[3].length() > 10) {
+                return invalidCancelado("NumberFrom demasiado largo (" + valores[3].length() + " > 10)", valores, registrosInvalidos);
+            }
+            if (valores[4] != null && valores[4].length() > 20) {
+                return invalidCancelado("NumberTo demasiado largo (" + valores[4].length() + " > 20)", valores, registrosInvalidos);
+            }
+            if (valores[5] != null && valores[5].length() > 1) {
+                return invalidCancelado("isMPP demasiado largo (" + valores[5].length() + " > 1)", valores, registrosInvalidos);
+            }
 
             NumeroCancelado num = new NumeroCancelado();
             num.setPortId(StringUtils.trimToEmpty(valores[0]));
             num.setPortType(StringUtils.trimToEmpty(valores[1]));
-
-            // === Validar ACTION permitido ===
-            //String action = StringUtils.trimToEmpty(valores[2]);
-            //if (!("Port".equalsIgnoreCase(action) || "Reverse".equalsIgnoreCase(action) || "Delete".equalsIgnoreCase(action))) {
-            //    return invalid("Error mapeando fila CSV:  ACTION inválido: " + action, valores, registrosInvalidos);
-            //}
-            //num.setAction(action);
-            num.setAction(StringUtils.trim(valores[2]));
-
+            num.setAction(StringUtils.trimToEmpty(valores[2]));
             num.setNumberFrom(StringUtils.trimToEmpty(valores[3]));
             num.setNumberTo(StringUtils.trimToEmpty(valores[4]));
+            num.setIsMpp(StringUtils.defaultIfBlank(StringUtils.trim(valores[5]), "N"));
 
-            // === Validar ISMPP ===
-            //String isMpp = StringUtils.defaultIfBlank(StringUtils.trim(valores[5]), "N");
-            //if (!(isMpp.equalsIgnoreCase("N") || isMpp.equalsIgnoreCase("Y"))) {
-            //    return invalid("Error mapeando fila CSV:  ISMPP inválido: " + isMpp, valores, registrosInvalidos);
-            //}
-            //num.setIsMpp(isMpp);
-            num.setIsMpp(StringUtils.trim(valores[5]));
-
-            // === Validar numéricos obligatorios ===
+            // ==== Validación de numéricos obligatorios (RIDA, RCR, ASSIGNEEIDA, ASSIGNEECR) ====
             if (!isNumeric(valores[6]) || !isNumeric(valores[7]) ||
                     !isNumeric(valores[11]) || !isNumeric(valores[12])) {
-                return invalid("Error mapeando fila CSV: Valores numéricos obligatorios inválidos", valores, registrosInvalidos);
+                return invalidCancelado("Valores no numéricos en RIDA/RCR/AssigneeIDA/AssigneeCR", valores, registrosInvalidos);
             }
 
-            // === Asignar obligatorios ===
+            // ==== Validar rango numérico (máx 3 dígitos) ====
+            if (valores[6] != null && valores[6].length() > 3) {
+                return invalidCancelado("RIDA fuera de rango (" + valores[6] + " > 3 dígitos)", valores, registrosInvalidos);
+            }
+            if (valores[7] != null && valores[7].length() > 3) {
+                return invalidCancelado("RCR fuera de rango (" + valores[7] + " > 3 dígitos)", valores, registrosInvalidos);
+            }
+            if (valores[11] != null && valores[11].length() > 3) {
+                return invalidCancelado("AssigneeIDA fuera de rango (" + valores[11] + " > 3 dígitos)", valores, registrosInvalidos);
+            }
+            if (valores[12] != null && valores[12].length() > 3) {
+                return invalidCancelado("AssigneeCR fuera de rango (" + valores[12] + " > 3 dígitos)", valores, registrosInvalidos);
+            }
+
+            // ==== Asignar obligatorios ====
             num.setRida(new BigDecimal(valores[6]));
             num.setRcr(new BigDecimal(valores[7]));
             num.setAssigneeIda(new BigDecimal(valores[11]));
             num.setAssigneeCr(new BigDecimal(valores[12]));
 
-            // === Opcionales (DIDA, DCR) ===
-            if (StringUtils.isNotBlank(valores[8]) && isNumeric(valores[8])) {
+            // ==== Opcionales (DIDA, DCR) ====
+            if (StringUtils.isNotBlank(valores[8]) && isNumeric(valores[8]) && valores[8].length() <= 3) {
                 num.setDida(new BigDecimal(valores[8]));
             }
-            if (StringUtils.isNotBlank(valores[9]) && isNumeric(valores[9])) {
+            if (StringUtils.isNotBlank(valores[9]) && isNumeric(valores[9]) && valores[9].length() <= 3) {
                 num.setDcr(new BigDecimal(valores[9]));
             }
 
-            // === Fecha (col 10) ===
+            // ==== Fecha (col 10) ====
             String rawDate = StringUtils.trimToNull(valores[10]);
             if (rawDate != null) {
                 Date parsed = null;
                 try {
-                    if (rawDate.matches("\\d{8}")) {
-                        parsed = ACTIONDATE_FORMAT_COMPACT.parse(rawDate);
-                    } else if (rawDate.matches("\\d{4}-\\d{2}-\\d{2}.*")) {
+                    parsed = ACTIONDATE_FORMAT_COMPACT.parse(rawDate);
+                } catch (ParseException e1) {
+                    try {
+                        parsed = ACTIONDATE_FORMAT_EXTENDED.parse(rawDate);
+                    } catch (ParseException e2) {
                         try {
-                            parsed = ACTIONDATE_FORMAT_EXTENDED.parse(rawDate);
-                        } catch (ParseException e2) {
                             String sanitized = rawDate.replace("T", " ").split("\\.")[0];
                             parsed = ACTIONDATE_FORMAT_EXTENDED.parse(sanitized);
+                        } catch (ParseException ignored) {
+                            return invalidCancelado("ActionDate inválido: " + rawDate, valores, registrosInvalidos);
                         }
-                    } else {
-                        throw new ParseException("Formato inválido ActionDate=" + rawDate, 0);
                     }
-                } catch (Exception e) {
-                    return invalid("Error mapeando fila CSV: ActionDate inválido: " + rawDate, valores, registrosInvalidos);
                 }
                 num.setActionDate(new java.sql.Timestamp(parsed.getTime()));
             } else {
-                return invalid("Error mapeando fila CSV: ActionDate vacío", valores, registrosInvalidos);
+                return invalidCancelado("ActionDate vacío", valores, registrosInvalidos);
             }
 
             return num;
 
         } catch (Exception ex) {
-            LOGGER.error("Error inesperado mapeando fila Cancelados: {}", Arrays.toString(valores), ex);
-            if (registrosInvalidos != null) {
-                registrosInvalidos.add("Error mapeando fila CSV: " + Arrays.toString(valores));
-            }
-            return null;
+            return invalidCancelado("Error inesperado", valores, registrosInvalidos);
         }
     }
 
-    // Helper
-    private NumeroCancelado invalid(String causa, String[] valores, List<String> registrosInvalidos) {
-        String msg = causa + " fila=" + Arrays.toString(valores);
-        LOGGER.error(msg);
-        if (registrosInvalidos != null) registrosInvalidos.add(msg);
-        return null;
+    // ==== Auxiliar: representar un registro inválido con motivo + fila cruda ====
+    private static class RegistroInvalido {
+        String motivo;
+        String filaCsv;
+
+        RegistroInvalido(String motivo, String filaCsv) {
+            this.motivo = motivo;
+            this.filaCsv = filaCsv;
+        }
     }
 
 
     /**
-     * PASO 8: Genera un archivo .log con los registros inválidos de contenido CSV (Cancelados).
-     * Solo se genera cuando hay errores.
-     * Si no hay errores, no se crea ningún archivo.
+     * Auxiliar para marcar fila inválida de Cancelados (mensaje + fila CSV limpia)
      */
-    private void generarLogInvalidos(List<String> registrosInvalidos) {
+    private NumeroCancelado invalidCancelado(String motivo, String[] valores, List<RegistroInvalido> registrosInvalidos) {
+        String msg = "Error mapeando fila CSV: " + motivo;
+        LOGGER.error("{} Contenido={}", msg, Arrays.toString(valores));
+
+        if (registrosInvalidos != null) {
+            // reconstruir la fila CSV limpia
+            StringBuilder sb = new StringBuilder();
+            if (valores != null && valores.length > 0) {
+                for (int i = 0; i < valores.length; i++) {
+                    if (i > 0) sb.append("|");
+                    sb.append(valores[i] != null ? valores[i].trim() : "");
+                }
+            }
+            registrosInvalidos.add(new RegistroInvalido(msg, sb.toString()));
+        }
+        return null;
+    }
+
+    /**
+     * PASO 8: Genera un archivo .log con los registros inválidos de contenido CSV (Cancelados).
+     * Con filtro para descartar duplicados tipo [col0, col1, ...]
+     */
+    private void generarLogInvalidos(List<RegistroInvalido> registrosInvalidos) {
         if (registrosInvalidos == null || registrosInvalidos.isEmpty()) {
             LOGGER.info("No se generó archivo de inválidos CSV (Cancelados): no se detectaron errores.");
             return;
         }
 
-        FileWriter writer = null;
-        BufferedWriter bw = null;
-        try {
-            // Carpeta base desde parámetros (cancelados, no portados)
-            String basePath = paramService.getParamByName("port_XMLLOG_path.portados");
-            if (StringUtils.isEmpty(basePath)) {
-                LOGGER.warn("Parametro port_XMLLOG_path.portados no definido, usando temporal");
-                basePath = System.getProperty("java.io.tmpdir"); // fallback
-            }
-
-            // Nombre con solo la fecha
-            String fechaStr = new SimpleDateFormat("yyyyMMdd").format(new Date());
-            String fileName = "port_num_cancelados_CSVinvalidos_" + fechaStr + ".log";
-            File logFile = new File(basePath + File.separator + fileName);
-
-            // Asegurar que el directorio exista
-            logFile.getParentFile().mkdirs();
-
-            writer = new FileWriter(logFile, false);
-            bw = new BufferedWriter(writer);
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(
+                new File(paramService.getParamByName("port_XMLLOG_path.portados"),
+                        "port_num_cancelados_CSVinvalidos_" +
+                                new SimpleDateFormat("yyyyMMdd").format(new Date()) + ".log")))) {
 
             bw.write("==== Registros inválidos detectados en cancelados ====\n\n");
 
-            for (String row : registrosInvalidos) {
-                String[] cols = row.split("\\|", -1); // -1: conserva vacíos
+            for (RegistroInvalido reg : registrosInvalidos) {
+                // mensaje de error
+                bw.write(reg.motivo);
+                bw.newLine();
 
-                bw.write("Error: fila inválida (" + cols.length + " columnas detectadas)\n");
-                bw.write("<PortData>\n");
-                bw.write("   <PortID>"       + safe(cols,0)  + "</PortID>\n");
-                bw.write("   <PortType>"     + safe(cols,1)  + "</PortType>\n");
-                bw.write("   <Action>"       + safe(cols,2)  + "</Action>\n");
+                if (StringUtils.isNotBlank(reg.filaCsv)) {
+                    String[] cols = reg.filaCsv.split("\\|", -1);
 
-                bw.write("   <NumberRanges>\n");
-                bw.write("      <NumberRange>\n");
-                bw.write("         <NumberFrom>" + safe(cols,3) + "</NumberFrom>\n");
-                bw.write("         <NumberTo>"   + safe(cols,4) + "</NumberTo>\n");
-                bw.write("         <isMPP>"      + safe(cols,5) + "</isMPP>\n");
-                bw.write("      </NumberRange>\n");
-                bw.write("   </NumberRanges>\n");
+                    bw.write("<PortData>\n");
+                    bw.write("   <PortID>"       + safe(cols,0)  + "</PortID>\n");
+                    bw.write("   <PortType>"     + safe(cols,1)  + "</PortType>\n");
+                    bw.write("   <Action>"       + safe(cols,2)  + "</Action>\n");
 
-                bw.write("   <RIDA>"        + safe(cols,6)  + "</RIDA>\n");
-                bw.write("   <RCR>"         + safe(cols,7)  + "</RCR>\n");
-                bw.write("   <DIDA>"        + safe(cols,8)  + "</DIDA>\n");
-                bw.write("   <DCR>"         + safe(cols,9)  + "</DCR>\n");
-                bw.write("   <ActionDate>"  + safe(cols,10) + "</ActionDate>\n");
-                bw.write("   <AssigneeIDA>" + safe(cols,11) + "</AssigneeIDA>\n");
-                bw.write("   <AssigneeCR>"  + safe(cols,12) + "</AssigneeCR>\n");
-                bw.write("</PortData>\n\n");
+                    bw.write("   <NumberRanges>\n");
+                    bw.write("      <NumberRange>\n");
+                    bw.write("         <NumberFrom>" + safe(cols,3) + "</NumberFrom>\n");
+                    bw.write("         <NumberTo>"   + safe(cols,4) + "</NumberTo>\n");
+                    bw.write("         <isMPP>"      + safe(cols,5) + "</isMPP>\n");
+                    bw.write("      </NumberRange>\n");
+                    bw.write("   </NumberRanges>\n");
+
+                    bw.write("   <RIDA>"        + safe(cols,6)  + "</RIDA>\n");
+                    bw.write("   <RCR>"         + safe(cols,7)  + "</RCR>\n");
+                    bw.write("   <DIDA>"        + safe(cols,8)  + "</DIDA>\n");
+                    bw.write("   <DCR>"         + safe(cols,9)  + "</DCR>\n");
+                    bw.write("   <ActionDate>"  + safe(cols,10) + "</ActionDate>\n");
+                    bw.write("   <AssigneeIDA>" + safe(cols,11) + "</AssigneeIDA>\n");
+                    bw.write("   <AssigneeCR>"  + safe(cols,12) + "</AssigneeCR>\n");
+                    bw.write("</PortData>\n\n");
+                }
             }
 
-            bw.flush();
-            LOGGER.info("Archivo de inválidos CSV generado: {}", logFile.getAbsolutePath());
+            LOGGER.info("Archivo de inválidos CSV (Cancelados) generado correctamente.");
 
         } catch (Exception e) {
-            LOGGER.error("Error al generar log de inválidos CSV", e);
-        } finally {
-            try {
-                if (bw != null) bw.close();
-                if (writer != null) writer.close();
-            } catch (IOException ex) {
-                LOGGER.error("Error cerrando writer de log inválidos CSV", ex);
-            }
+            LOGGER.error("Error al generar log de inválidos CSV (Cancelados)", e);
         }
     }
 
-    // Utilidad segura para evitar IndexOutOfBounds
+
+    // Utilidad segura
     private String safe(String[] cols, int idx) {
-        return (idx < cols.length) ? cols[idx].trim() : "";
+        return (cols != null && idx < cols.length && cols[idx] != null) ? cols[idx].trim() : "";
     }
 
     public void generarXmlNoPersistidos(List<NumeroCancelado> noPersistidos, String timestampOriginal) throws Exception {
